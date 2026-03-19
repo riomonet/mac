@@ -2,8 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <termios.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
+#include <errno.h>
 #include "lookup_tables.h"
+#include "term_interop.c"
 
 typedef struct cell {
     size_t nBytes;
@@ -107,7 +111,7 @@ grid *initGrid(int width, int height) {
 void term_send_clr() {
     printf("\x1b[2J");
     fflush(stdout);
-}
+ }
 
 /* Sets the cursor position on the terminal */
 void term_send_pos(int y, int x) {
@@ -129,12 +133,15 @@ void resetGrid(grid *g, char chVal, enum colors bgCl, enum colors fgCl) {
 }
 
 int main(void) {
+    struct termConfig E;
     term_send_clr();
-    grid *g = initGrid(20,30);
+    initTerm(&E);
+    grid *g = initGrid(E.cols, E.rows);
     resetGrid(g,' ',blue, white);
     setChar(g,10,10,'A');
     setChar(g,10,11,'B');
     setChar(g,10,12,'C');
+    
     frameBuffer *fb = serializeGrid(g);
     blitFrameBuffer(fb);
     term_send_pos(1,1);

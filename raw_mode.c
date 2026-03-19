@@ -1,7 +1,7 @@
 
 //(setq c-basic-offset 4)
-//(c-set-offset 'case-label 4)
-//https://vt100.net/docs/vt100-ug/chapter3.html#ED
+//(c-set-ofet 'case-label 4)
+//https://vtp100.net/docs/vt100-ug/chapter3.html#ED
 
 #include <unistd.h>
 #include <termios.h>
