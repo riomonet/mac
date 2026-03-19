@@ -103,6 +103,18 @@ grid *initGrid(int width, int height) {
     return g;
 }
 
+/* Clears the terminal screen */
+void term_send_clr() {
+    printf("\x1b[2J");
+    fflush(stdout);
+}
+
+/* Sets the cursor position on the terminal */
+void term_send_pos(int y, int x) {
+    printf("\x1b[%d;%dH",y,x);
+    fflush(stdout);
+}
+
 /* Sets the char value of each cell in grid 'g' to 'chVal', as
  * as well as the background and foreground colors if the
  * value passed is not NULL */
@@ -117,13 +129,15 @@ void resetGrid(grid *g, char chVal, enum colors bgCl, enum colors fgCl) {
 }
 
 int main(void) {
+    term_send_clr();
     grid *g = initGrid(20,30);
-    resetGrid(g,' ',black, brown);
+    resetGrid(g,' ',blue, white);
     setChar(g,10,10,'A');
     setChar(g,10,11,'B');
     setChar(g,10,12,'C');
     frameBuffer *fb = serializeGrid(g);
     blitFrameBuffer(fb);
-    printf("\n");
+    term_send_pos(1,1);
+    printf("\x1b[0m");
     return 0;
 }
