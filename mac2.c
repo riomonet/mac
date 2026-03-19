@@ -53,7 +53,6 @@ void setBgCl(grid *g, int y, int x, enum colors color) {
 void setChar(grid *g, int y, int x, char ch) {
     int idx = y * g->width + x;
     g->cell[idx].ch = ch;
-    g->cell[idx].nBytes += 1;
 }
 
 void setAttb(grid *g, int y, int x) {
@@ -69,32 +68,62 @@ size_t countBytes(grid *g) {
     return sum;
 }
 
-/* Turn 'grid' where each cell is a variable number of string into a
- *  flat buffer */
+/* Returns a flatbuffer assembled from a 'grid' where each cell
+ * contains various string escape sequence directives that specify
+ * the foreground color, background color, and any special
+ * attributes like reverse or underline for the character
+ * val of the cell */
 frameBuffer *serializeGrid(grid *g) {
     size_t nBytes = countBytes(g);
     frameBuffer *fb = malloc(sizeof(*fb) + nBytes);
+    fb->len = nBytes;
     char *fbPtr = fb->data;
     for(int i = 0; i < g->height; i++) {
         for(int j = 0; j < g->width; j++) {
             cell curCell = g->cell[i * g->width + j];
+	    memcpy(fbPtr,curCell.bg.color,curCell.bg.len);
+	    fbPtr+=curCell.bg.len;
+	    memcpy(fbPtr,curCell.fg.color,curCell.fg.len);
+	    fbPtr+=curCell.fg.len;
             *fbPtr++ = curCell.ch;
         }
     }
+    return fb;
 } 
 
 grid *initGrid(int width, int height) {
     grid *g = malloc(sizeof(*g) + (sizeof(cell) * width * height));
     g->width = width;
     g->height = height;
+    for(int i = 0; i < g->height; i++) {
+	for(int j = 0; j < g->width; j++) {
+	    g->cell[i * g->width + j].nBytes = 1;
+	}
+    }
     return g;
+}
+
+/* Sets the char value of each cell in grid 'g' to 'chVal', as
+ * as well as the background and foreground colors if the
+ * value passed is not NULL */
+void resetGrid(grid *g, char chVal, enum colors bgCl, enum colors fgCl) {
+    for(int i = 0; i < g->height; i++) {
+        for(int j = 0; j < g->width; j++) {
+	    setBgCl(g,i,j,bgCl);
+	    setFgCl(g,i,j,fgCl);
+	    setChar(g,i,j,chVal);
+	}
+    }
 }
 
 int main(void) {
     grid *g = initGrid(20,30);
+    resetGrid(g,' ',black, brown);
     setChar(g,10,10,'A');
     setChar(g,10,11,'B');
     setChar(g,10,12,'C');
-
+    frameBuffer *fb = serializeGrid(g);
+    blitFrameBuffer(fb);
+    printf("\n");
     return 0;
 }
