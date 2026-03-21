@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <signal.h>
 #include <termios.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -27,8 +28,8 @@ typedef struct cell {
 } cell;
 
 typedef struct grid {
-    int width;
-    int height;
+    int nCols;
+    int nRows;
      cell cell[];
 } grid;
 
@@ -42,29 +43,29 @@ void blitFrameBuffer(frameBuffer *frameBuf) {
 }
 
 void setFgCl(grid *g, int y, int x, enum colors color) {
-    int idx = y * g->width + x;
+    int idx = y * g->nCols + x;
     g->cell[idx].fg.color = colors[color].fg;
     g->cell[idx].fg.len = colors[color].len;
     g->cell[idx].nBytes += colors[color].len;
 }
 void setBgCl(grid *g, int y, int x, enum colors color) {
-    int idx = y * g->width + x;
+    int idx = y * g->nCols + x;
     g->cell[idx].bg.color = colors[color].bg;
     g->cell[idx].bg.len = colors[color].len;
     g->cell[idx].nBytes += colors[color].len;
 }
 
 void setChar(grid *g, int y, int x, char ch) {
-    int idx = y * g->width + x;
+    int idx = y * g->nCols + x;
     g->cell[idx].ch = ch;
 }
 
 void setAttb(grid *g, int y, int x) {
-    int idx = y * g->width + x;
+    int idx = y * g->nCols + x;
 }
 
 size_t countBytes(grid *g) {
-    int len = g->width * g->height;
+    int len = g->nCols * g->nRows;
     int sum = 0;
     for(int i = 0; i < len; i++) {
         sum += g->cell[i].nBytes;
@@ -82,69 +83,117 @@ frameBuffer *serializeGrid(grid *g) {
     frameBuffer *fb = malloc(sizeof(*fb) + nBytes);
     fb->len = nBytes;
     char *fbPtr = fb->data;
-    for(int i = 0; i < g->height; i++) {
-        for(int j = 0; j < g->width; j++) {
-            cell curCell = g->cell[i * g->width + j];
-	    memcpy(fbPtr,curCell.bg.color,curCell.bg.len);
-	    fbPtr+=curCell.bg.len;
-	    memcpy(fbPtr,curCell.fg.color,curCell.fg.len);
-	    fbPtr+=curCell.fg.len;
+    for(int i = 0; i < g->nRows; i++) {
+        for(int j = 0; j < g->nCols; j++) {
+            cell curCell = g->cell[i * g->nCols + j]; 
+	    //memcpy(fbPtr,curCell.bg.color,curCell.bg.len);
+	    //fbPtr+=curCell.bg.len;  
+	    //memcpy(fbPtr,curCell.fg.color,curCell.fg.len);
+	    //fbPtr+=curCell.fg.len;
             *fbPtr++ = curCell.ch;
         }
     }
     return fb;
 } 
 
-grid *initGrid(int width, int height) {
-    grid *g = malloc(sizeof(*g) + (sizeof(cell) * width * height));
-    g->width = width;
-    g->height = height;
-    for(int i = 0; i < g->height; i++) {
-	for(int j = 0; j < g->width; j++) {
-	    g->cell[i * g->width + j].nBytes = 1;
+grid *initGrid(int nCols, int nRows) {
+    grid *g = malloc(sizeof(*g) + (sizeof(cell) * nCols * nRows));
+    g->nRows = nRows;
+    g->nCols= nCols;
+    for(int i = 0; i < g->nRows; i++) {
+	for(int j = 0; j < g->nCols; j++) {
+	    g->cell[i * g->nCols + j].nBytes = 1;
 	}
     }
     return g;
 }
 
-/* Clears the terminal screen */
+/* Clear the terminal screen */
 void term_send_clr() {
-    printf("\x1b[2J");
-    fflush(stdout);
+    write(STDOUT_FILENO,"x1b[2J", 4);
  }
 
 /* Sets the cursor position on the terminal */
 void term_send_pos(int y, int x) {
-    printf("\x1b[%d;%dH",y,x);
+    printf("\x1b[%d;%dH",y,x); //TODO: Convert to write call, using snprintf;
     fflush(stdout);
 }
 
 /* Sets the char value of each cell in grid 'g' to 'chVal', as
  * as well as the background and foreground colors if the
  * value passed is not NULL */
-void resetGrid(grid *g, char chVal, enum colors bgCl, enum colors fgCl) {
-    for(int i = 0; i < g->height; i++) {
-        for(int j = 0; j < g->width; j++) {
-	    setBgCl(g,i,j,bgCl);
-	    setFgCl(g,i,j,fgCl);
+void resetGrid(grid *g, char chVal) {
+    for(int i = 0; i < g->nRows; i++) {
+        for(int j = 0; j < g->nCols; j++) {
 	    setChar(g,i,j,chVal);
 	}
     }
 }
 
-int main(void) {
-    struct termConfig E;
-    term_send_clr();
-    initTerm(&E);
-    grid *g = initGrid(E.cols, E.rows);
-    resetGrid(g,' ',blue, white);
+void handler(int code) {
+    RESIZE = 1;
+}
+
+grid *resizeGrid(grid *gOld, struct termConfig *E) {
+    free(gOld);
+    initTerm(E);
+    fflush(stdout);
+    grid *g = initGrid(E->cols, E->rows);
+    resetGrid(g, ' '); 
+    return g;
+}
+
+void writeToGrid(grid *g) {
     setChar(g,10,10,'A');
     setChar(g,10,11,'B');
-    setChar(g,10,12,'C');
+    setChar(g,10,12,'C');    
+}
+
+void setDefaultColors(enum colors bg, enum colors fg) {
+    printf(colors[fg].fg);
+    printf(colors[bg].bg);
+    fflush(stdout);
+}
+
+int main(void) {
+    term_send_clr();
+    setDefaultColors(blue,white);
+
+    /*  */
+    struct sigaction sa = {0};
+    /* memset(&sa, 0, sizeof(sa)); */ // Clear it to avoid garbage values
+    sigemptyset(&sa.sa_mask);    // Don't block any other signals
+    sa.sa_flags = SA_RESTART;    // Restart interrupted sys-calls
+    sa.sa_handler = handler;
+    if (sigaction(SIGWINCH, &sa, NULL) == -1) {
+	perror("sigaction");
+    }
+
+    printf(HIDE_CURSOR); 
+    fflush(stdout);
+    struct termConfig E;
+    initTerm(&E);
+    grid *g = initGrid(E.cols, E.rows);
+    resetGrid(g,' ');
+    writeToGrid(g);
+
+    while(1) {
+	if (RESIZE) {
+	    RESIZE = 0;
+	    g = resizeGrid(g, &E);
+	    if( countBytes(g) != g->nRows * g->nCols) {
+		printf("nRows * nCols: %d * %d = %d\n", g->nRows , g->nCols, countBytes(g));
+		fflush(stdout);
+	    }
+	}
+	writeToGrid(g);
+	frameBuffer *fb = serializeGrid(g);
+	blitFrameBuffer(fb);
+	free(fb);
+	term_send_pos(1,1);
+    }
     
-    frameBuffer *fb = serializeGrid(g);
-    blitFrameBuffer(fb);
-    term_send_pos(1,1);
+    printf(SHOW_CURSOR);
     printf("\x1b[0m");
     return 0;
 }

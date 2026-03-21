@@ -1,6 +1,13 @@
+#define SHOW_CURSOR "\x1b[?25h"
+#define HIDE_CURSOR "\x1b[?25l"
+
 enum colors {
     black, red, green, brown, blue, magenta, cyan, white
 };
+
+/* enum term_cmds { */
+/*     CLEAR_SCREEN, RESET, SHOW_CURSOR, HIDE_CURSOR */
+/* }; */
 
 struct color {
     char *name;
@@ -20,6 +27,13 @@ struct color colors[8] = {
     [7] = { .name = "white",   .fg = "\033[97m", .bg = "\033[47m", .len = 5 }
 };
 
+
+/* enum term_cmds term_cmds[] = { */
+/* } */
+
+/* void term_send(enum term_cmds) { */
+    
+/* } */
 
 /* void term_send_attrib(attributes attrib) { */
 /*     switch(attrib) { */
