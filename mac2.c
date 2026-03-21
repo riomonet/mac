@@ -41,18 +41,17 @@ typedef struct {
 void blitFrameBuffer(frameBuffer *frameBuf) {
     write(STDOUT_FILENO,frameBuf->data,frameBuf->len);
 }
-
 void setFgCl(grid *g, int y, int x, enum colors color) {
     int idx = y * g->nCols + x;
     g->cell[idx].fg.color = colors[color].fg;
-    g->cell[idx].fg.len = colors[color].len;
-    g->cell[idx].nBytes += colors[color].len;
+    g->cell[idx].fg.len = colors[color].fgLen;
+    g->cell[idx].nBytes += colors[color].fgLen;
 }
 void setBgCl(grid *g, int y, int x, enum colors color) {
     int idx = y * g->nCols + x;
     g->cell[idx].bg.color = colors[color].bg;
-    g->cell[idx].bg.len = colors[color].len;
-    g->cell[idx].nBytes += colors[color].len;
+    g->cell[idx].bg.len = colors[color].bgLen;
+    g->cell[idx].nBytes += colors[color].bgLen;
 }
 
 void setChar(grid *g, int y, int x, char ch) {
@@ -77,7 +76,11 @@ size_t countBytes(grid *g) {
  * contains various string escape sequence directives that specify
  * the foreground color, background color, and any special
  * attributes like reverse or underline for the character
- * val of the cell */
+ * val of the cell.
+ *
+ *
+ * TODO: a big block should be allocated at startup and just
+ * use that instead of calling malloc every time */
 frameBuffer *serializeGrid(grid *g) {
     size_t nBytes = countBytes(g);
     frameBuffer *fb = malloc(sizeof(*fb) + nBytes);
@@ -108,11 +111,6 @@ grid *initGrid(int nCols, int nRows) {
     return g;
 }
 
-/* Clear the terminal screen */
-void term_send_clr() {
-    write(STDOUT_FILENO,"x1b[2J", 4);
- }
-
 /* Sets the cursor position on the terminal */
 void term_send_pos(int y, int x) {
     printf("\x1b[%d;%dH",y,x); //TODO: Convert to write call, using snprintf;
@@ -138,7 +136,7 @@ grid *resizeGrid(grid *gOld, struct termConfig *E) {
     free(gOld);
     initTerm(E);
     fflush(stdout);
-    grid *g = initGrid(E->cols, E->rows);
+    grid *g = initGrid(E->nCols, E->nRows);
     resetGrid(g, ' '); 
     return g;
 }
@@ -156,10 +154,9 @@ void setDefaultColors(enum colors bg, enum colors fg) {
 }
 
 int main(void) {
-    term_send_clr();
-    setDefaultColors(blue,white);
+    term_send_cmd(CLEAR_SCREEN);
+    setDefaultColors(BLUE,WHITE);
 
-    /*  */
     struct sigaction sa = {0};
     /* memset(&sa, 0, sizeof(sa)); */ // Clear it to avoid garbage values
     sigemptyset(&sa.sa_mask);    // Don't block any other signals
@@ -168,15 +165,12 @@ int main(void) {
     if (sigaction(SIGWINCH, &sa, NULL) == -1) {
 	perror("sigaction");
     }
-
-    printf(HIDE_CURSOR); 
-    fflush(stdout);
+    term_send_cmd(HIDE_CURSOR);
     struct termConfig E;
     initTerm(&E);
-    grid *g = initGrid(E.cols, E.rows);
+    grid *g = initGrid(E.nCols, E.nRows);
     resetGrid(g,' ');
     writeToGrid(g);
-
     while(1) {
 	if (RESIZE) {
 	    RESIZE = 0;
@@ -192,8 +186,9 @@ int main(void) {
 	free(fb);
 	term_send_pos(1,1);
     }
-    
-    printf(SHOW_CURSOR);
-    printf("\x1b[0m");
+
+ CLEANUP:
+    term_send_cmd(SHOW_CURSOR);
+    term_send_cmd(RESET);
     return 0;
 }
