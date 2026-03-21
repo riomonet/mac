@@ -72,18 +72,12 @@ size_t countBytes(grid *g) {
     return sum;
 }
 
-/* Returns a flatbuffer assembled from a 'grid' where each cell
- * contains various string escape sequence directives that specify
- * the foreground color, background color, and any special
- * attributes like reverse or underline for the character
- * val of the cell.
- *
- *
- * TODO: a big block should be allocated at startup and just
- * use that instead of calling malloc every time */
-frameBuffer *serializeGrid(grid *g) {
+/* Flattens 'grid' where each cell contains various string escape
+ * sequence directives that specify the foreground color, background
+ * color, and any special attributes like reverse or underline for the
+ * character val of the cell into a flat 'frameBuffer' to write. */
+void serializeGrid(grid *g, frameBuffer *fb) {
     size_t nBytes = countBytes(g);
-    frameBuffer *fb = malloc(sizeof(*fb) + nBytes);
     fb->len = nBytes;
     char *fbPtr = fb->data;
     for(int i = 0; i < g->nRows; i++) {
@@ -96,8 +90,12 @@ frameBuffer *serializeGrid(grid *g) {
             *fbPtr++ = curCell.ch;
         }
     }
-    return fb;
 } 
+
+frameBuffer *initFrameBuffer(void) {
+    frameBuffer *fb = malloc(sizeof(*fb) + (1024 * 1024));
+    return fb;
+}
 
 grid *initGrid(int nCols, int nRows) {
     grid *g = malloc(sizeof(*g) + (sizeof(cell) * nCols * nRows));
@@ -120,7 +118,7 @@ void term_send_pos(int y, int x) {
 /* Sets the char value of each cell in grid 'g' to 'chVal', as
  * as well as the background and foreground colors if the
  * value passed is not NULL */
-void resetGrid(grid *g, char chVal) {
+void setAllGridCells(grid *g, char chVal) {
     for(int i = 0; i < g->nRows; i++) {
         for(int j = 0; j < g->nCols; j++) {
 	    setChar(g,i,j,chVal);
@@ -137,7 +135,7 @@ grid *resizeGrid(grid *gOld, struct termConfig *E) {
     initTerm(E);
     fflush(stdout);
     grid *g = initGrid(E->nCols, E->nRows);
-    resetGrid(g, ' '); 
+    setAllGridCells(g, ' '); 
     return g;
 }
 
@@ -157,33 +155,33 @@ int main(void) {
     term_send_cmd(CLEAR_SCREEN);
     setDefaultColors(BLUE,WHITE);
 
+    /* Set up signal handling for change of window size. */
     struct sigaction sa = {0};
-    /* memset(&sa, 0, sizeof(sa)); */ // Clear it to avoid garbage values
-    sigemptyset(&sa.sa_mask);    // Don't block any other signals
-    sa.sa_flags = SA_RESTART;    // Restart interrupted sys-calls
+    sigemptyset(&sa.sa_mask);    
+    sa.sa_flags = SA_RESTART; // Restart interrupted sys-calls.
     sa.sa_handler = handler;
     if (sigaction(SIGWINCH, &sa, NULL) == -1) {
 	perror("sigaction");
     }
-    term_send_cmd(HIDE_CURSOR);
+    
     struct termConfig E;
     initTerm(&E);
     grid *g = initGrid(E.nCols, E.nRows);
-    resetGrid(g,' ');
+    frameBuffer *fb = initFrameBuffer();
+    setAllGridCells(g,' ');
+
+    /* temp */
     writeToGrid(g);
+
+    term_send_cmd(HIDE_CURSOR);
     while(1) {
 	if (RESIZE) {
 	    RESIZE = 0;
 	    g = resizeGrid(g, &E);
-	    if( countBytes(g) != g->nRows * g->nCols) {
-		printf("nRows * nCols: %d * %d = %d\n", g->nRows , g->nCols, countBytes(g));
-		fflush(stdout);
-	    }
 	}
 	writeToGrid(g);
-	frameBuffer *fb = serializeGrid(g);
+	serializeGrid(g,fb);
 	blitFrameBuffer(fb);
-	free(fb);
 	term_send_pos(1,1);
     }
 
