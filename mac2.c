@@ -45,13 +45,12 @@ void setFgCl(grid *g, int y, int x, enum colors color) {
     int idx = y * g->nCols + x;
     g->cell[idx].fg.color = colors[color].fg;
     g->cell[idx].fg.len = colors[color].fgLen;
-    g->cell[idx].nBytes += colors[color].fgLen;
 }
+
 void setBgCl(grid *g, int y, int x, enum colors color) {
     int idx = y * g->nCols + x;
     g->cell[idx].bg.color = colors[color].bg;
     g->cell[idx].bg.len = colors[color].bgLen;
-    g->cell[idx].nBytes += colors[color].bgLen;
 }
 
 void setChar(grid *g, int y, int x, char ch) {
@@ -59,15 +58,19 @@ void setChar(grid *g, int y, int x, char ch) {
     g->cell[idx].ch = ch;
 }
 
-void setAttb(grid *g, int y, int x) {
-    int idx = y * g->nCols + x;
-}
+/* void setAttb(grid *g, int y, int x) { */
+/*      int idx = y * g->nCols + x; */
+/* } */
 
+/* Returns the total number of bytes in 'grid'. */
 size_t countBytes(grid *g) {
     int len = g->nCols * g->nRows;
     int sum = 0;
     for(int i = 0; i < len; i++) {
-        sum += g->cell[i].nBytes;
+        sum += 1;
+        //sum += g->cell[i].fg.len;
+        sum += g->cell[i].bg.len;
+        //sum += g->cell[i].attributes.len;
     }
     return sum;
 }
@@ -83,8 +86,8 @@ void serializeGrid(grid *g, frameBuffer *fb) {
     for(int i = 0; i < g->nRows; i++) {
         for(int j = 0; j < g->nCols; j++) {
             cell curCell = g->cell[i * g->nCols + j]; 
-	    //memcpy(fbPtr,curCell.bg.color,curCell.bg.len);
-	    //fbPtr+=curCell.bg.len;  
+	    memcpy(fbPtr,curCell.bg.color,curCell.bg.len);
+	    fbPtr+=curCell.bg.len;
 	    //memcpy(fbPtr,curCell.fg.color,curCell.fg.len);
 	    //fbPtr+=curCell.fg.len;
             *fbPtr++ = curCell.ch;
@@ -101,11 +104,11 @@ grid *initGrid(int nCols, int nRows) {
     grid *g = malloc(sizeof(*g) + (sizeof(cell) * nCols * nRows));
     g->nRows = nRows;
     g->nCols= nCols;
-    for(int i = 0; i < g->nRows; i++) {
-	for(int j = 0; j < g->nCols; j++) {
-	    g->cell[i * g->nCols + j].nBytes = 1;
-	}
-    }
+    /* for(int i = 0; i < g->nRows; i++) { */
+    /* 	for(int j = 0; j < g->nCols; j++) { */
+    /* 	    g->cell[i * g->nCols + j].nBytes = 1; */
+    /* 	} */
+    /* } */
     return g;
 }
 
@@ -122,6 +125,8 @@ void setAllGridCells(grid *g, char chVal) {
     for(int i = 0; i < g->nRows; i++) {
         for(int j = 0; j < g->nCols; j++) {
 	    setChar(g,i,j,chVal);
+	    g->cell[i * g->nCols + j].bg.color = 0;
+	    g->cell[i * g->nCols + j].bg.len = 0;
 	}
     }
 }
@@ -130,24 +135,25 @@ void handler(int code) {
     RESIZE = 1;
 }
 
-grid *resizeGrid(grid *gOld, struct termConfig *E) {
-    free(gOld);
+grid *resizeGrid(grid *g, struct termConfig *E) {
+    free(g);
     initTerm(E);
-    fflush(stdout);
-    grid *g = initGrid(E->nCols, E->nRows);
+    g = initGrid(E->nCols, E->nRows);
     setAllGridCells(g, ' '); 
     return g;
 }
-
+//3899
 void writeToGrid(grid *g) {
     setChar(g,10,10,'A');
+    setBgCl(g,10,10, RED);
     setChar(g,10,11,'B');
+    setBgCl(g,10,11, BLUE);	
     setChar(g,10,12,'C');    
 }
 
 void setDefaultColors(enum colors bg, enum colors fg) {
-    printf(colors[fg].fg);
-    printf(colors[bg].bg);
+    printf("%s",colors[fg].fg);
+    printf("%s",colors[bg].bg);
     fflush(stdout);
 }
 
@@ -161,7 +167,7 @@ int main(void) {
     sa.sa_flags = SA_RESTART; // Restart interrupted sys-calls.
     sa.sa_handler = handler;
     if (sigaction(SIGWINCH, &sa, NULL) == -1) {
-	perror("sigaction");
+	perror("sigaction"); 
     }
     
     struct termConfig E;

@@ -2,18 +2,23 @@
 
 volatile sig_atomic_t RESIZE = 0;
 
+
+
 struct termConfig {
     int nRows;
     int nCols;
     struct termios orig_termios;
 };
 
-void initTerm(struct termConfig *E) {
-    E->nRows = 0;
-    E->nCols = 0;
-    if (getWindowSize(E) == -1) {
-	die("getWindowsSize");
+int getWindowSize(struct termConfig *E) {
+    struct winsize ws;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+	return -1; //TODO:(handle this error)
+    } else {
+    	E->nCols = ws.ws_col;
+	E->nRows = ws.ws_row;
     }
+    return 0;
 }
 
 void die(const char *s) {
@@ -23,8 +28,16 @@ void die(const char *s) {
     exit(1);
 }
 
+void initTerm(struct termConfig *E) {
+    E->nRows = 0;
+    E->nCols = 0;
+    if (getWindowSize(E) == -1) {
+	die("getWindowsSize");
+    }
+}
+
 void disableRawMode(struct termConfig E) {
-  if (tcsetattr(STDIN_FILENO, TCSAFLUSH,&E.orig_termios ) == -1) {
+  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios ) == -1) {
 	die("tcgetattr");
     }
 }
@@ -33,7 +46,9 @@ void enableRawMode(struct termConfig E) {
     if (tcgetattr(STDIN_FILENO,&E.orig_termios) == -1) {
       die("tcgetaddr");
     }
-    atexit(disableRawMode);
+
+    //TODO:(ari) DisableRawMode requires access to E, but atexit, only call void func(void) functions.
+    atexit(disableRawMode); 
     struct termios raw = E.orig_termios;
 
     raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -65,13 +80,3 @@ int getCursorPostion(int *rows, int *cols) {
     return 0;
 }
 
-int getWindowSize(struct termConfig *E) {
-    struct winsize ws;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
-	return -1; //TODO:(handle this error)
-    } else {
-    	E->nCols = ws.ws_col;
-	E->nRows = ws.ws_row;
-    }
-    return 0;
-}

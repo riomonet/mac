@@ -21,12 +21,12 @@ struct color {
 
 struct color colors[] = {
     [BLACK]   = { .name = "BLACK",   .fg = "\033[30m", .fgLen = 5,  .bg = "\033[40m", .bgLen = 5 },
-    [RED]     = { .name = "RED",     .fg = "\x1b[38;2;170;0;0m",.fgLen = 5, .bg = "\x1b[48;2;170;0;0m", .bgLen = 15},
-    [GREEN]   = { .name = "GREEN",   .fg = "\x1b[38;2;0;170;0m", .fgLen = 5,.bg = "\x1b[48;2;0;170;0m", .bgLen = 15},
-    [BROWN]   = { .name = "BROWN",   .fg = "\x1b[38;2;170;85;0m", .fgLen = 5,.bg = "\x1b[48;2;170;85;0m", .bgLen = 16 },
-    [BLUE]    = { .name = "BLUE",    .fg = "\x1b[38;2;0;0;170m", .fgLen = 5,.bg = "\x1b[48;2;0;0;170m", .bgLen = 15 },
-    [MAGENTA] = { .name = "MAGENTA", .fg = "\x1b[38;2;255;85;255m", .fgLen = 5,.bg = "\x1b[48;2;255;85;255m", .bgLen = 18 },
-    [CYAN]    = { .name = "CYAN",    .fg = "\x1b[38;2;85;255;255m", .fgLen = 5,.bg = "\x1b[48;2;85;255;255m", .bgLen = 18 },
+    [RED]     = { .name = "RED",     .fg = "\x1b[38;2;170;0;0m",.fgLen = 15, .bg = "\x1b[48;2;170;0;0m", .bgLen = 15},
+    [GREEN]   = { .name = "GREEN",   .fg = "\x1b[38;2;0;170;0m", .fgLen = 15,.bg = "\x1b[48;2;0;170;0m", .bgLen = 15},
+    [BROWN]   = { .name = "BROWN",   .fg = "\x1b[38;2;170;85;0m", .fgLen = 16,.bg = "\x1b[48;2;170;85;0m", .bgLen = 16 },
+    [BLUE]    = { .name = "BLUE",    .fg = "\x1b[38;2;0;0;170m", .fgLen = 15,.bg = "\x1b[48;2;0;0;170m", .bgLen = 15 },
+    [MAGENTA] = { .name = "MAGENTA", .fg = "\x1b[38;2;255;85;255m", .fgLen = 18,.bg = "\x1b[48;2;255;85;255m", .bgLen = 18 },
+    [CYAN]    = { .name = "CYAN",    .fg = "\x1b[38;2;85;255;255m", .fgLen = 18,.bg = "\x1b[48;2;85;255;255m", .bgLen = 18 },
     [WHITE]   = { .name = "WHITE",   .fg = "\033[97m", .fgLen = 5, .bg = "\033[107m", .bgLen = 6 }
 };
 
