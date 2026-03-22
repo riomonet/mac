@@ -10,6 +10,7 @@
 #include "lookup_tables.h"
 #include "term_interop.c"
 
+
 typedef struct cell {
     size_t nBytes;
     char ch;
