@@ -12,9 +12,8 @@
 #include "lookup_tables.h"
 #include "term_interop.c"
 
-
-enum colors def_bg;
-enum colors def_fg;
+static enum colors DEF_BG;
+static enum colors DEF_FG;
 
 typedef struct cell {
     char ch;
@@ -47,9 +46,10 @@ typedef struct {
     char data[];
 } frameBuffer;
 
-void blitFrameBuffer(frameBuffer *frameBuf) {
+void bltFrameBuffer(frameBuffer *frameBuf) {
     write(STDOUT_FILENO,frameBuf->data,frameBuf->len);
 }
+
 void setFgCl(grid *g, int y, int x, enum colors color) {
     int idx = y * g->nCols + x;
     if (x < g->nCols && y < g->nRows) {
@@ -71,6 +71,11 @@ void setChar(grid *g, int y, int x, char ch) {
 	g->cell[y * g->nCols + x].ch = ch;
     }
 }
+
+int xCenter(grid *g, int strlen) {
+    return (g->nCols - strlen)/2;
+}
+
 
 /* void setAttb(grid *g, int y, int x) { */
 /*      int idx = y * g->nCols + x; */
@@ -116,15 +121,34 @@ void serializeGrid(grid *g, frameBuffer *fb) {
     }
 } 
 
+/* Allocates memory one time at the beginning for the framebuffer.
+ * This memory block is reused every frame.*/
 frameBuffer *initFrameBuffer(void) {
     frameBuffer *fb = malloc(sizeof(*fb) + (1024 * 1024));
     return fb;
+}
+
+/* Initialized the grid position of every 'cell' in 'grid'.
+ * The escape sequence is written out for every cell prior to the
+ * color, or character to be. */
+void setCursorPostions(grid *g) {
+    for(int y = 0; y < g->nRows; y++) {
+        for(int x = 0; x < g->nCols; x++) {
+	    cell *curCell = &(g->cell[y * g->nCols + x]);
+	    char tmp[32];
+	    snprintf(tmp, 32,"\x1b[%d;%dH",y+1,x+1);
+	    int len = strlen(tmp);
+	    memcpy(curCell->cursor.pos, tmp, len);
+	    curCell->cursor.seqLen = len;
+	}
+    }
 }
 
 grid *initGrid(int nCols, int nRows) {
     grid *g = malloc(sizeof(*g) + (sizeof(cell) * nCols * nRows));
     g->nRows = nRows;
     g->nCols= nCols;
+    setCursorPostions(g);
     return g;
 }
 
@@ -141,29 +165,13 @@ void clearAllGridCells(grid *g, char chVal) {
     for(int i = 0; i < g->nRows; i++) {
         for(int j = 0; j < g->nCols; j++) {
 	    setChar(g,i,j,chVal);
-	    setFgCl(g,i,j,def_fg);
-	    setBgCl(g,i,j,def_bg);
-	    //g->cell[i * g->nCols + j].bg.color = 0;
-	    // g->cell[i * g->nCols + j].bg.len = 0;
-	    // g->cell[i * g->nCols + j].fg.color = 0;
-	    //g->cell[i * g->nCols + j].fg.len = 0;
+	    setFgCl(g,i,j,DEF_FG);
+	    setBgCl(g,i,j,DEF_BG);
 	}
     }
 }
 
-void setCursorPostions(grid *g) {
-    for(int y = 0; y < g->nRows; y++) {
-        for(int x = 0; x < g->nCols; x++) {
-	    cell *curCell = &(g->cell[y * g->nCols + x]);
-	    char tmp[32];
-	    snprintf(tmp, 32,"\x1b[%d;%dH",y+1,x+1);
-	    int len = strlen(tmp);
-	    memcpy(curCell->cursor.pos, tmp, len);
-	    curCell->cursor.seqLen = len;
-	}
-    }
-}
-
+/* Callback for 'SIGWINCH' signal */
 void handler(int code) {
     if (code) RESIZE = 1;
 }
@@ -173,49 +181,46 @@ grid *resizeGrid(grid *g, struct termConfig *E) {
     initTerm(E);
     g = initGrid(E->nCols, E->nRows);
     clearAllGridCells(g, ' ');
-    setCursorPostions(g);
     return g;
 }
 
-
 /* Typesets 'txt' string horizontally to pos y, x on the terminal. With
- * Bg color bg and foreground color fg, an additional cell strlen(txt) + 1
- * is set to reset colors to default */
-void hText(grid *g, char *txt, int y, int x, enum colors bg, enum colors fg) {
+ * Bg color bg and foreground color fg */
+void hText(grid *g, char  *txt, int y, int x, enum colors bg, enum colors fg) {
     size_t len = strlen(txt);
     for (int i = 0; i < (int)strlen(txt); i++) {
 	setChar(g,y,x+i,txt[i]);
 	if (bg != DEFAULT) {
 	    setBgCl(g,y,x+i,bg);
-	    setBgCl(g, y, x + len , def_bg);
+	    setBgCl(g, y, x + len , DEF_BG);
 	}
 	if (fg != DEFAULT) {
 	    setFgCl(g,y,x+i,fg);
-	    setFgCl(g, y, x + len, def_fg);
+	    setFgCl(g, y, x + len, DEF_FG);
 	}
     }
 }
 
-void writeToGrid(grid *g) {
-    hText(g, " MARINA 59 | LOGIN ", 20, 10, BLACK, RED);
+void writeToGrid(grid *g, int(*screen)(grid *g)) {
+    screen(g);
 }
 
 void setDefaultColors(enum colors bg, enum colors fg) {
-    def_bg = bg;
-    def_fg = fg;
-    char *_fg = colors[def_fg].fg;
-    char *_bg = colors[def_bg].bg;
-    printf("%s",_fg);
-    printf("%s",_bg);
-    fflush(stdout);
+    DEF_BG = bg;
+    DEF_FG = fg;
 }
 
-int main(void) {
-    term_send_cmd(ALT_BUFFER);
-    term_send_cmd(CLEAR_SCREEN);
-    setDefaultColors(BLUE,WHITE);
+/* ============================== SCREENS SECTIONS  ======================================== */
+int loginScreen(grid *g) {
+    char *title = "MARINA 59 | LOGIN";
+    hText(g, "MARINA 59 | LOGIN", 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT);
+    hText(g, "Username",16,xCenter(g,strlen("Username")),DEFAULT,DEFAULT);
+    return 1;
+}
 
-    /* Set up signal handling for change of window size. */
+
+int main(void) {
+    /* ============================== SIGNAL HANDLING  ======================================== */
     struct sigaction sa = {0};
     sigemptyset(&sa.sa_mask);    
     sa.sa_flags = SA_RESTART; // Restart interrupted sys-calls.
@@ -223,29 +228,28 @@ int main(void) {
     if (sigaction(SIGWINCH, &sa, NULL) == -1) {
 	perror("sigaction"); 
     }
-
-    //    struct termConfig E;
+    
+    term_send_cmd(ALT_BUFFER);
+    term_send_cmd(CLEAR_SCREEN);
+    term_send_cmd(HIDE_CURSOR);
+    setDefaultColors(BLUE,WHITE);
+    
     initTerm();
     grid *g = initGrid(E.nCols, E.nRows);
-    setCursorPostions(g);
     frameBuffer *fb = initFrameBuffer();
     clearAllGridCells(g,' ');
-
-    /* temp */
-    //    writeToGrid(g);
-
-    term_send_cmd(HIDE_CURSOR);
+/* ============================== MAIN GAME LOOP  ======================================== */
     while(1) {
 	if (RESIZE) {
 	    RESIZE = 0;
 	    g = resizeGrid(g, &E);
 	}
-	writeToGrid(g);
+	// TODO: switch statement here to dispatch screens
+	writeToGrid(g, loginScreen);
 	serializeGrid(g,fb);
-	blitFrameBuffer(fb);
+	bltFrameBuffer(fb);
 	term_send_pos(1,1);
     }
-
 /* ============================== CLEAN UP ======================================== */
     term_send_cmd(ORIG_BUFFER);
     term_send_cmd(SHOW_CURSOR);
