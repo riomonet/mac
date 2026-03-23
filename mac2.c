@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -11,6 +12,9 @@
 #include "lookup_tables.h"
 #include "term_interop.c"
 
+
+enum colors def_bg;
+enum colors def_fg;
 
 typedef struct cell {
     char ch;
@@ -137,10 +141,12 @@ void clearAllGridCells(grid *g, char chVal) {
     for(int i = 0; i < g->nRows; i++) {
         for(int j = 0; j < g->nCols; j++) {
 	    setChar(g,i,j,chVal);
-	    g->cell[i * g->nCols + j].bg.color = 0;
-	    g->cell[i * g->nCols + j].bg.len = 0;
-	    g->cell[i * g->nCols + j].fg.color = 0;
-	    g->cell[i * g->nCols + j].fg.len = 0;
+	    setFgCl(g,i,j,def_fg);
+	    setBgCl(g,i,j,def_bg);
+	    //g->cell[i * g->nCols + j].bg.color = 0;
+	    // g->cell[i * g->nCols + j].bg.len = 0;
+	    // g->cell[i * g->nCols + j].fg.color = 0;
+	    //g->cell[i * g->nCols + j].fg.len = 0;
 	}
     }
 }
@@ -171,26 +177,41 @@ grid *resizeGrid(grid *g, struct termConfig *E) {
     return g;
 }
 
+
+/* Typesets 'txt' string horizontally to pos y, x on the terminal. With
+ * Bg color bg and foreground color fg, an additional cell strlen(txt) + 1
+ * is set to reset colors to default */
+void hText(grid *g, char *txt, int y, int x, enum colors bg, enum colors fg) {
+    size_t len = strlen(txt);
+    for (int i = 0; i < (int)strlen(txt); i++) {
+	setChar(g,y,x+i,txt[i]);
+	if (bg != DEFAULT) {
+	    setBgCl(g,y,x+i,bg);
+	    setBgCl(g, y, x + len , def_bg);
+	}
+	if (fg != DEFAULT) {
+	    setFgCl(g,y,x+i,fg);
+	    setFgCl(g, y, x + len, def_fg);
+	}
+    }
+}
+
 void writeToGrid(grid *g) {
-    setChar(g,10,59,'A');
-    setBgCl(g,10,10, RED);
-    setChar(g,100,11,'B');
-    setBgCl(g,10,11, GREEN);
-    setChar(g,10,12,'C');
-    setBgCl(g,10,12, CYAN);
-    setFgCl(g,10,12,WHITE);
-    setBgCl(g,10,13, BLUE);
+    hText(g, " MARINA 59 | LOGIN ", 20, 10, BLACK, RED);
 }
 
 void setDefaultColors(enum colors bg, enum colors fg) {
-    printf("%s",colors[fg].fg);
-    printf("%s",colors[bg].bg);
+    def_bg = bg;
+    def_fg = fg;
+    char *_fg = colors[def_fg].fg;
+    char *_bg = colors[def_bg].bg;
+    printf("%s",_fg);
+    printf("%s",_bg);
     fflush(stdout);
 }
 
 int main(void) {
-    printf("\033[?1049h");
-    fflush(stdout);
+    term_send_cmd(ALT_BUFFER);
     term_send_cmd(CLEAR_SCREEN);
     setDefaultColors(BLUE,WHITE);
 
@@ -202,7 +223,7 @@ int main(void) {
     if (sigaction(SIGWINCH, &sa, NULL) == -1) {
 	perror("sigaction"); 
     }
-    
+
     //    struct termConfig E;
     initTerm();
     grid *g = initGrid(E.nCols, E.nRows);
@@ -211,7 +232,7 @@ int main(void) {
     clearAllGridCells(g,' ');
 
     /* temp */
-    writeToGrid(g);
+    //    writeToGrid(g);
 
     term_send_cmd(HIDE_CURSOR);
     while(1) {
@@ -226,6 +247,7 @@ int main(void) {
     }
 
 /* ============================== CLEAN UP ======================================== */
+    term_send_cmd(ORIG_BUFFER);
     term_send_cmd(SHOW_CURSOR);
     term_send_cmd(RESET);
     return 0;
