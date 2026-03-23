@@ -48,14 +48,18 @@ void blitFrameBuffer(frameBuffer *frameBuf) {
 }
 void setFgCl(grid *g, int y, int x, enum colors color) {
     int idx = y * g->nCols + x;
-    g->cell[idx].fg.color = colors[color].fg;
-    g->cell[idx].fg.len = colors[color].fgLen;
+    if (x < g->nCols && y < g->nRows) {
+	g->cell[idx].fg.color = colors[color].fg;
+	g->cell[idx].fg.len = colors[color].fgLen;
+    }
 }
 
 void setBgCl(grid *g, int y, int x, enum colors color) {
     int idx = y * g->nCols + x;
-    g->cell[idx].bg.color = colors[color].bg;
-    g->cell[idx].bg.len = colors[color].bgLen;
+    if (x < g->nCols && y < g->nRows) {
+	g->cell[idx].bg.color = colors[color].bg;
+	g->cell[idx].bg.len = colors[color].bgLen;
+    }
 }
 
 void setChar(grid *g, int y, int x, char ch) {
@@ -146,7 +150,7 @@ void setCursorPostions(grid *g) {
         for(int x = 0; x < g->nCols; x++) {
 	    cell *curCell = &(g->cell[y * g->nCols + x]);
 	    char tmp[32];
-	    snprintf(tmp, 32,"\x1b[%d;%dH",y,x);
+	    snprintf(tmp, 32,"\x1b[%d;%dH",y+1,x+1);
 	    int len = strlen(tmp);
 	    memcpy(curCell->cursor.pos, tmp, len);
 	    curCell->cursor.seqLen = len;
@@ -168,15 +172,14 @@ grid *resizeGrid(grid *g, struct termConfig *E) {
 }
 
 void writeToGrid(grid *g) {
-    setChar(g,10,90,'A');
-    /* setBgCl(g,90,10, RED); */
-    /* setChar(g,90,11,'B'); */
-    /* setBgCl(g,90,11, GREEN);	 */
-    /* setChar(g,90,12,'C'); */
-    /* setBgCl(g,90,12, CYAN); */
-    /* setFgCl(g,90,12,BLACK); */
-    /* setBgCl(g,90,13, BLACK); */
-
+    setChar(g,10,59,'A');
+    setBgCl(g,10,10, RED);
+    setChar(g,100,11,'B');
+    setBgCl(g,10,11, GREEN);
+    setChar(g,10,12,'C');
+    setBgCl(g,10,12, CYAN);
+    setFgCl(g,10,12,WHITE);
+    setBgCl(g,10,13, BLUE);
 }
 
 void setDefaultColors(enum colors bg, enum colors fg) {
