@@ -82,7 +82,8 @@ enum attributes {
     BLINKING,
     INVERSE,
     HIDDEN,
-    STRIKE
+    STRIKE,
+    RESET
 };
 
 struct attr_obj attribute[] = {
@@ -94,6 +95,7 @@ struct attr_obj attribute[] = {
     [INVERSE] = {.name = "INVERSE", . seqOn = "\x1b[7m", .seqOff = "\x1b[27m",.len = 4},
     [HIDDEN] =  {.name = "HIDDEN", .seqOn = "\x1b[8m", .seqOff = "\x1b[28m",.len = 4},
     [STRIKE] = {.name = "STRIKE", .seqOn = "\x1b[9m", .seqOff = "\x1b[29m",.len = 4},
+    [RESET] = {.name = "RESET", .seqOn = "\x1b[0m", .len = 4},
     [NONE] =  {.name = "NONE", .seqOn = "", .seqOff = "",.len = 0}
 };
 

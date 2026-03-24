@@ -40,16 +40,11 @@ void setChar(grid *g, int y, int x, char ch) {
     }
 }
 
-void setAttribute(grid *g, int y, int x, enum attributes attr, int state) {
+void setAttribute(grid *g, int y, int x, enum attributes attr) {
     int idx = y * g->nCols + x;
-    if (x < g->nCols && y < g->nRows) {
-        if (state) {
-            g->cell[idx].attributes.val = attribute[attr].seqOn;
-            g->cell[idx].attributes.len = attribute[attr].len;
-        } else {
-            g->cell[idx].attributes.val = attribute[attr].seqOff;
-            g->cell[idx].attributes.len = attribute[attr].len + 1;
-        }
+    if (x <  g->nCols && y < g->nRows) {
+      g->cell[idx].attributes.val = attribute[attr].seqOn;
+      g->cell[idx].attributes.len = attribute[attr].len;
     }
 }
 
@@ -70,7 +65,7 @@ size_t countBytes(grid *g) {
 	sum += g->cell[i].cursor.seqLen;
         sum += g->cell[i].fg.len;
         sum += g->cell[i].bg.len;
-        //sum += g->cell[i].attributes.len;
+        sum += g->cell[i].attributes.len;
     }
     return sum;
 }
@@ -89,6 +84,10 @@ void serializeGrid(grid *g, frameBuffer *fb) {
             cell curCell = g->cell[i * g->nCols + j];
             memcpy(fbPtr, curCell.cursor.pos, curCell.cursor.seqLen);
             fbPtr+=curCell.cursor.seqLen;
+            if (curCell.attributes.len > 0) {
+                memcpy(fbPtr, curCell.attributes.val, curCell.attributes.len);
+                fbPtr+=curCell.attributes.len;
+            }
             if (curCell.bg.len > 0) {
                 memcpy(fbPtr, curCell.bg.color, curCell.bg.len);
                 fbPtr+=curCell.bg.len;
@@ -97,10 +96,6 @@ void serializeGrid(grid *g, frameBuffer *fb) {
                 memcpy(fbPtr, curCell.fg.color, curCell.fg.len);
                 fbPtr+=curCell.fg.len;
             }
-            if (curCell.attributes.len > 0) {
-                memcpy(fbPtr, curCell.attributes.val, curCell.attributes.len);
-                fbPtr+=curCell.attributes.len;
-           }
             *fbPtr++ = curCell.ch;
         }
     }
@@ -149,10 +144,10 @@ void term_send_pos(int y, int x) {
 void clearAllGridCells(grid *g, char chVal) {
     for(int i = 0; i < g->nRows; i++) {
         for(int j = 0; j < g->nCols; j++) {
-            setChar(g,i,j,chVal);
-            setFgCl(g,i,j,DEF_FG);
-            setBgCl(g,i,j,DEF_BG);
-            setAttribute(g,i,j,NONE,1);
+          setChar(g,i,j,chVal);
+          setFgCl(g,i,j,DEF_FG);
+          setBgCl(g,i,j,DEF_BG);
+          setAttribute(g,i,j,RESET);
         }
     }
 }
@@ -183,20 +178,23 @@ void hText(grid *g, char  *txt, int y, int x,
         if (fg) {
             setFgCl(g,y,x+i,fg);
         }
-    }
-    if (attr) {
-        setAttribute(g, y, x, attr, 1);
-        setAttribute(g,y, x + i + 1, attr, 0);
+        if (attr) {
+          setAttribute(g, y, x + i, attr);
+        }
     }
 }
 
 int writeToGrid(grid *g, int(*screen)(grid *g)) {
-    return screen(g);
+  return screen(g);
 }
 
 void setDefaultColors(enum colors bg, enum colors fg) {
     DEF_BG = bg;
     DEF_FG = fg;
+    //TODO generalize from decimal rgb to hex rgb
+    printf("\x1b]11;rgb:00/00/aa\e\\"); 
+    fflush(stdout);
+
 }
 
 int main(void) {
