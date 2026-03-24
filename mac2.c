@@ -194,7 +194,6 @@ void setDefaultColors(enum colors bg, enum colors fg) {
     //TODO generalize from decimal rgb to hex rgb
     printf("\x1b]11;rgb:00/00/aa\e\\"); 
     fflush(stdout);
-
 }
 
 int main(void) {
