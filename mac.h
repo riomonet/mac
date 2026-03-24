@@ -5,7 +5,7 @@ typedef struct cell {
     char ch;
     struct {
         size_t seqLen;
-        char pos[32];
+        char pos[32]; //TODO make this 16 bytes. 
     } cursor;
     struct {
         size_t len;
@@ -49,8 +49,7 @@ void setFgCl(grid*, int, int, enum colors);
 void setBgCl(grid*, int, int, enum colors);
 void setChar(grid*, int, int, char);
 void underline(grid*, int, int, int, enum colors, enum colors);
-void hText(grid*, char*, int, int, enum colors, enum colors);
-
+void hText(grid*, char*, int, int, enum colors, enum colors, enum attributes);
 void handler(int);
 void setDefaultColors(enum colors, enum colors);
 void term_send_pos(int, int);

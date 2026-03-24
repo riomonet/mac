@@ -1,5 +1,6 @@
 
 enum colors {
+    DEFAULT,
     BLACK,
     RED,
     GREEN,
@@ -7,8 +8,7 @@ enum colors {
     BLUE,
     MAGENTA,
     CYAN,
-    WHITE,
-    DEFAULT
+    WHITE
 };
 
 
@@ -38,7 +38,7 @@ enum term_commands {
     HIDE_CURSOR,
     ALT_BUFFER,
     ORIG_BUFFER,
-    RESET
+    TERM_RESET
 };
     
 struct term_cmd_obj {
@@ -53,7 +53,7 @@ struct term_cmd_obj term_cmds[] = {
     [HIDE_CURSOR] = { .name = "HIDE_CURSOR", .escape_seq = "\x1b[?25l", .len = 6 },
     [ALT_BUFFER] = { .name = "ALT_BUFFER", .escape_seq = "\x1b[?1049h", .len = 8 },
     [ORIG_BUFFER] = { .name = "ORIG_BUFFER", .escape_seq = "\x1b[?1049l", .len = 8 },
-    [RESET] = { .name = "RESET", .escape_seq = "\x1b[0m", .len = 4 },
+    [TERM_RESET] = { .name = "RESET", .escape_seq = "\x1b[0m", .len = 4 }
 };
 
 void term_send_cmd(enum term_commands cmd) {
@@ -68,11 +68,13 @@ void term_send_write(char *seq, int len) {
 
 struct attr_obj {
     char *name;
-    char *seq;
+    char *seqOn;
+    char *seqOff;
     uint8_t len;
 };
 
 enum attributes {
+    NONE,
     BOLD,
     FAINT,
     ITALIC,
@@ -84,13 +86,14 @@ enum attributes {
 };
 
 struct attr_obj attribute[] = {
-    [BOLD] = {.name = "BOLD", .seq = "\x1b[1m", .len =4 },
-    [FAINT] = {.name = "FAINT", .seq = "\x1b[2m", .len =4},
-    [ITALIC] = {.name = "ITALIC", .seq = "\x1b[3m", .len =4 },
-    [UNDERLINE] = {.name = "UNDERLINE", .seq = "\x1b[4m", .len = 4 },
-    [BLINKING] = {.name = "BLINKING", .seq = "\x1b[5m", .len = 4},
-    [INVERSE] = {.name = "INVERSE", . seq = "\x1b[7m", .len = 4},
-    [HIDDEN] =  {.name = "HIDDEN", .seq = "\x1b[8m", .len = 4},
-    [STRIKE] = {.name = "STRIKE", .seq = "\x1b[9m", .len = 4}
+    [BOLD] = {.name = "BOLD", .seqOn = "\x1b[1m", .seqOff = "\x1b[21m", .len =4 },
+    [FAINT] = {.name = "FAINT", .seqOn = "\x1b[2m",.seqOff = "\x1b[22m", .len =4},
+    [ITALIC] = {.name = "ITALIC", .seqOn = "\x1b[3m",.seqOff = "\x1b[23m", .len =4 },
+    [UNDERLINE] = {.name = "UNDERLINE", .seqOn = "\x1b[4m", .seqOff = "\x1b[24m",.len = 4 },
+    [BLINKING] = {.name = "BLINKING", .seqOn = "\x1b[5m", .seqOff = "\x1b[25m",.len = 4},
+    [INVERSE] = {.name = "INVERSE", . seqOn = "\x1b[7m", .seqOff = "\x1b[27m",.len = 4},
+    [HIDDEN] =  {.name = "HIDDEN", .seqOn = "\x1b[8m", .seqOff = "\x1b[28m",.len = 4},
+    [STRIKE] = {.name = "STRIKE", .seqOn = "\x1b[9m", .seqOff = "\x1b[29m",.len = 4},
+    [NONE] =  {.name = "NONE", .seqOn = "", .seqOff = "",.len = 0}
 };
 

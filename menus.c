@@ -29,11 +29,12 @@ inputField createInputField(char *label) {
 
 
 /* ============================== SCREENS SECTIONS  ======================================== */
+/* loginForm  */
 int loginScreen(grid *g) {
     //    char *title = "MARINA 59 | Sign On";
     inputField user = createInputField("User");
     //hText(g, title, 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT);
-    hText(g, user.label, 16 , 20 , DEFAULT, DEFAULT);
+    hText(g, user.label, 16 , 20 , DEFAULT, DEFAULT, UNDERLINE);
     //    hText(g, password, 17, xThird(g,strlen(password)), DEFAULT, DEFAULT);
     return 1;
 }
