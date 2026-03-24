@@ -31,6 +31,7 @@ struct color colors[] = {
     [WHITE]   = { .name = "WHITE",   .fg = "\033[97m", .fgLen = 5, .bg = "\033[107m", .bgLen = 6 }
 };
 
+
 enum term_commands {
     CLEAR_SCREEN,
     SHOW_CURSOR,
@@ -65,16 +66,31 @@ void term_send_write(char *seq, int len) {
     write(STDOUT_FILENO, seq, len);
 }
 
-/* void term_send_attrib(attributes attrib) { */
-/*     switch(attrib) { */
-/*     case reset: printf("\x1b[0m"); fflush(stdout); return; */
-/*     case bold: printf("\x1b[1m"); fflush(stdout); return; */
-/*     case underline: printf("\x1b[4m"); fflush(stdout); return; */
-/*     case blink: printf("\x1b[5m"); fflush(stdout); return; */
-/*     case reverse: printf("\x1b[7m"); fflush(stdout); return; */
-/*     default: */
-/*     } */
-/* } */
+struct attr_obj {
+    char *name;
+    char *seq;
+    uint8_t len;
+};
 
+enum attributes {
+    BOLD,
+    FAINT,
+    ITALIC,
+    UNDERLINE,
+    BLINKING,
+    INVERSE,
+    HIDDEN,
+    STRIKE
+};
 
+struct attr_obj attribute[] = {
+    [BOLD] = {.name = "BOLD", .seq = "\x1b[1m", .len =4 },
+    [FAINT] = {.name = "FAINT", .seq = "\x1b[2m", .len =4},
+    [ITALIC] = {.name = "ITALIC", .seq = "\x1b[3m", .len =4 },
+    [UNDERLINE] = {.name = "UNDERLINE", .seq = "\x1b[4m", .len = 4 },
+    [BLINKING] = {.name = "BLINKING", .seq = "\x1b[5m", .len = 4},
+    [INVERSE] = {.name = "INVERSE", . seq = "\x1b[7m", .len = 4},
+    [HIDDEN] =  {.name = "HIDDEN", .seq = "\x1b[8m", .len = 4},
+    [STRIKE] = {.name = "STRIKE", .seq = "\x1b[9m", .len = 4}
+};
 

@@ -76,6 +76,9 @@ int xCenter(grid *g, int strlen) {
     return (g->nCols - strlen)/2;
 }
 
+int xThird(grid *g, int strlen) {
+    return (g->nCols - strlen)/3;
+}
 
 /* void setAttb(grid *g, int y, int x) { */
 /*      int idx = y * g->nCols + x; */
@@ -201,8 +204,9 @@ void hText(grid *g, char  *txt, int y, int x, enum colors bg, enum colors fg) {
     }
 }
 
-void writeToGrid(grid *g, int(*screen)(grid *g)) {
-    screen(g);
+
+int writeToGrid(grid *g, int(*screen)(grid *g)) {
+    return screen(g);
 }
 
 void setDefaultColors(enum colors bg, enum colors fg) {
@@ -210,14 +214,30 @@ void setDefaultColors(enum colors bg, enum colors fg) {
     DEF_FG = fg;
 }
 
+void underline(grid *g, int y, int x, int len, enum colors bg, enum colors fg) {
+    
+
+}
+
 /* ============================== SCREENS SECTIONS  ======================================== */
 int loginScreen(grid *g) {
-    char *title = "MARINA 59 | LOGIN";
-    hText(g, "MARINA 59 | LOGIN", 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT);
-    hText(g, "Username",16,xCenter(g,strlen("Username")),DEFAULT,DEFAULT);
+    char *title = "MARINA 59 | Sign On";
+    char *user =     "User   . . . . . . . . . .";
+    char *password = "Password   . . . . . . . .";
+	
+    hText(g, title, 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT);
+    hText(g, user, 16 , xThird(g,strlen(user)) , DEFAULT, DEFAULT);
+    hText(g, password, 17, xThird(g,strlen(password)), DEFAULT, DEFAULT);
     return 1;
 }
 
+enum SCREENS {
+    LOGIN,
+    MAIN_MENU,
+    ADD_USER,
+    VIEW_LIVE_LOGS,
+    SEARCH_LOGS
+};
 
 int main(void) {
     /* ============================== SIGNAL HANDLING  ======================================== */
