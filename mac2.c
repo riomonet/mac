@@ -11,40 +11,8 @@
 #include <assert.h>
 #include "lookup_tables.h"
 #include "term_interop.c"
-
-static enum colors DEF_BG;
-static enum colors DEF_FG;
-
-typedef struct cell {
-    char ch;
-    struct {
-        size_t seqLen;
-        char pos[32];
-    } cursor;
-    struct {
-        size_t len;
-        char *color;
-    } fg;
-    struct {
-        size_t len;
-        char *color;
-    } bg;
-    struct {
-        size_t len;
-        char *val;
-    } attributes;
-} cell;
-
-typedef struct grid {
-    int nCols;
-    int nRows;
-     cell cell[];
-} grid;
-
-typedef struct {
-    int len;
-    char data[];
-} frameBuffer;
+#include "mac.h"
+#include "menus.c"
 
 void bltFrameBuffer(frameBuffer *frameBuf) {
     write(STDOUT_FILENO,frameBuf->data,frameBuf->len);
@@ -214,30 +182,8 @@ void setDefaultColors(enum colors bg, enum colors fg) {
     DEF_FG = fg;
 }
 
-void underline(grid *g, int y, int x, int len, enum colors bg, enum colors fg) {
-    
-
-}
-
-/* ============================== SCREENS SECTIONS  ======================================== */
-int loginScreen(grid *g) {
-    char *title = "MARINA 59 | Sign On";
-    char *user =     "User   . . . . . . . . . .";
-    char *password = "Password   . . . . . . . .";
-	
-    hText(g, title, 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT);
-    hText(g, user, 16 , xThird(g,strlen(user)) , DEFAULT, DEFAULT);
-    hText(g, password, 17, xThird(g,strlen(password)), DEFAULT, DEFAULT);
-    return 1;
-}
-
-enum SCREENS {
-    LOGIN,
-    MAIN_MENU,
-    ADD_USER,
-    VIEW_LIVE_LOGS,
-    SEARCH_LOGS
-};
+/* void underline(grid *g, int y, int x, int len, enum colors bg, enum colors fg) { */
+/* } */
 
 int main(void) {
     /* ============================== SIGNAL HANDLING  ======================================== */
