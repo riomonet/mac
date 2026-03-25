@@ -11,30 +11,33 @@ typedef struct intputField {
     char input[24];
 } inputField;
 
-typedef struct form {
-    char *title;
-    int numFields;
-    inputField fields[];
-} form;
 
 inputField createInputField(char *label) {
     inputField f = {0};
     char frame[] = ". . . . . . . . . . . .";
+    char input[] = "               ";
     memcpy(f.label, frame, strlen(frame));
     memcpy(f.label, label, strlen(label));
+    memcpy(f.input, input, strlen(input));
     return f;
 }
 
+void printForm(grid *g, char *title, inputField *inputs, int len) {
+    hText(g, title, 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT,NONE);
+    int i = 0;
+    while(i  < len) {
+        hText(g, inputs[i].label, 16 + i, 20 , DEFAULT, DEFAULT, NONE);
+        hText(g, inputs[i].input, 16 + i, 40 , DEFAULT, DEFAULT, UNDERLINE);
+        i++;
+    }
+}
 
 
-
-/* ============================== SCREENS SECTIONS  ======================================== */
-/* loginForm  */
 int loginScreen(grid *g) {
-    //    char *title = "MARINA 59 | Sign On";
-    inputField user = createInputField("User");
-    //hText(g, title, 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT);
-    hText(g, user.label, 16 , 20 , DEFAULT, DEFAULT, UNDERLINE);
-    //    hText(g, password, 17, xThird(g,strlen(password)), DEFAULT, DEFAULT);
+    char *title = "MARINA 59 | Sign On";
+    inputField fields[2];
+    fields[0] = createInputField("User");
+    fields[1] = createInputField("Password");
+    printForm(g, title, fields, 2);
     return 1;
 }
