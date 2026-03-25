@@ -22,7 +22,7 @@ inputField createInputField(char *label) {
     return f;
 }
 
-void printForm(grid *g, char *title, inputField *inputs, int len) {
+void printForm(grid *g, char *title, inputField *inputs) {
     hText(g, title, 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT,NONE);
     int x = xCenter(g,strlen(inputs[0].label) + strlen(inputs[0].input));
     hText(g, inputs[0].label, 12, x + 5 , DEFAULT, DEFAULT, BOLD);
@@ -38,7 +38,7 @@ int loginScreen(grid *g) {
     fields[0] = createInputField("User");
     fields[1] = createInputField("Password");
 
-    printForm(g, title, fields, 2);
+    printForm(g, title, fields);
     return 1;
 }
 

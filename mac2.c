@@ -74,30 +74,33 @@ size_t countBytes(grid *g) {
  * sequence directives that specify the foreground color, background
  * color, and any special attributes like reverse or underline for the
  * character val of the cell into a flat 'frameBuffer' to write. */
-void serializeGrid(grid *g, frameBuffer *fb) {
-    size_t nBytes = countBytes(g);
+void serializeGrid(grid *b, grid *f, frameBuffer *fb) {
+    size_t nBytes = countBytes(b);
     fb->len = nBytes;
     char *fbPtr = fb->data;
     memset(fb->data, 0, nBytes);
-    for(int i = 0; i < g->nRows; i++) {
-        for(int j = 0; j < g->nCols; j++) {
-            cell curCell = g->cell[i * g->nCols + j];
-            memcpy(fbPtr, curCell.cursor.pos, curCell.cursor.seqLen);
-            fbPtr+=curCell.cursor.seqLen;
-            if (curCell.attributes.len > 0) {
-                memcpy(fbPtr, curCell.attributes.val, curCell.attributes.len);
-                fbPtr+=curCell.attributes.len;
-            }
-            if (curCell.bg.len > 0) {
-                memcpy(fbPtr, curCell.bg.color, curCell.bg.len);
-                fbPtr+=curCell.bg.len;
-            }
-            if (curCell.fg.len > 0) {
-                memcpy(fbPtr, curCell.fg.color, curCell.fg.len);
-                fbPtr+=curCell.fg.len;
-            }
-            *fbPtr++ = curCell.ch;
-        }
+    for(int i = 0; i < b->nRows; i++) {
+        for(int j = 0; j < b->nCols; j++) {
+	    cell frontCell = f->cell[i * b->nCols + j];
+            cell backCell = b->cell[i * b->nCols + j];
+	    if (memcmp(&frontCell, &backCell, sizeof(frontCell))) {
+		memcpy(fbPtr, backCell.cursor.pos, backCell.cursor.seqLen);
+		fbPtr+=backCell.cursor.seqLen;
+		if (backCell.attributes.len > 0) {
+		    memcpy(fbPtr, backCell.attributes.val, backCell.attributes.len);
+		    fbPtr+=backCell.attributes.len;
+		}
+		if (backCell.bg.len > 0) {
+		    memcpy(fbPtr, backCell.bg.color, backCell.bg.len);
+		    fbPtr+=backCell.bg.len;
+		}
+		if (backCell.fg.len > 0) {
+		    memcpy(fbPtr, backCell.fg.color, backCell.fg.len);
+		    fbPtr+=backCell.fg.len;
+		}
+		*fbPtr++ = backCell.ch;
+	    }
+	}
     }
 } 
 
@@ -191,13 +194,16 @@ int writeToGrid(grid *g, int(*screen)(grid *g)) {
 void setDefaultColors(enum colors bg, enum colors fg) {
     DEF_BG = bg;
     DEF_FG = fg;
-    //TODO generalize from decimal rgb to hex rgb
-    /* printf("\x1b]11;rgb:00/00/aa\e\\");  */
-    /* fflush(stdout); */
+    //    TODO generalize from decimal rgb to hex rgb
+    printf("\x1b]11;rgb:00/00/aa\e\\");
+    fflush(stdout);
 }
+
+
 
 int main(void) {
     /* ============================== SIGNAL HANDLING  ======================================== */
+
     struct sigaction sa = {0};
     sigemptyset(&sa.sa_mask);    
     sa.sa_flags = SA_RESTART; // Restart interrupted sys-calls.
@@ -212,19 +218,27 @@ int main(void) {
     setDefaultColors(BLUE,WHITE);
     
     initTerm();
-    grid *g = initGrid(E.nCols, E.nRows);
+    grid *front = initGrid(E.nCols, E.nRows);
+    grid *back = initGrid(E.nCols, E.nRows);
+    grid *tmp;
+    clearAllGridCells(front,' ');
     frameBuffer *fb = initFrameBuffer();
-    clearAllGridCells(g,' ');
 /* ============================== MAIN GAME LOOP  ======================================== */
     while(1) {
 	if (RESIZE) {
 	    RESIZE = 0;
-	    g = resizeGrid(g, &E);
+	    back = resizeGrid(back, &E);
+	    front = resizeGrid(front, &E);
 	}
+	
 	// TODO: switch statement here to dispatch screens
-	writeToGrid(g, loginScreen);
-	serializeGrid(g,fb);
+	clearAllGridCells(back,' ');
+	writeToGrid(back, loginScreen);
+	serializeGrid(back, front, fb);
 	bltFrameBuffer(fb);
+	tmp = back;
+	back = front;
+	front = tmp;
 	term_send_pos(1,1);
     }
 /* ============================== CLEAN UP ======================================== */

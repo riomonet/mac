@@ -40,7 +40,7 @@ int writeToGrid(grid*, int(*screen)(grid *g));
 size_t countBytes(grid*);
 
 frameBuffer *initFrameBuffer(void);
-void serializeGrid(grid*, frameBuffer*);
+void serializeGrid(grid*, grid*, frameBuffer*);
 void bltFrameBuffer(frameBuffer*);
 
 int xCenter(grid*, int);
