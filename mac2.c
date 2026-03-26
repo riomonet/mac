@@ -14,38 +14,50 @@
 #include "mac.h"
 #include "menus.c"
 
+#define GET_IDX(g, y, x) (((y) * ((g)->nCols)) + (x))
+
+int inFrame(grid *g, int y, int x) {
+  if (x < g->nCols && y < g->nRows){
+    return 1;
+  } else {
+    return 0;
+  }
+}
+  
 void bltFrameBuffer(frameBuffer *frameBuf) {
     write(STDOUT_FILENO,frameBuf->data,frameBuf->len);
 }
 
 void setFgCl(grid *g, int y, int x, enum colors color) {
-    int idx = y * g->nCols + x;
-    if (x < g->nCols && y < g->nRows) {
-        g->cell[idx].fg.color = colors[color].fg;
-        g->cell[idx].fg.len = colors[color].fgLen;
+  if(inFrame(g,y,x)) {
+      int idx = GET_IDX(g,y,x);
+      g->cell[idx].fgColor = color;
     }
 }
 
 void setBgCl(grid *g, int y, int x, enum colors color) {
-    int idx = y * g->nCols + x;
-    if (x < g->nCols && y < g->nRows) {
-        g->cell[idx].bg.color = colors[color].bg;
-        g->cell[idx].bg.len = colors[color].bgLen;
+  if(inFrame(g,y,x)) {
+      int idx = GET_IDX(g,y,x);
+      g->cell[idx].bgColor = color;
     }
 }
 
 void setChar(grid *g, int y, int x, char ch) {
-    if (x < g->nCols && y < g->nRows) {
-        g->cell[y * g->nCols + x].ch = ch;
-    }
+  if(inFrame(g,y,x)) {
+      int idx = GET_IDX(g,y,x);
+      g->cell[idx].char_code = ch;
+  }
+}
+
+int getIdx(grid *g,int y, int x) {
+  return (y * g->nCols + x);
 }
 
 void setAttribute(grid *g, int y, int x, enum attributes attr) {
-    int idx = y * g->nCols + x;
-    if (x <  g->nCols && y < g->nRows) {
-      g->cell[idx].attributes.val = attribute[attr].seqOn;
-      g->cell[idx].attributes.len = attribute[attr].len;
-    }
+  if(inFrame(g,y,x)) {
+      int idx = GET_IDX(g,y,x);
+      g->cell[idx].attr = attr;
+  }
 }
 
 int xCenter(grid *g, int strlen) {
@@ -57,6 +69,7 @@ int xThird(grid *g, int strlen) {
 }
 
 /* Returns the total number of bytes in 'grid'. */
+#if  0
 size_t countBytes(grid *g) {
     int len = g->nCols * g->nRows;
     int sum = 0;
@@ -69,6 +82,17 @@ size_t countBytes(grid *g) {
     }
     return sum;
 }
+#endif
+
+int diffCells(cell *back, cell *front) {
+  return ((back->column != front->column) ||
+          (back->row != front->row) ||
+          (back->char_code != front->char_code) ||
+          (back->fgColor != front->fgColor) ||
+          (back->bgColor != front->bgColor) ||
+          (back->attr != front->attr));
+}
+
 
 /* Flattens 'grid' where each cell contains various string escape
  * sequence directives that specify the foreground color, background
@@ -78,35 +102,42 @@ void serializeGrid(grid *b, grid *f, frameBuffer *fb) {
     char *fbPtr = fb->data;
     memset(fb->data, 0, 1024 * 1024);
     fb->len = 0;
-    for(int i = 0; i < b->nRows; i++) {
-        for(int j = 0; j < b->nCols; j++) {
-            cell *frontCell = &f->cell[i * b->nCols + j];
-            cell *backCell = &b->cell[i * b->nCols + j];
-            if(strcmp(frontCell->cursor.pos, backCell->cursor.pos) != 0) {
-                printf("EAATSHIT");
-                fflush(stdout);
-                memcpy(fbPtr, backCell->cursor.pos, backCell->cursor.seqLen);
-                fbPtr+=backCell->cursor.seqLen;
-            }
-            if (strcmp(backCell->attributes.val, frontCell->attributes.val) != 0) {
-                memcpy(fbPtr, backCell->attributes.val, backCell->attributes.len);
-                fbPtr+=backCell->attributes.len;
-            }
-            if (strcmp(backCell->bg.color, frontCell->bg.color) != 0) {
-                memcpy(fbPtr, backCell->bg.color, backCell->bg.len);
-                fbPtr+=backCell->bg.len;
-            }
-            if (strcmp(backCell->fg.color,frontCell->fg.color) != 0) {
-                memcpy(fbPtr, backCell->fg.color, backCell->fg.len);
-                fbPtr+=backCell->fg.len;
-            }
-            if (backCell->ch != frontCell->ch) {
-                *fbPtr++ = backCell->ch;
-            }
+     for(int y = 0; y < b->nRows; y++) {
+        for(int x = 0; x < b->nCols; x++) {
+          int idx = GET_IDX(b,y,x);
+          cell *back =  &b->cell[idx];
+          cell *front = &f->cell[idx];
+          if (diffCells(back, front))
+              {
+                char pos[32];
+                snprintf(pos,32,"\x1b[%d;%dH",back->column, back->row);
+                int len = strlen(pos);
+                memcpy(fbPtr, pos, len);
+                fbPtr+=len;
+
+                memcpy(fbPtr,
+                       attribute[back->attr].seqOn,
+                       attribute[back->attr].len);
+                fbPtr+=attribute[back->attr].len;
+                
+                memcpy(fbPtr,
+                       colors[back->bgColor].bg,
+                       colors[back->bgColor].bgLen);
+                fbPtr += colors[back->bgColor].bgLen;
+
+                memcpy(fbPtr,
+                       colors[back->bgColor].fg,
+                       colors[back->bgColor].fgLen);
+                fbPtr+=colors[back->bgColor].fgLen;
+                
+                *fbPtr = back->char_code;
+                fbPtr++;
+              }
         }
     }
     fb->len = fbPtr - fb->data;
-} 
+}
+
 
 /* Allocates memory one time at the beginning for the framebuffer.
  * This memory block is reused every frame.*/
@@ -118,24 +149,24 @@ frameBuffer *initFrameBuffer(void) {
 /* Initialized the grid position of every 'cell' in 'grid'.
  * The escape sequence is written out for every cell prior to the
  * color, or character to be. */
-void setCursorPostions(grid *g) {
+void initCellPosition(grid *g) {
     for(int y = 0; y < g->nRows; y++) {
         for(int x = 0; x < g->nCols; x++) {
-            cell *curCell = &(g->cell[y * g->nCols + x]);
-            char tmp[32];
-            snprintf(tmp, 32,"\x1b[%d;%dH",y+1,x+1);
-            int len = strlen(tmp);
-            memcpy(curCell->cursor.pos, tmp, len);
-            curCell->cursor.seqLen = len;
+          
+            /* cell *curCell = &(g->cell[y * g->nCols + x]); */
+            /* char tmp[32]; */
+            /* snprintf(tmp, 32,"\x1b[%d;%dH",y+1,x+1); */
+            /* int len = strlen(tmp); */
+            /* memcpy(curCell->cursor.pos, tmp, len); */
+            /* curCell->cursor.seqLen = len; */
         }
     }
 }
 
-grid *initGrid(int nCols, int nRows) {
+grid *allocateGrid(int nCols, int nRows) {
     grid *g = malloc(sizeof(*g) + (sizeof(cell) * nCols * nRows));
     g->nRows = nRows;
     g->nCols = nCols;
-    setCursorPostions(g);
     return g;
 }
 
@@ -148,16 +179,18 @@ void term_send_pos(int y, int x) {
 /* Sets the char value of each cell in grid 'g' to 'chVal', as
  * as well as the background and foreground colors if the
  * value passed is not NULL */
-void clearAllGridCells(grid *g, char chVal) {
-    for(int i = 0; i < g->nRows; i++) {
-        for(int j = 0; j < g->nCols; j++) {
-          setChar(g,i,j,chVal);
-          setFgCl(g,i,j,DEF_FG);
-          setBgCl(g,i,j,DEF_BG);
-          setAttribute(g,i,j,RESET);
-        }
+void resetGrid(grid *g, char char_code) {
+
+  for(int y = 0; y < g->nRows; y++) {
+    for(int x = 0; x < g->nCols; x++) {
+      setChar(g,y,x,char_code);
+      setFgCl(g,y,x,DEF_FG);
+      setBgCl(g,y,x,DEF_BG);
+      setAttribute(g,y,x,RESET);
+      g->cell[GET_IDX(g,y,x)].column = y + 1;
+      g->cell[GET_IDX(g,y,x)].row = x + 1;
     }
-    setCursorPostions(g);
+  }
 }
 
 /* Callback for 'SIGWINCH' signal */
@@ -169,10 +202,10 @@ void resizeGrid(grid *back, grid *front,  struct termConfig *E) {
     free(back);
     free(front);
     initTerm(E);
-    back  = initGrid(E->nCols, E->nRows);
-    front = initGrid(E->nCols, E->nRows);
-    clearAllGridCells(back, ' ');
-    clearAllGridCells(front, ' ');
+    back  = allocateGrid(E->nCols, E->nRows);
+    front = allocateGrid(E->nCols, E->nRows);
+    resetGrid(back, ' ');
+    resetGrid(front, ' ');
 }
 
 /* Typesets 'txt' string horizontally to pos y, x on the terminal. With
@@ -206,6 +239,14 @@ void setDefaultColors(enum colors bg, enum colors fg) {
     fflush(stdout);
 }
 
+void zeroFront(grid *g) {
+    for(int y = 0; y < g->nRows; y++) {
+      for(int x = 0; x < g->nCols; x++) {
+        setChar(g,y,x,-1);
+      }
+    }
+}
+
 int main(void) {
     /* ============================== SIGNAL HANDLING  ======================================== */
     struct sigaction sa = {0};
@@ -220,34 +261,29 @@ int main(void) {
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(HIDE_CURSOR);
     setDefaultColors(BLUE,WHITE);
-    printf("\033[?7l");  // disable line wrap
-    fflush(stdout);
-    //printf("\033[?7h");  // re-enable line wrap    		
-		
-
     
     initTerm();
-    grid *front = initGrid(E.nCols, E.nRows);
-    grid *back = initGrid(E.nCols, E.nRows);
+    grid *front = allocateGrid(E.nCols, E.nRows);
+    grid *back = allocateGrid(E.nCols, E.nRows);
     grid *tmp;
-    clearAllGridCells(front,' ');
-    clearAllGridCells(back,' ');
+    //    resetGrid(front,' ');
+    zeroFront(front);
+    resetGrid(back,' ');
     frameBuffer *fb = initFrameBuffer();
 /* ============================== MAIN GAME LOOP  ======================================== */
     while(1) {
 	if (RESIZE) {
 	    RESIZE = 0;
 	    free(back);
-	    free(front);
 	    initTerm(E);
-	    back  = initGrid(E.nCols, E.nRows);
-	    front = initGrid(E.nCols, E.nRows);
-	    clearAllGridCells(back, ' ');
-	    clearAllGridCells(front, ' ');
-	    ///////	    resizeGrid(back, front, &E);
+	    back  = allocateGrid(E.nCols, E.nRows);
+	    front = allocateGrid(E.nCols, E.nRows);
+
+        ///////	    resizeGrid(back, front, &E);
 	}
-	
+
 	// TODO: switch statement here to dispatch screens
+    resetGrid(back,' ');
     writeToGrid(back, loginScreen);
 	serializeGrid(back, front, fb);
 	bltFrameBuffer(fb);
@@ -255,8 +291,8 @@ int main(void) {
 	back = front;
 	front = tmp;
 	term_send_pos(1,1);
-	clearAllGridCells(back,' ');
     }
+    
 /* ============================== CLEAN UP ======================================== */
     term_send_cmd(ORIG_BUFFER);
     term_send_cmd(SHOW_CURSOR);

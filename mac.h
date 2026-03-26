@@ -1,11 +1,13 @@
 static enum colors DEF_BG;
 static enum colors DEF_FG;
 
+
+#if 0
 typedef struct cell {
     char ch;
     struct {
         size_t seqLen;
-        char pos[32]; //TODO make this 16 bytes. 
+        char pos[32]; //TODO make this 16 bytes.
     } cursor;
     struct {
         size_t len;
@@ -19,6 +21,16 @@ typedef struct cell {
         size_t len;
         char *val;
     } attributes;
+} cell;
+#endif
+
+typedef struct cell {
+  short column;
+  short row;
+  char char_code;
+  enum colors fgColor;
+  enum colors bgColor;
+  enum attributes attr;
 } cell;
 
 typedef struct grid {

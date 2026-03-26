@@ -22,12 +22,13 @@ inputField createInputField(char *label) {
 }
 
 void printForm(grid *g, char *title, inputField *inputs) {
-    hText(g, title, 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT,NONE);
-    int x = xCenter(g,strlen(inputs[0].label) + strlen(inputs[0].input));
-    hText(g, inputs[0].label, 12, x + 5  , DEFAULT, DEFAULT, BOLD);
-    hText(g, inputs[0].input, 12, x + 29 , DEFAULT, DEFAULT, UNDERLINE);
-    hText(g, inputs[1].label, 14, x + 5  , DEFAULT, DEFAULT, BOLD);
-    hText(g, inputs[1].input, 14, x + 29 , DEFAULT, DEFAULT, UNDERLINE);
+  //     hText(g, title, 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT,NONE);
+    /* int x = xCenter(g,strlen(inputs[0].label) + strlen(inputs[0].input)); */
+    /* hText(g, inputs[0].label, 12, x + 5  , DEFAULT, DEFAULT, BOLD); */
+    /* hText(g, inputs[0].input, 12, x + 29 , DEFAULT, DEFAULT, UNDERLINE); */
+    /* hText(g, inputs[1].label, 14, x + 5  , DEFAULT, DEFAULT, BOLD); */
+    /* hText(g, inputs[1].input, 14, x + 29 , DEFAULT, DEFAULT, UNDERLINE); */
+  hText(g,"ABCDEFG",10,1,BLACK,RED,NONE);
 }
 
 int loginScreen(grid *g) {
