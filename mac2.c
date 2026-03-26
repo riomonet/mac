@@ -80,29 +80,32 @@ void serializeGrid(grid *b, grid *f, frameBuffer *fb) {
     fb->len = 0;
     for(int i = 0; i < b->nRows; i++) {
         for(int j = 0; j < b->nCols; j++) {
-	    cell *frontCell = &f->cell[i * b->nCols + j];
+            cell *frontCell = &f->cell[i * b->nCols + j];
             cell *backCell = &b->cell[i * b->nCols + j];
-	    if (memcmp(&frontCell, &backCell, sizeof(frontCell))) {
-		memcpy(fbPtr, backCell->cursor.pos, backCell->cursor.seqLen);
-		fbPtr+=backCell->cursor.seqLen;
-		if (backCell->attributes.len > 0) {
-		    memcpy(fbPtr, backCell->attributes.val, backCell->attributes.len);
-		    fbPtr+=backCell->attributes.len;
-		}
-		if (backCell->bg.len > 0) {
-		    memcpy(fbPtr, backCell->bg.color, backCell->bg.len);
-		    fbPtr+=backCell->bg.len;
-		}
-		if (backCell->fg.len > 0) {
-		    memcpy(fbPtr, backCell->fg.color, backCell->fg.len);
-		    fbPtr+=backCell->fg.len;
-		}
-		*fbPtr++ = backCell->ch;
-	    }
-	}
+            if(strcmp(frontCell->cursor.pos, backCell->cursor.pos) != 0) {
+                printf("EAATSHIT");
+                fflush(stdout);
+                memcpy(fbPtr, backCell->cursor.pos, backCell->cursor.seqLen);
+                fbPtr+=backCell->cursor.seqLen;
+            }
+            if (strcmp(backCell->attributes.val, frontCell->attributes.val) != 0) {
+                memcpy(fbPtr, backCell->attributes.val, backCell->attributes.len);
+                fbPtr+=backCell->attributes.len;
+            }
+            if (strcmp(backCell->bg.color, frontCell->bg.color) != 0) {
+                memcpy(fbPtr, backCell->bg.color, backCell->bg.len);
+                fbPtr+=backCell->bg.len;
+            }
+            if (strcmp(backCell->fg.color,frontCell->fg.color) != 0) {
+                memcpy(fbPtr, backCell->fg.color, backCell->fg.len);
+                fbPtr+=backCell->fg.len;
+            }
+            if (backCell->ch != frontCell->ch) {
+                *fbPtr++ = backCell->ch;
+            }
+        }
     }
     fb->len = fbPtr - fb->data;
-
 } 
 
 /* Allocates memory one time at the beginning for the framebuffer.
@@ -136,7 +139,6 @@ grid *initGrid(int nCols, int nRows) {
     return g;
 }
 
-
 /* Sets the cursor position on the terminal */
 void term_send_pos(int y, int x) {
     printf("\x1b[%d;%dH",y,x); //TODO: Convert to write call, using snprintf;
@@ -155,6 +157,7 @@ void clearAllGridCells(grid *g, char chVal) {
           setAttribute(g,i,j,RESET);
         }
     }
+    setCursorPostions(g);
 }
 
 /* Callback for 'SIGWINCH' signal */
@@ -245,12 +248,8 @@ int main(void) {
 	}
 	
 	// TODO: switch statement here to dispatch screens
-       	writeToGrid(back, loginScreen);
+    writeToGrid(back, loginScreen);
 	serializeGrid(back, front, fb);
-	int x = fb->len;
-	char tp[32];
-	snprintf(tp, 32, "Framebuffer: %d bytes", x);
-	hText(front, tp, 1, 1,  DEFAULT, DEFAULT, NONE);
 	bltFrameBuffer(fb);
 	tmp = back;
 	back = front;
