@@ -75,33 +75,34 @@ size_t countBytes(grid *g) {
  * color, and any special attributes like reverse or underline for the
  * character val of the cell into a flat 'frameBuffer' to write. */
 void serializeGrid(grid *b, grid *f, frameBuffer *fb) {
-    size_t nBytes = countBytes(b);
-    fb->len = nBytes;
     char *fbPtr = fb->data;
-    memset(fb->data, 0, nBytes);
+    memset(fb->data, 0, 1024 * 1024);
+    fb->len = 0;
     for(int i = 0; i < b->nRows; i++) {
         for(int j = 0; j < b->nCols; j++) {
-	    cell frontCell = f->cell[i * b->nCols + j];
-            cell backCell = b->cell[i * b->nCols + j];
+	    cell *frontCell = &f->cell[i * b->nCols + j];
+            cell *backCell = &b->cell[i * b->nCols + j];
 	    if (memcmp(&frontCell, &backCell, sizeof(frontCell))) {
-		memcpy(fbPtr, backCell.cursor.pos, backCell.cursor.seqLen);
-		fbPtr+=backCell.cursor.seqLen;
-		if (backCell.attributes.len > 0) {
-		    memcpy(fbPtr, backCell.attributes.val, backCell.attributes.len);
-		    fbPtr+=backCell.attributes.len;
+		memcpy(fbPtr, backCell->cursor.pos, backCell->cursor.seqLen);
+		fbPtr+=backCell->cursor.seqLen;
+		if (backCell->attributes.len > 0) {
+		    memcpy(fbPtr, backCell->attributes.val, backCell->attributes.len);
+		    fbPtr+=backCell->attributes.len;
 		}
-		if (backCell.bg.len > 0) {
-		    memcpy(fbPtr, backCell.bg.color, backCell.bg.len);
-		    fbPtr+=backCell.bg.len;
+		if (backCell->bg.len > 0) {
+		    memcpy(fbPtr, backCell->bg.color, backCell->bg.len);
+		    fbPtr+=backCell->bg.len;
 		}
-		if (backCell.fg.len > 0) {
-		    memcpy(fbPtr, backCell.fg.color, backCell.fg.len);
-		    fbPtr+=backCell.fg.len;
+		if (backCell->fg.len > 0) {
+		    memcpy(fbPtr, backCell->fg.color, backCell->fg.len);
+		    fbPtr+=backCell->fg.len;
 		}
-		*fbPtr++ = backCell.ch;
+		*fbPtr++ = backCell->ch;
 	    }
 	}
     }
+    fb->len = fbPtr - fb->data;
+
 } 
 
 /* Allocates memory one time at the beginning for the framebuffer.
@@ -130,10 +131,11 @@ void setCursorPostions(grid *g) {
 grid *initGrid(int nCols, int nRows) {
     grid *g = malloc(sizeof(*g) + (sizeof(cell) * nCols * nRows));
     g->nRows = nRows;
-    g->nCols= nCols;
+    g->nCols = nCols;
     setCursorPostions(g);
     return g;
 }
+
 
 /* Sets the cursor position on the terminal */
 void term_send_pos(int y, int x) {
@@ -160,12 +162,14 @@ void handler(int code) {
     if (code) RESIZE = 1;
 }
 
-grid *resizeGrid(grid *g, struct termConfig *E) {
-    free(g);
+void resizeGrid(grid *back, grid *front,  struct termConfig *E) {
+    free(back);
+    free(front);
     initTerm(E);
-    g = initGrid(E->nCols, E->nRows);
-    clearAllGridCells(g, ' ');
-    return g;
+    back  = initGrid(E->nCols, E->nRows);
+    front = initGrid(E->nCols, E->nRows);
+    clearAllGridCells(back, ' ');
+    clearAllGridCells(front, ' ');
 }
 
 /* Typesets 'txt' string horizontally to pos y, x on the terminal. With
@@ -188,7 +192,7 @@ void hText(grid *g, char  *txt, int y, int x,
 }
 
 int writeToGrid(grid *g, int(*screen)(grid *g)) {
-  return screen(g);
+    return screen(g);
 }
 
 void setDefaultColors(enum colors bg, enum colors fg) {
@@ -199,11 +203,8 @@ void setDefaultColors(enum colors bg, enum colors fg) {
     fflush(stdout);
 }
 
-
-
 int main(void) {
     /* ============================== SIGNAL HANDLING  ======================================== */
-
     struct sigaction sa = {0};
     sigemptyset(&sa.sa_mask);    
     sa.sa_flags = SA_RESTART; // Restart interrupted sys-calls.
@@ -216,30 +217,46 @@ int main(void) {
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(HIDE_CURSOR);
     setDefaultColors(BLUE,WHITE);
+    printf("\033[?7l");  // disable line wrap
+    fflush(stdout);
+    //printf("\033[?7h");  // re-enable line wrap    		
+		
+
     
     initTerm();
     grid *front = initGrid(E.nCols, E.nRows);
     grid *back = initGrid(E.nCols, E.nRows);
     grid *tmp;
     clearAllGridCells(front,' ');
+    clearAllGridCells(back,' ');
     frameBuffer *fb = initFrameBuffer();
 /* ============================== MAIN GAME LOOP  ======================================== */
     while(1) {
 	if (RESIZE) {
 	    RESIZE = 0;
-	    back = resizeGrid(back, &E);
-	    front = resizeGrid(front, &E);
+	    free(back);
+	    free(front);
+	    initTerm(E);
+	    back  = initGrid(E.nCols, E.nRows);
+	    front = initGrid(E.nCols, E.nRows);
+	    clearAllGridCells(back, ' ');
+	    clearAllGridCells(front, ' ');
+	    ///////	    resizeGrid(back, front, &E);
 	}
 	
 	// TODO: switch statement here to dispatch screens
-	clearAllGridCells(back,' ');
-	writeToGrid(back, loginScreen);
+       	writeToGrid(back, loginScreen);
 	serializeGrid(back, front, fb);
+	int x = fb->len;
+	char tp[32];
+	snprintf(tp, 32, "Framebuffer: %d bytes", x);
+	hText(front, tp, 1, 1,  DEFAULT, DEFAULT, NONE);
 	bltFrameBuffer(fb);
 	tmp = back;
 	back = front;
 	front = tmp;
 	term_send_pos(1,1);
+	clearAllGridCells(back,' ');
     }
 /* ============================== CLEAN UP ======================================== */
     term_send_cmd(ORIG_BUFFER);

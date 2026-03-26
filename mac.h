@@ -33,7 +33,7 @@ typedef struct {
 } frameBuffer;
 
 grid *initGrid(int, int);
-grid *resizeGrid(grid*, struct termConfig*);
+void resizeGrid(grid*,grid*,struct termConfig*);
 void setCursorPostions(grid*);
 void clearAllGridCells(grid*, char);
 int writeToGrid(grid*, int(*screen)(grid *g));
