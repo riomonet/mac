@@ -119,16 +119,18 @@ void serializeGrid(grid *b, grid *f, frameBuffer *fb) {
                        attribute[back->attr].seqOn,
                        attribute[back->attr].len);
                 fbPtr+=attribute[back->attr].len;
-                
+
+                // backgfouen color
                 memcpy(fbPtr,
                        colors[back->bgColor].bg,
                        colors[back->bgColor].bgLen);
                 fbPtr += colors[back->bgColor].bgLen;
 
+                //foreground color
                 memcpy(fbPtr,
-                       colors[back->bgColor].fg,
-                       colors[back->bgColor].fgLen);
-                fbPtr+=colors[back->bgColor].fgLen;
+                       colors[back->fgColor].fg,
+                       colors[back->fgColor].fgLen);
+                fbPtr+=colors[back->fgColor].fgLen;
                 
                 *fbPtr = back->char_code;
                 fbPtr++;
