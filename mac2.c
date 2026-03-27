@@ -14,76 +14,14 @@
 #include "mac.h"
 #include "menus.c"
 
-#define GET_IDX(g, y, x) (((y) * ((g)->nCols)) + (x))
 
-int inFrame(grid *g, int y, int x) {
-  if (x < g->nCols && y < g->nRows){
-    return 1;
-  } else {
-    return 0;
-  }
-}
-  
+/* Once per frame, the framebuffer is written to the terminal */
 void bltFrameBuffer(frameBuffer *frameBuf) {
     write(STDOUT_FILENO,frameBuf->data,frameBuf->len);
 }
 
-void setFgCl(grid *g, int y, int x, enum colors color) {
-  if(inFrame(g,y,x)) {
-      int idx = GET_IDX(g,y,x);
-      g->cell[idx].fgColor = color;
-    }
-}
-
-void setBgCl(grid *g, int y, int x, enum colors color) {
-  if(inFrame(g,y,x)) {
-      int idx = GET_IDX(g,y,x);
-      g->cell[idx].bgColor = color;
-    }
-}
-
-void setChar(grid *g, int y, int x, char ch) {
-  if(inFrame(g,y,x)) {
-      int idx = GET_IDX(g,y,x);
-      g->cell[idx].char_code = ch;
-  }
-}
-
-int getIdx(grid *g,int y, int x) {
-  return (y * g->nCols + x);
-}
-
-void setAttribute(grid *g, int y, int x, enum attributes attr) {
-  if(inFrame(g,y,x)) {
-      int idx = GET_IDX(g,y,x);
-      g->cell[idx].attr = attr;
-  }
-}
-
-int xCenter(grid *g, int strlen) {
-    return (g->nCols - strlen)/2;
-}
-
-int xThird(grid *g, int strlen) {
-    return (g->nCols - strlen)/3;
-}
-
-/* Returns the total number of bytes in 'grid'. */
-#if  0
-size_t countBytes(grid *g) {
-    int len = g->nCols * g->nRows;
-    int sum = 0;
-    for(int i = 0; i < len; i++) {
-        sum += 1;
-	sum += g->cell[i].cursor.seqLen;
-        sum += g->cell[i].fg.len;
-        sum += g->cell[i].bg.len;
-        sum += g->cell[i].attributes.len;
-    }
-    return sum;
-}
-#endif
-
+/*  Returns true (any non zero) if there is any difference between corresponding
+ *  cells in the front and back buffers. */
 int diffCells(cell *back, cell *front) {
   return ((back->column != front->column) ||
           (back->row != front->row) ||
@@ -93,11 +31,10 @@ int diffCells(cell *back, cell *front) {
           (back->attr != front->attr));
 }
 
-
-/* Flattens 'grid' where each cell contains various string escape
- * sequence directives that specify the foreground color, background
- * color, and any special attributes like reverse or underline for the
- * character val of the cell into a flat 'frameBuffer' to write. */
+/* If there is any differnece between corresponding front and back buffer 
+ * cells, that cells member string directive information (escape sequences and
+ * 'char_code') are looked up in loookup.h and inserted into the frameBuffer 
+ * 'data' member. The frameBuffer 'len' is incremented accordingly. */
 void serializeGrid(grid *b, grid *f, frameBuffer *fb) {
     char *fbPtr = fb->data;
     memset(fb->data, 0, 1024 * 1024);
@@ -120,7 +57,7 @@ void serializeGrid(grid *b, grid *f, frameBuffer *fb) {
                        attribute[back->attr].len);
                 fbPtr+=attribute[back->attr].len;
 
-                // backgfouen color
+                // background color
                 memcpy(fbPtr,
                        colors[back->bgColor].bg,
                        colors[back->bgColor].bgLen);
@@ -140,31 +77,15 @@ void serializeGrid(grid *b, grid *f, frameBuffer *fb) {
     fb->len = fbPtr - fb->data;
 }
 
-
-/* Allocates memory one time at the beginning for the framebuffer.
- * This memory block is reused every frame.*/
+/* Platform layer: Allocates memory one time at the 
+ * beginning for the framebuffer.  This memory block is
+ * reused every frame.*/
 frameBuffer *initFrameBuffer(void) {
     frameBuffer *fb = malloc(sizeof(*fb) + (1024 * 1024));
     return fb;
 }
 
-/* Initialized the grid position of every 'cell' in 'grid'.
- * The escape sequence is written out for every cell prior to the
- * color, or character to be. */
-void initCellPosition(grid *g) {
-    for(int y = 0; y < g->nRows; y++) {
-        for(int x = 0; x < g->nCols; x++) {
-          
-            /* cell *curCell = &(g->cell[y * g->nCols + x]); */
-            /* char tmp[32]; */
-            /* snprintf(tmp, 32,"\x1b[%d;%dH",y+1,x+1); */
-            /* int len = strlen(tmp); */
-            /* memcpy(curCell->cursor.pos, tmp, len); */
-            /* curCell->cursor.seqLen = len; */
-        }
-    }
-}
-
+/* ??? which layer */
 grid *allocateGrid(int nCols, int nRows) {
     grid *g = malloc(sizeof(*g) + (sizeof(cell) * nCols * nRows));
     g->nRows = nRows;
@@ -172,17 +93,15 @@ grid *allocateGrid(int nCols, int nRows) {
     return g;
 }
 
-/* Sets the cursor position on the terminal */
+/* service provided to mac*/
 void term_send_pos(int y, int x) {
     printf("\x1b[%d;%dH",y,x); //TODO: Convert to write call, using snprintf;
     fflush(stdout);
 }
 
-/* Sets the char value of each cell in grid 'g' to 'chVal', as
- * as well as the background and foreground colors if the
- * value passed is not NULL */
+/* platform layerSets the char value of each cell in grid 'g' to 'chVal', as
+ * as well as colors and attributess */
 void resetGrid(grid *g, char char_code) {
-
   for(int y = 0; y < g->nRows; y++) {
     for(int x = 0; x < g->nCols; x++) {
       setChar(g,y,x,char_code);
@@ -195,15 +114,16 @@ void resetGrid(grid *g, char char_code) {
   }
 }
 
-static int cleanup = 0;
-/* Callback for 'SIGWINCH' signal */
+/* Platform layer*/
 void handler(int code) {
     switch (code) {
     case SIGWINCH: RESIZE = 1; break;
-    case SIGINT: cleanup = 1; break;
+    case SIGINT: CLEANUP = 1; break;
     }
 }
 
+
+/* platform layer */
 void resizeGrid(grid *back, grid *front,  struct termConfig *E) {
     free(back);
     free(front);
@@ -214,35 +134,7 @@ void resizeGrid(grid *back, grid *front,  struct termConfig *E) {
     resetGrid(front, ' ');
 }
 
-/* Typesets 'txt' string horizontally to pos y, x on the terminal. With
- * Bg color bg and foreground color fg */
-void hText(grid *g, char  *txt, int y, int x,
-           enum colors bg, enum colors fg, enum attributes attr) {
-    int i;
-    for (i = 0; i < (int)strlen(txt); i++) {
-        setChar(g,y,x+i,txt[i]);
-        if (bg) {
-            setBgCl(g,y,x+i,bg);
-        }
-        if (fg) {
-            setFgCl(g,y,x+i,fg);
-        }
-        if (attr) {
-          setAttribute(g, y, x + i, attr);
-        }
-    }
-}
 
-int writeToGrid(grid *g, int(*screen)(grid *g)) {
-    return screen(g);
-}
-
-void setDefaultColors(enum colors bg, enum colors fg) {
-    DEF_BG = bg;
-    DEF_FG = fg;
-    printf("\x1b]11;rgb:00/00/aa\e\\");
-    fflush(stdout);
-}
 
 void zeroFront(grid *g) {
     for(int y = 0; y < g->nRows; y++) {
@@ -266,11 +158,9 @@ int main(void) {
     if (sigaction(SIGINT, &sa, NULL) == -1) {
         perror("SIGINT");
     }
-    
     term_send_cmd(ALT_BUFFER);
-    term_send_cmd(CLEAR_SCREEN);
-    term_send_cmd(HIDE_CURSOR);
-    setDefaultColors(BLUE,WHITE);
+    enableRawMode();
+    mac_startup();
     
     initTerm();
     grid *front = allocateGrid(E.nCols, E.nRows);
@@ -280,38 +170,37 @@ int main(void) {
     zeroFront(front);
     resetGrid(back,' ');
     frameBuffer *fb = initFrameBuffer();
-/* ============================== MAIN GAME LOOP  ======================================== */
+    /* ============================== MAIN GAME LOOP  ======================================== */
     while(1) {
-        if (cleanup) {
-            goto CLEANUP;
+        if (CLEANUP) {
+            goto CLEAN_UP;
         }
-        if (RESIZE) {
+        if (RESIZE) { // TODO(ari): move this to function _resize.
             RESIZE = 0;
             free(back);
             initTerm(E);
             back  = allocateGrid(E.nCols, E.nRows);
             front = allocateGrid(E.nCols, E.nRows);
-
             ///////	    resizeGrid(back, front, &E);
         }
-
-        // TODO: switch statement here to dispatch screens
         resetGrid(back,' ');
-        writeToGrid(back, loginScreen);
+        mac_writeToGrid(back); // TODO(ari): throttle frame rate in platform
+	term_send_cmd(SHOW_CURSOR);
+	mac_handleInput(back, 'Z');
         serializeGrid(back, front, fb);
+	term_send_cmd(HIDE_CURSOR); 
         bltFrameBuffer(fb);
         tmp = back;
         back = front;
         front = tmp;
-        //        term_send_pos(1,1);
     }
-    
     /* ============================== CLEAN UP ======================================== */
- CLEANUP:
+
+ CLEAN_UP:
     term_send_cmd(ORIG_BUFFER);
     term_send_cmd(SHOW_CURSOR);
     term_send_cmd(TERM_RESET);
-    printf("\x1b]11;rgb:00/00/00\e\\");
+    printf("\x1b]11;rgb:00/00/00\e\\"); // TODO currently this is Reset to Black, need to query original state.
     fflush(stdout);
     return 0;
 }

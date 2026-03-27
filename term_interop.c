@@ -1,6 +1,9 @@
-/* we use one or the other flags */
 
-volatile sig_atomic_t RESIZE = 0;
+/* Global Signal handling switches, these are switched on
+ * when signal is recieved */
+volatile sig_atomic_t RESIZE = 0; //SIGWINCH
+volatile sig_atomic_t CLEANUP = 0; //SIGINT
+
 
 struct termConfig {
     int nRows;
@@ -47,14 +50,13 @@ void enableRawMode() {
       die("tcgetaddr");
     }
 
-    //TODO:(ari) DisableRawMode requires access to E, but atexit, only call void func(void) functions.
     atexit(disableRawMode); 
     struct termios raw = E.orig_termios;
     
     raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
     raw.c_oflag &= ~(OPOST);
     raw.c_cflag |= (CS8);
-    raw.c_lflag &= ~(ECHO | ICANON |IEXTEN| ISIG);
+    raw.c_lflag &= ~(ECHO | ICANON |IEXTEN); //TODO tmp removed ISIG, please restore and handle SIGINT
     raw.c_cc[VMIN] = 0;           // min bytes to read prior to return
     raw.c_cc[VTIME] = 1;          // the max amount of time to wait for bytes 10ths of second
   
