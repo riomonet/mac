@@ -195,9 +195,13 @@ void resetGrid(grid *g, char char_code) {
   }
 }
 
+static int cleanup = 0;
 /* Callback for 'SIGWINCH' signal */
 void handler(int code) {
-    if (code) RESIZE = 1;
+    switch (code) {
+    case SIGWINCH: RESIZE = 1; break;
+    case SIGINT: cleanup = 1; break;
+    }
 }
 
 void resizeGrid(grid *back, grid *front,  struct termConfig *E) {
@@ -236,7 +240,6 @@ int writeToGrid(grid *g, int(*screen)(grid *g)) {
 void setDefaultColors(enum colors bg, enum colors fg) {
     DEF_BG = bg;
     DEF_FG = fg;
-    //    TODO generalize from decimal rgb to hex rgb
     printf("\x1b]11;rgb:00/00/aa\e\\");
     fflush(stdout);
 }
@@ -256,7 +259,12 @@ int main(void) {
     sa.sa_flags = SA_RESTART; // Restart interrupted sys-calls.
     sa.sa_handler = handler;
     if (sigaction(SIGWINCH, &sa, NULL) == -1) {
-	perror("sigaction"); 
+        perror("sigaction"); 
+    }
+    // TOOD(ari): This should only be active during debug mode.
+    // otherwise SIGINT should be ignored once in raw mode.
+    if (sigaction(SIGINT, &sa, NULL) == -1) {
+        perror("SIGINT");
     }
     
     term_send_cmd(ALT_BUFFER);
@@ -274,30 +282,36 @@ int main(void) {
     frameBuffer *fb = initFrameBuffer();
 /* ============================== MAIN GAME LOOP  ======================================== */
     while(1) {
-	if (RESIZE) {
-	    RESIZE = 0;
-	    free(back);
-	    initTerm(E);
-	    back  = allocateGrid(E.nCols, E.nRows);
-	    front = allocateGrid(E.nCols, E.nRows);
+        if (cleanup) {
+            goto CLEANUP;
+        }
+        if (RESIZE) {
+            RESIZE = 0;
+            free(back);
+            initTerm(E);
+            back  = allocateGrid(E.nCols, E.nRows);
+            front = allocateGrid(E.nCols, E.nRows);
 
-        ///////	    resizeGrid(back, front, &E);
-	}
+            ///////	    resizeGrid(back, front, &E);
+        }
 
-	// TODO: switch statement here to dispatch screens
-    resetGrid(back,' ');
-    writeToGrid(back, loginScreen);
-	serializeGrid(back, front, fb);
-	bltFrameBuffer(fb);
-	tmp = back;
-	back = front;
-	front = tmp;
-	term_send_pos(1,1);
+        // TODO: switch statement here to dispatch screens
+        resetGrid(back,' ');
+        writeToGrid(back, loginScreen);
+        serializeGrid(back, front, fb);
+        bltFrameBuffer(fb);
+        tmp = back;
+        back = front;
+        front = tmp;
+        //        term_send_pos(1,1);
     }
     
-/* ============================== CLEAN UP ======================================== */
+    /* ============================== CLEAN UP ======================================== */
+ CLEANUP:
     term_send_cmd(ORIG_BUFFER);
     term_send_cmd(SHOW_CURSOR);
     term_send_cmd(TERM_RESET);
+    printf("\x1b]11;rgb:00/00/00\e\\");
+    fflush(stdout);
     return 0;
 }
