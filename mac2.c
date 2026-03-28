@@ -115,7 +115,7 @@ void resetGrid(grid *g, char char_code) {
 }
 
 /* Platform layer*/
-void handler(int code) {
+void signalHandler(int code) {
     switch (code) {
     case SIGWINCH: RESIZE = 1; break;
     case SIGINT: CLEANUP = 1; break;
@@ -149,7 +149,7 @@ int main(void) {
     struct sigaction sa = {0};
     sigemptyset(&sa.sa_mask);    
     sa.sa_flags = SA_RESTART; // Restart interrupted sys-calls.
-    sa.sa_handler = handler;
+    sa.sa_handler = signalHandler;
     if (sigaction(SIGWINCH, &sa, NULL) == -1) {
         perror("sigaction"); 
     }
@@ -184,11 +184,11 @@ int main(void) {
             ///////	    resizeGrid(back, front, &E);
         }
         resetGrid(back,' ');
-        mac_writeToGrid(back); // TODO(ari): throttle frame rate in platform
-	term_send_cmd(SHOW_CURSOR);
-	mac_handleInput(back, 'Z');
+	char c;
+	read(STDIN_FILENO, &c, 1);
+	mac_handleInput(back, c);
+        mac_renderWindow(back); // TODO(ari): throttle frame rate in platform
         serializeGrid(back, front, fb);
-	term_send_cmd(HIDE_CURSOR); 
         bltFrameBuffer(fb);
         tmp = back;
         back = front;

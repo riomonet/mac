@@ -1,4 +1,3 @@
-
 enum colors {
     DEFAULT,
     BLACK,
