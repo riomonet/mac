@@ -1,13 +1,52 @@
 
-/* ===================================== Individual cell and grid functions.  ==================================== */
-
 #define GET_IDX(g, y, x) (((y) * ((g)->nCols)) + (x))
+
+// NOTE We have to keep track of where we are.
+typedef enum states {
+    STARTUP,
+    LOGIN,
+    MAIN_MENU,
+    ADD_USER,
+    VIEW_LIVE_LOGS,
+    SEARCH_LOGS
+} states;
+
+typedef struct {
+    states state;
+    int row;
+    int col;
+} userWindow;
 
 typedef struct point {
     int row;
     int col;
 } point;
 
+
+/* ===================================== Start up functions.  ==================================== */
+
+userWindow window;
+
+/* On start we set the default colors for the ap. */
+void setDefaultColors(enum colors bg, enum colors fg) {
+    DEF_BG = bg;
+    DEF_FG = fg;
+    //TODO: create a Lookup table for rgb values the correspond
+    // to our current colors table values.
+    printf("\x1b]11;rgb:00/00/aa\e\\");
+    fflush(stdout);
+}
+
+/* Pre game loop directives, service provided by mac layer to platform */
+void mac_startup() {
+    window.state = STARTUP;
+    term_send_cmd(CLEAR_SCREEN);
+    term_send_cmd(HIDE_CURSOR);
+    setDefaultColors(BLUE,WHITE);
+}
+/* ===================================== Utility functions.  ==================================== */
+
+/* Returns true if y, x are within the visible window */
 int inFrame(grid *g, int y, int x) {
   if (x < g->nCols && y < g->nRows){
     return 1;
@@ -15,6 +54,8 @@ int inFrame(grid *g, int y, int x) {
     return 0;
   }
 }
+
+/* ===================================== Cell values.  ========================================== */
 
 void setFgCl(grid *g, int y, int x, enum colors color) {
   if(inFrame(g,y,x)) {
@@ -74,41 +115,15 @@ void setCellState(grid *g, int row, int col, char *fmt, ...) {
     va_end(args);
 }
 
-/* Returns a column value given a percentage of nCols */
-int _Col(grid *g, char *str,float pos) {
-    if (pos < 1) {
-	if (str) {
-	    return (g->nCols - strlen(str)) * pos;
-	} else {
-	    return g->nCols * pos;
-	}
-    }
-    else {
-	return pos;	
-    }
-}
-
-/* Returns a row value given a percentag of nRows */
-int _Row(grid *g, float pos) {
-    if(pos < 1) {
-    return g->nRows * pos;
-    } else {
-	return pos;
-    }
-}
-
-point _Pt(grid *g, char *str, float rwRatio, float clRatio) {
-    point p = {
-	.row = _Row(g, rwRatio),
-	.col = _Col(g, str, clRatio)
-    };
-    return p;
-}
-
 /* Sets all the values for each column in a row starting at 
- * row 'y' and column 'x' for the length of 'txt'. 
+ * row 'y' and column 'x' for the length of 'str'. Can optionally
+ * set colors and attributes. If 'fmt' string is 0. colors and attributes
+ * are ignored. other wise we must include f->foreground, b->background
+ * and a->attributes in the 'fmt' string
  *
- * TODO if string is wider than screen print only up to screen width  we are getting segfaults*/
+ *
+ *  TODO If string is wider than screen print only up to screen
+ * width  we are getting segfaults. */
 void writeString(grid *g, point p, char *str, char *fmt, ...) {
     enum colors fg = DEFAULT;
     enum colors bg = DEFAULT;
@@ -143,41 +158,57 @@ void writeString(grid *g, point p, char *str, char *fmt, ...) {
     }
 }
 
-void setDefaultColors(enum colors bg, enum colors fg) {
-    DEF_BG = bg;
-    DEF_FG = fg;
-    printf("\x1b]11;rgb:00/00/aa\e\\");
-    fflush(stdout);
+/* ===================================== Point object caluclations  ==================================== */
+/* Returns a column value given a percentage of nCols */
+int _Col(grid *g, char *str,float pos) {
+    if (pos < 1) {
+	if (str) {
+	    return (g->nCols - strlen(str)) * pos;
+	} else {
+	    return g->nCols * pos;
+	}
+    }
+    else {
+	return pos;	
+    }
 }
 
-// NOTE We have to keep track of where we are.
- // TODO put these in a menus.h file
-typedef enum states {
-    STARTUP,
-    LOGIN,
-    MAIN_MENU,
-    ADD_USER,
-    VIEW_LIVE_LOGS,
-    SEARCH_LOGS
-} states;
-
-typedef struct {
-    states state;
-    int row;
-    int col;
-} userWindow;
-
-userWindow window;
-
-/* Pre game loop directives, service provided by mac layer to platform */
-void mac_startup() {
-    window.state = STARTUP;
-    term_send_cmd(CLEAR_SCREEN);
-    term_send_cmd(HIDE_CURSOR);
-    setDefaultColors(BLUE,WHITE);
+/* Returns a row value given a percentage of nRows */
+int _Row(grid *g, float pos) {
+    if(pos < 1) {
+    return g->nRows * pos;
+    } else {
+	return pos;
+    }
 }
 
-/* ============================== Screen rendering and application state functionality. ============================== */
+/* Point constructor by percentage of width and height of screen.
+ * If str is not null, the point return centers the string at
+ * the given proportion, horizontally */
+point _Pt(grid *g, char *str, float rwRatio, float clRatio) {
+    point p = {
+	.row = _Row(g, rwRatio),
+	.col = _Col(g, str, clRatio)
+    };
+    return p;
+}
+
+/* Return a new point incrementing arg 'p' by nRows and nCols */
+point ptAdd (point p, int nRows, int nCols) {
+    point pt =  {
+	.row = p.row + nRows,
+	.col = p.col + nCols
+    };
+    return pt;
+}
+
+/* Point constructor. */
+point Point(float row, float col) {
+    point p = {.row = row, .col = col};
+    return p;
+}
+
+/* ============================== Forms ============================== */
 
 typedef struct input {
     struct {
@@ -190,10 +221,6 @@ typedef struct input {
     } input;
 } input;
 
-point Point(float row, float col) {
-    point p = {.row = row, .col = col};
-    return p;
-}
 
 input Input(char *label, point labelPt, point inputPt) {
     input inp = {.label.buf = ". . . . . . . . . . . . . . . . ",
@@ -213,20 +240,12 @@ void renderLabels(grid *g, input inp ) {
     writeString(g,inp.input.pt, inp.input.buf, "a", UNDERLINE);
 }
 
-point ptAdd (point p, int nRows, int nCols) {
-    point pt =  {
-	.row = p.row + nRows,
-	.col = p.col + nCols
-    };
-    return pt;
-}
-
 
 void renderLoginScreen(grid *g) {
     renderTitle(g, "MARINA 59 | Sign On");
 
     /* Form  */
-    point base = _Pt(g, 0, .33, .33);
+    point base = _Pt(g, 0, .33, .50);
     
     input loginForm[] = {
 	 Input("User",  base, ptAdd(base, 0 , 28)),
@@ -237,7 +256,10 @@ void renderLoginScreen(grid *g) {
     renderLabels(g, loginForm[1]);
 }
 
-/* Mac service provided to platform. */
+/* ============================== Serices provided to the platform layer ============================== */
+
+
+
 void mac_renderWindow(grid *g) {
     switch(window.state) {
     case STARTUP:
