@@ -184,9 +184,7 @@ int main(void) {
             ///////	    resizeGrid(back, front, &E);
         }
         resetGrid(back,' ');
-	char c;
-	read(STDIN_FILENO, &c, 1);
-	mac_handleInput(back, c);
+	//	mac_handleInput(back, c);
         mac_renderWindow(back); // TODO(ari): throttle frame rate in platform
         serializeGrid(back, front, fb);
         bltFrameBuffer(fb);
@@ -200,6 +198,8 @@ int main(void) {
     term_send_cmd(ORIG_BUFFER);
     term_send_cmd(SHOW_CURSOR);
     term_send_cmd(TERM_RESET);
+    term_send_cmd(CLEAR_SCREEN);
+    term_send_pos(1,1);
     printf("\x1b]11;rgb:00/00/00\e\\"); // TODO currently this is Reset to Black, need to query original state.
     fflush(stdout);
     return 0;

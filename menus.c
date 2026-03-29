@@ -3,6 +3,11 @@
 
 #define GET_IDX(g, y, x) (((y) * ((g)->nCols)) + (x))
 
+typedef struct point {
+    int row;
+    int col;
+} point;
+
 int inFrame(grid *g, int y, int x) {
   if (x < g->nCols && y < g->nRows){
     return 1;
@@ -69,37 +74,62 @@ void setCellState(grid *g, int row, int col, char *fmt, ...) {
     va_end(args);
 }
 
-
-/* TODO combing the following 2 functions into single variadic
- * with some kind of nomenclature specifying what we want. expand for thirds and fifths
- * horizontally and vertically haves/quarters/thirds/fifths, maybe golden ratio HA! */
-int xCenter(grid *g, int strlen) {
-    return (g->nCols - strlen)/2;
+/* Returns a column value given a percentage of nCols */
+int _Col(grid *g, char *str,float pos) {
+    if (pos < 1) {
+	if (str) {
+	    return (g->nCols - strlen(str)) * pos;
+	} else {
+	    return g->nCols * pos;
+	}
+    }
+    else {
+	return pos;	
+    }
 }
 
-int xThird(grid *g, int strlen) {
-    return (g->nCols - strlen)/3;
+/* Returns a row value given a percentag of nRows */
+int _Row(grid *g, float pos) {
+    if(pos < 1) {
+    return g->nRows * pos;
+    } else {
+	return pos;
+    }
+}
+
+point _Pt(grid *g, char *str, float rwRatio, float clRatio) {
+    point p = {
+	.row = _Row(g, rwRatio),
+	.col = _Col(g, str, clRatio)
+    };
+    return p;
 }
 
 /* Sets all the values for each column in a row starting at 
- * row 'y' and column 'x' for the length of 'txt'. */
-void writeString(grid *g, int y, int x, char *str, char *fmt, ...) {
-
-    va_list args;
-    va_start(args, fmt);
+ * row 'y' and column 'x' for the length of 'txt'. 
+ *
+ * TODO if string is wider than screen print only up to screen width  we are getting segfaults*/
+void writeString(grid *g, point p, char *str, char *fmt, ...) {
     enum colors fg = DEFAULT;
     enum colors bg = DEFAULT;
     enum attributes attr = NONE;
 
-    while(*fmt) {
-	if (*fmt == 'f') fg = va_arg(args,enum colors);
-	else if (*fmt == 'b') bg = va_arg(args, enum colors);
-	else if (*fmt == 'a') attr = va_arg(args, enum attributes);
+    if (fmt) {
+	va_list args;
+	va_start(args, fmt);
+	while(*fmt) {
+	    if (*fmt == 'f') fg = va_arg(args,enum colors);
+	    else if (*fmt == 'b') bg = va_arg(args, enum colors);
+	    else if (*fmt == 'a') attr = va_arg(args, enum attributes);
+	    fmt++;
+	}
+	va_end(args);
     }
-
-    va_end(args);
     
-    for (int i = 0; i < (int)strlen(str); i++) {
+    int y = p.row;
+    int x = p.col;
+    
+    for (size_t i = 0; i < strlen(str); i++) {
         setChar(g,y,x+i,str[i]);
         if (bg) {
             setBgCl(g,y,x+i,bg);
@@ -121,7 +151,7 @@ void setDefaultColors(enum colors bg, enum colors fg) {
 }
 
 // NOTE We have to keep track of where we are.
-// TODO put these in a menus.h file
+ // TODO put these in a menus.h file
 typedef enum states {
     STARTUP,
     LOGIN,
@@ -138,6 +168,7 @@ typedef struct {
 } userWindow;
 
 userWindow window;
+
 /* Pre game loop directives, service provided by mac layer to platform */
 void mac_startup() {
     window.state = STARTUP;
@@ -148,59 +179,62 @@ void mac_startup() {
 
 /* ============================== Screen rendering and application state functionality. ============================== */
 
-/* NOTE: What other kinds of items are there, 'Input', 'Menu', 'DataRow' ? */
-typedef struct ui_Item {
-    char item[48];
-    int len;
-    int row;
-    int col;
-} ui_Item;
+typedef struct input {
+    struct {
+	char buf[32];
+	point pt;
+    } label;
+    struct {
+	char buf[16];
+	point pt;
+    } input;
+} input;
 
-typedef struct ui_Form {
-    int numItems;
-    ui_Item *items;
-} ui_Form;
-
-ui_Item createInput_Label(char *label) {
-    ui_Item f = {0};
-    char frame[] = ". . . . . . . . . . . . . . . . ";
-    memcpy(f.item, frame, strlen(frame));
-    memcpy(f.item, label, strlen(label));
-    return f;
+point Point(float row, float col) {
+    point p = {.row = row, .col = col};
+    return p;
 }
 
-ui_Item createReadBlock() {
-    ui_Item f = {0};
-    strcpy(f.item, "                ");
+input Input(char *label, point labelPt, point inputPt) {
+    input inp = {.label.buf = ". . . . . . . . . . . . . . . . ",
+		 .input.buf = "                ",
+		 .label.pt = labelPt,
+		 .input.pt = inputPt};
+    memcpy(inp.label.buf, label, strlen(label));
+    return inp;
 }
 
-ui_Item createInput(char *label, int row, int col) {
-    ui_Item user = createInput_Lable("User");
-    ui_Item textArea = createReadBlock();
-    ui_Item input;
-    return input;
+void renderTitle(grid *g, char *title) {
+    writeString(g, _Pt(g,title,1, .5), title, 0);
 }
 
-#if 0
-void renderLoginForm (grid *g, char *title, inputItem *inputs) {
-  horText(g, title, 1, xCenter(g,strlen(title)), DEFAULT,DEFAULT,NONE);
-  int x = xCenter(g , strlen(inputs[0].label) + strlen(inputs[0].input));
-  horText(g, inputs[0].label, 12, x + 5  , DEFAULT, DEFAULT, BOLD);
-  horText(g, inputs[0].input, 12, x + 29 , DEFAULT, DEFAULT, UNDERLINE);
-  horText(g, inputs[1].label, 14, x + 5  , DEFAULT, DEFAULT, BOLD);
-  horText(g, inputs[1].input, 14, x + 29 , DEFAULT, DEFAULT, UNDERLINE);
+void renderLabels(grid *g, input inp ) {
+    writeString(g,inp.label.pt, inp.label.buf, "a", BOLD);
+    writeString(g,inp.input.pt, inp.input.buf, "a", UNDERLINE);
 }
-#endif
+
+point ptAdd (point p, int nRows, int nCols) {
+    point pt =  {
+	.row = p.row + nRows,
+	.col = p.col + nCols
+    };
+    return pt;
+}
+
 
 void renderLoginScreen(grid *g) {
-    char *title = "MARINA 59 | Sign On";
-    writeString(g, 12, 5, title, "");
-    uiItem user = createInput("User");
-    uiItem password = createInput("Password");
+    renderTitle(g, "MARINA 59 | Sign On");
+
+    /* Form  */
+    point base = _Pt(g, 0, .33, .33);
     
-    term_send_pos(user.row, user.col);
-    term_send_pos(password.row, password.col);
-    term_send_cmd(SHOW_CURSOR);
+    input loginForm[] = {
+	 Input("User",  base, ptAdd(base, 0 , 28)),
+	 Input("Password", ptAdd(base, 2, 0),ptAdd(base, 2, 28))
+    };
+	 
+    renderLabels(g, loginForm[0]);
+    renderLabels(g, loginForm[1]);
 }
 
 /* Mac service provided to platform. */
@@ -218,10 +252,11 @@ void mac_renderWindow(grid *g) {
     }
 }
 
+#if 0
 void mac_handleInput(grid *g, char c) {
     int row = window.row;
     int col = window.col;
-    setCellState(g,row,col,"c", c);
-    window.row++;
-    putchar(c);
+    ////   setCellState(g,1,1,"c",c);
+    
 }
+#endif
