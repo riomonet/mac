@@ -37,7 +37,6 @@ struct color colors[] = {
     [AMBER]   = { .name = "AMBER",   .fg = "\033[38;2;255;165;0m", .fgLen = 17 , .bg = "\033[48;2;255;165;0m", .bgLen = 17}
 };
 
-
 struct rgb_color rgb_colors[] = {
     [BLACK]   = { .name = "BLACK",   .rgb = "\x1b]11;rgb:00/00/00\e\\", .len = 19 },
     [RED]     = { .name = "RED",     .rgb = "\x1b]11;rgb:aa/00/00\e\\", .len = 19 },
@@ -49,8 +48,6 @@ struct rgb_color rgb_colors[] = {
     [WHITE]   = { .name = "WHITE",   .rgb = "\x1b]11;rgb:ff/ff/ff\e\\", .len = 19 },
     [AMBER]   = { .name = "AMBER",   .rgb = "\x1b]11;rgb:ff/a5/00\e\\", .len = 19 },
 };
-
-
 
 enum term_commands {
     CLEAR_SCREEN,

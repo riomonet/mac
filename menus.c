@@ -41,12 +41,7 @@ void setDefaultColors(enum colors bg, enum colors fg) {
 }
 
 /* Pre game loop directives, service provided by mac layer to platform */
-void mac_startup() {
-    window.state = STARTUP;
-    term_send_cmd(CLEAR_SCREEN);
-    term_send_cmd(HIDE_CURSOR);
-    setDefaultColors(BLACK,AMBER);
-}
+
 /* ===================================== Utility functions.  ==================================== */
 
 /* Returns true if y, x are within the visible window */
@@ -182,8 +177,8 @@ int _Row(grid *g, float pos) {
 }
 
 /* Point constructor by percentage of width and height of screen.
- * If str is not null, the point return centers the string at
- * the given proportion, horizontally */
+ * If len is not null, the point uses, centers a string  of len
+ * 'len' at the given proportion, horizontally */
 point _Pt(grid *g, int len, float rwRatio, float clRatio) {
     point p = {
 	.row = _Row(g, rwRatio),
@@ -207,7 +202,13 @@ point Point(float row, float col) {
     return p;
 }
 
-/* ============================== Input forms ============================== */
+/* ============================== Forms ============================== */
+#define HALF .50
+#define ONE_THIRD .33
+#define INPUT_WIDTH 40
+#define LABEL_WIDTH 28
+#define DOUBLE_SPACE 2
+
 
 typedef struct input {
     struct {
@@ -220,46 +221,56 @@ typedef struct input {
     } input;
 } input;
 
-input Input(char *label, point base, point bufPt) {
+typedef struct form {
+    point base;
+    int nFields;
+    input field[8];
+} form;
+
+/* Constructor for 'input' type. */
+input Input(char *label) {
     input inp = {.label.buf = ". . . . . . . . . . . . . . . . ",
-		 .input.buf = "                ",
-		 .label.pt = base,
-		 .input.pt = bufPt};
+		 .input.buf = "                "};
     memcpy(inp.label.buf, label, strlen(label));
     return inp;
 }
 
+/* Constructor for 'Form' type. */
+form Form(char **inputs, int nFields, point basePt, int label_width, int line_space ) {
+    form f;
+    int rowStart = 1;
+    for (int i = 0; i < nFields; i++) {
+	f.field[i] = Input(inputs[i]);
+	f.field[i].label.pt.row = basePt.row + rowStart;
+	f.field[i].label.pt.col = basePt.col;
+	f.field[i].input.pt.row = basePt.row + rowStart;
+	f.field[i].input.pt.col = basePt.col + label_width;
+	rowStart += line_space;
+    }
+    f.nFields = nFields;
+    return f;
+ }
+
+void renderForm(grid *g, form f) {
+    for (int i = 0; i < f.nFields; i++) {
+	writeString(g,f.field[i].label.pt, f.field[i].label.buf, 0);
+	writeString(g,f.field[i].input.pt, f.field[i].input.buf, "a", UNDERLINE);
+    }
+}
+
 void renderTitle(grid *g, char *title) {
-    writeString(g, _Pt(g,strlen(title), 1, .5), title, 0);
+    writeString(g, _Pt(g,strlen(title), 1, HALF), title, 0);
 }
-
-void renderInp(grid *g, input inp ) {
-    writeString(g,inp.label.pt, inp.label.buf, 0);
-    writeString(g,inp.input.pt, inp.input.buf, "a", UNDERLINE);
-}
-
-#define HALF .50
-#define ONE_THIRD .33
-#define INPUT_WIDTH 40
-#define LABEL_WIDTH 28
-#define DOUBLE_SPACE 2
 
 void renderLoginScreen(grid *g) {
+    char *fields[] = {"User", "Password"};
+    point basePt = _Pt(g, INPUT_WIDTH, ONE_THIRD, HALF);
+    form f = Form(fields, 2, basePt, LABEL_WIDTH, DOUBLE_SPACE);
     renderTitle(g, "MARINA 59 | Sign On");
+    renderForm(g, f);
 
-    /* Form  */
-    point base = _Pt(g, INPUT_WIDTH, ONE_THIRD, HALF);
-    
-    input Form[] = {
-	 Input("User",  base, ptAdd(base, 0 , LABEL_WIDTH)),
-	 Input("Password", ptAdd(base, DOUBLE_SPACE, 0),
-	       ptAdd(base, DOUBLE_SPACE, LABEL_WIDTH))
-    };
-    
-    renderInp(g, Form[0]);
-    renderInp(g, Form[1]);
-    /* term_send_pos(Form[0].input.pt.row + 1, Form[0].input.pt.col); */
-    /* term_send_cmd(SHOW_CURSOR); */
+    term_send_pos(f.field[0].input.pt.row + 1, f.field[0].input.pt.col + 1);
+    term_send_cmd(SHOW_CURSOR);
 }
 
 /* ============================== Serices provided to the platform layer ============================== */
@@ -277,6 +288,12 @@ void mac_renderWindow(grid *g) {
     }
 }
 
+void mac_startup() {
+    window.state = STARTUP;
+    term_send_cmd(CLEAR_SCREEN);
+    term_send_cmd(HIDE_CURSOR);
+    setDefaultColors(BLACK,GREEN);
+}
 #if 0
 void mac_handleInput(grid *g, char c) {
     int row = window.row;
