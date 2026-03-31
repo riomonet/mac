@@ -197,7 +197,19 @@ point Point(float row, float col) {
 #define LABEL_LEN 28
 #define DOUBLE_SPACE 2
 
+/* screenMap, title is at a point form memebers all have their own points
+ * menus have their own points. */
 
+typedef struct field {
+  char name[32];
+  char entry[16];
+  struct{
+    point name;
+    point entry;
+  } map;
+} field;
+
+  
 typedef struct input {
     struct {
 	char name[32];
@@ -244,10 +256,17 @@ void renderTitle(grid *g, char *title) {
 }
 
 void renderForm(grid *g, form f) {
-    for (int i = 0; i < f.nFields; i++) {
+  ///reposition-based on grid, establish new basebt based on g .
+  point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
+  f.field[0].label.pt = basePt;
+  f.field[1].label.pt = ptAdd(basePt,2,0);
+  f.field[0].input.pt = ptAdd(basePt,0,25);
+  f.field[1].input.pt = ptAdd(basePt,2,25);
+  
+  for (int i = 0; i < f.nFields; i++) {
 	writeString(g,f.field[i].label.pt, f.field[i].label.name, 0);
 	writeString(g,f.field[i].input.pt, f.field[i].input.buf, "a", UNDERLINE);
-    }
+  }
 }
 
 static form loginForm = {.nFields = 0}; 
@@ -272,10 +291,10 @@ void mac_handleInput () {
  * The forms basePt must be reset on a SIGWINCH signal prior to rerendering,
  * But the values of the field buffers, must not change. */
 void login(grid *g) {
-    if (!loginForm.nFields) { 
+    if (!loginForm.nFields) {
         char *fields[] = {"User", "Password"};
         point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
-        loginForm = Form(fields, 2, basePt, LABEL_LEN, DOUBLE_SPACE); 
+        loginForm = Form(fields, 2, basePt, LABEL_LEN, DOUBLE_SPACE);
         W.cx = loginForm.field[0].input.pt.col;
         W.cy = loginForm.field[0].input.pt.row;
     }
