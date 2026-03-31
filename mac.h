@@ -55,13 +55,10 @@ frameBuffer *initFrameBuffer(void);
 void serializeGrid(grid*, grid*, frameBuffer*);
 void bltFrameBuffer(frameBuffer*);
 
-int xCenter(grid*, int);
-int xThird(grid*, int) ;
 void setFgCl(grid*, int, int, enum colors);
 void setBgCl(grid*, int, int, enum colors);
 void setChar(grid*, int, int, char);
 void underline(grid*, int, int, int, enum colors, enum colors);
-void hText(grid*, char*, int, int, enum colors, enum colors, enum attributes);
 void handler(int);
 void setDefaultColors(enum colors, enum colors);
 void term_send_pos(int, int);

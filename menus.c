@@ -1,7 +1,6 @@
 #define GET_IDX(g, y, x) (((y) * ((g)->nCols)) + (x))
 
 typedef enum states {
-    STARTUP,
     LOGIN,
     MAIN_MENU,
     ADD_USER,
@@ -254,8 +253,23 @@ void renderForm(grid *g, form f) {
 
 static form loginForm = {.nFields = 0}; 
 
-void login(grid *g) {
+//TODO handle tab, backspace, and arrow keys, add submit F8 or something like that
+void mac_handleInput () {
+    form *f;
+    if (W.state == LOGIN) f = &loginForm;
+    term_send_pos(W.cy + 1, W.cx + 1);
+    term_send_cmd(SHOW_CURSOR);
+    char c = platform_read();
+    int inputCol = f-> field[0].input.pt.col;
+    int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
+    int curIdx = W.cx - inputCol;
+    if ((curIdx + inputCol) < lastCol && W.cx - inputCol >= 0 ) {
+	f->field[0].input.buf[curIdx] = c;
+	W.cx++;
+    }
+}
 
+void login(grid *g) {
     if (!loginForm.nFields) {
 	char *fields[] = {"User", "Password"};
 	point basePt = _Pt(g, INPUT_WIDTH, ONE_THIRD, HALF);
@@ -267,31 +281,12 @@ void login(grid *g) {
     renderForm(g, loginForm);
 }
 
-void processKeyPress (grid *g, form *f) {
-    term_send_pos(W.cy + 1, W.cx + 1);
-    term_send_cmd(SHOW_CURSOR);
-    char c = platform_read();
-    int inputCol = f->field[0].input.pt.col;
-    int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
-    int curIdx = W.cx - inputCol;
-    if ((curIdx + inputCol) < lastCol && W.cx - inputCol >= 0 ) {
-	f->field[0].input.buf[curIdx] = c;
-	W.cx++;
-    }
-      writeString(g, f->field[0].input.pt,f->field[0].input.buf,0);
-}
-
 /* ============================== Serices provided to the platform layer ============================== */
 void mac_renderWindow(grid *g) {
     switch(W.state) {
-    case STARTUP:
-	login(g);
-	W.state = LOGIN;
-	break;
     case LOGIN:
 	W.state = LOGIN;
 	login(g);
-	processKeyPress(g, &loginForm);
 	break;
     case MAIN_MENU:
     case ADD_USER:
@@ -301,7 +296,7 @@ void mac_renderWindow(grid *g) {
 }
 
 void mac_startup() {
-    W.state = STARTUP;
+    W.state = LOGIN;
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(HIDE_CURSOR);
     setDefaultColors(BLACK,AMBER);

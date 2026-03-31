@@ -196,6 +196,7 @@ int main(void) {
         tmp = back;
         back = front;
         front = tmp;
+	// mac_handleInput();
     }
     /* ============================== CLEAN UP ======================================== */
 
