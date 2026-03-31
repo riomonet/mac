@@ -16,7 +16,6 @@ typedef struct point {
 typedef struct {
     states state;
     int cx, cy;
-
 } userWindow;
 
 userWindow W;
@@ -194,14 +193,14 @@ point Point(float row, float col) {
 /* ============================== Forms ============================== */
 #define HALF .50
 #define ONE_THIRD .33
-#define INPUT_WIDTH 40
-#define LABEL_WIDTH 28
+#define TOTAL_FIELD_LEN 40
+#define LABEL_LEN 28
 #define DOUBLE_SPACE 2
 
 
 typedef struct input {
     struct {
-	char buf[32];
+	char name[32];
 	point pt;
     } label;
     struct {
@@ -218,9 +217,9 @@ typedef struct form {
 
 /* Constructor for 'input' type. */
 input Input(char *label) {
-    input inp = {.label.buf = ". . . . . . . . . . . . . . . . ",
+    input inp = {.label.name = ". . . . . . . . . . . . . . . . ",
 		 .input.buf = "                "};
-    memcpy(inp.label.buf, label, strlen(label));
+    memcpy(inp.label.name, label, strlen(label));
     return inp;
 }
 
@@ -246,7 +245,7 @@ void renderTitle(grid *g, char *title) {
 
 void renderForm(grid *g, form f) {
     for (int i = 0; i < f.nFields; i++) {
-	writeString(g,f.field[i].label.pt, f.field[i].label.buf, 0);
+	writeString(g,f.field[i].label.pt, f.field[i].label.name, 0);
 	writeString(g,f.field[i].input.pt, f.field[i].input.buf, "a", UNDERLINE);
     }
 }
@@ -264,18 +263,21 @@ void mac_handleInput () {
     int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
     int curIdx = W.cx - inputCol;
     if ((curIdx + inputCol) < lastCol && W.cx - inputCol >= 0 ) {
-	f->field[0].input.buf[curIdx] = c;
-	W.cx++;
+        f->field[0].input.buf[curIdx] = c;
+        W.cx++;
     }
 }
 
+/* Forms and menu's must be rerendered if the terminal window changes size.
+ * The forms basePt must be reset on a SIGWINCH signal prior to rerendering,
+ * But the values of the field buffers, must not change. */
 void login(grid *g) {
-    if (!loginForm.nFields) {
-	char *fields[] = {"User", "Password"};
-	point basePt = _Pt(g, INPUT_WIDTH, ONE_THIRD, HALF);
-	loginForm = Form(fields, 2, basePt, LABEL_WIDTH, DOUBLE_SPACE);
-	W.cx = loginForm.field[0].input.pt.col;
-	W.cy = loginForm.field[0].input.pt.row;
+    if (!loginForm.nFields) { 
+        char *fields[] = {"User", "Password"};
+        point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
+        loginForm = Form(fields, 2, basePt, LABEL_LEN, DOUBLE_SPACE); 
+        W.cx = loginForm.field[0].input.pt.col;
+        W.cy = loginForm.field[0].input.pt.row;
     }
     renderTitle(g, "MARINA 59 | Sign On");
     renderForm(g, loginForm);

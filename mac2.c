@@ -129,7 +129,7 @@ void resizeGrid(grid *back, grid *front,  struct termConfig *E) {
     free(front);
     initTerm(E);
     back  = allocateGrid(E->nCols, E->nRows);
-    front = allocateGrid(E->nCols, E->nRows);
+    front = allocateGrid(E->nCols, E->nRows); //NOTE: memory leak
     resetGrid(back, ' ');
     resetGrid(front, ' ');
 }
@@ -184,9 +184,13 @@ int main(void) {
         if (RESIZE) { // TODO(ari): move this to function _resize.
             RESIZE = 0;
             free(back);
+            free(front);
+
             initTerm(E);
+            //NOTE: do we need to realloc instead of new buffer?
             back  = allocateGrid(E.nCols, E.nRows);
-            front = allocateGrid(E.nCols, E.nRows);
+            front = allocateGrid(E.nCols, E.nRows); 
+            zeroFront(front);
             ///////	    resizeGrid(back, front, &E);
         }
         resetGrid(back,' ');
@@ -196,7 +200,7 @@ int main(void) {
         tmp = back;
         back = front;
         front = tmp;
-	// mac_handleInput();
+        mac_handleInput();
     }
     /* ============================== CLEAN UP ======================================== */
 
