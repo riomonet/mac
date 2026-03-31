@@ -134,14 +134,20 @@ void resizeGrid(grid *back, grid *front,  struct termConfig *E) {
     resetGrid(front, ' ');
 }
 
-
-
 void zeroFront(grid *g) {
     for(int y = 0; y < g->nRows; y++) {
       for(int x = 0; x < g->nCols; x++) {
         setChar(g,y,x,-1);
       }
     }
+}
+
+char platform_read() {
+    int nread;
+    char c;
+    while ((nread = read(STDIN_FILENO,&c,1)) == 0);
+    if (nread == -1) exit(1);
+    return c;
 }
 
 int main(void) {
@@ -153,7 +159,7 @@ int main(void) {
     if (sigaction(SIGWINCH, &sa, NULL) == -1) {
         perror("sigaction"); 
     }
-    // TOOD(ari): This should only be active during debug mode.
+    // TODO(ari): SIGINT should only be active during debug mode.
     // otherwise SIGINT should be ignored once in raw mode.
     if (sigaction(SIGINT, &sa, NULL) == -1) {
         perror("SIGINT");
@@ -184,7 +190,6 @@ int main(void) {
             ///////	    resizeGrid(back, front, &E);
         }
         resetGrid(back,' ');
-	//	mac_handleInput(back, c);
         mac_renderWindow(back); // TODO(ari): throttle frame rate in platform
         serializeGrid(back, front, fb);
         bltFrameBuffer(fb);

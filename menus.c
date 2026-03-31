@@ -1,7 +1,5 @@
-
 #define GET_IDX(g, y, x) (((y) * ((g)->nCols)) + (x))
 
-// NOTE We have to keep track of where we are.
 typedef enum states {
     STARTUP,
     LOGIN,
@@ -11,39 +9,31 @@ typedef enum states {
     SEARCH_LOGS
 } states;
 
-typedef struct {
-    states state;
-    int row;
-    int col;
-} userWindow;
-
 typedef struct point {
     int row;
     int col;
 } point;
 
+typedef struct {
+    states state;
+    int cx, cy;
+
+} userWindow;
+
+userWindow W;
 
 /* ===================================== Start up functions.  ==================================== */
-
-userWindow window;
-
 /* On start we set the default colors for the ap. */
 void setDefaultColors(enum colors bg, enum colors fg) {
     DEF_BG = bg;
     DEF_FG = fg;
-    //TODO: create a Lookup table for rgb values the correspond
-    // to our current colors table values.
+
     char *color = rgb_colors[bg].rgb;
     int len = rgb_colors[bg].len;
     write(STDOUT_FILENO, color, len);
-    /* printf("\x1b]11;rgb:00/00/aa\e\\"); */
-    /* fflush(stdout); */
 }
 
-/* Pre game loop directives, service provided by mac layer to platform */
-
 /* ===================================== Utility functions.  ==================================== */
-
 /* Returns true if y, x are within the visible window */
 int inFrame(grid *g, int y, int x) {
   if (x < g->nCols && y < g->nRows){
@@ -251,6 +241,10 @@ form Form(char **inputs, int nFields, point basePt, int label_width, int line_sp
     return f;
  }
 
+void renderTitle(grid *g, char *title) {
+    writeString(g, _Pt(g,strlen(title), 1, HALF), title, 0);
+}
+
 void renderForm(grid *g, form f) {
     for (int i = 0; i < f.nFields; i++) {
 	writeString(g,f.field[i].label.pt, f.field[i].label.buf, 0);
@@ -258,29 +252,47 @@ void renderForm(grid *g, form f) {
     }
 }
 
-void renderTitle(grid *g, char *title) {
-    writeString(g, _Pt(g,strlen(title), 1, HALF), title, 0);
+static form loginForm = {.nFields = 0}; 
+
+void login(grid *g) {
+
+    if (!loginForm.nFields) {
+	char *fields[] = {"User", "Password"};
+	point basePt = _Pt(g, INPUT_WIDTH, ONE_THIRD, HALF);
+	loginForm = Form(fields, 2, basePt, LABEL_WIDTH, DOUBLE_SPACE);
+	W.cx = loginForm.field[0].input.pt.col;
+	W.cy = loginForm.field[0].input.pt.row;
+    }
+    renderTitle(g, "MARINA 59 | Sign On");
+    renderForm(g, loginForm);
 }
 
-void renderLoginScreen(grid *g) {
-    char *fields[] = {"User", "Password"};
-    point basePt = _Pt(g, INPUT_WIDTH, ONE_THIRD, HALF);
-    form f = Form(fields, 2, basePt, LABEL_WIDTH, DOUBLE_SPACE);
-    renderTitle(g, "MARINA 59 | Sign On");
-    renderForm(g, f);
-
-    term_send_pos(f.field[0].input.pt.row + 1, f.field[0].input.pt.col + 1);
+void processKeyPress (grid *g, form *f) {
+    term_send_pos(W.cy + 1, W.cx + 1);
     term_send_cmd(SHOW_CURSOR);
+    char c = platform_read();
+    int inputCol = f->field[0].input.pt.col;
+    int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
+    int curIdx = W.cx - inputCol;
+    if ((curIdx + inputCol) < lastCol && W.cx - inputCol >= 0 ) {
+	f->field[0].input.buf[curIdx] = c;
+	W.cx++;
+    }
+      writeString(g, f->field[0].input.pt,f->field[0].input.buf,0);
 }
 
 /* ============================== Serices provided to the platform layer ============================== */
 void mac_renderWindow(grid *g) {
-    switch(window.state) {
+    switch(W.state) {
     case STARTUP:
-	renderLoginScreen(g);
-	window.state = LOGIN;
+	login(g);
+	W.state = LOGIN;
 	break;
-    case LOGIN: renderLoginScreen(g); break;
+    case LOGIN:
+	W.state = LOGIN;
+	login(g);
+	processKeyPress(g, &loginForm);
+	break;
     case MAIN_MENU:
     case ADD_USER:
     case VIEW_LIVE_LOGS:
@@ -289,10 +301,10 @@ void mac_renderWindow(grid *g) {
 }
 
 void mac_startup() {
-    window.state = STARTUP;
+    W.state = STARTUP;
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(HIDE_CURSOR);
-    setDefaultColors(BLACK,GREEN);
+    setDefaultColors(BLACK,AMBER);
 }
 #if 0
 void mac_handleInput(grid *g, char c) {
