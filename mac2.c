@@ -96,8 +96,9 @@ grid *allocateGrid(int nCols, int nRows) {
 
 /* service provided to mac*/
 void term_send_pos(int y, int x) {
-    printf("\x1b[%d;%dH",y,x); //TODO: Convert to write call, using snprintf;
-    fflush(stdout);
+    char buf[32];
+    snprintf(buf,32,"\x1b[%d;%dH",y,x);
+    write(STDOUT_FILENO, buf, strlen(buf));
 }
 
 /* platform layerSets the char value of each cell in grid 'g' to 'chVal', as
@@ -196,10 +197,11 @@ int main(void) {
         }
         resetGrid(back,' ');
 	mac_handleInput(back);
-	term_send_cmd(HIDE_CURSOR);
+	//	term_send_cmd(HIDE_CURSOR);
         mac_renderWindow(back); // TODO(ari): throttle frame rate in platform
         serializeGrid(back, front, fb);
         bltFrameBuffer(fb);
+	term_send_pos(W.cy,W.cx+1);
 	term_send_cmd(SHOW_CURSOR);
         tmp = back;
         back = front;

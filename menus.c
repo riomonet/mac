@@ -1,24 +1,11 @@
 #define GET_IDX(g, y, x) (((y) * ((g)->nCols)) + (x))
 
-typedef enum states {
-    LOGIN,
-    MAIN_MENU,
-    ADD_USER,
-    VIEW_LIVE_LOGS,
-    SEARCH_LOGS
-} states;
 
 typedef struct point {
     int row;
     int col;
 } point;
 
-typedef struct {
-    states state;
-    int cx, cy;
-} userWindow;
-
-userWindow W;
 
 /* ===================================== Start up functions.  ==================================== */
 /* On start we set the default colors for the ap. */

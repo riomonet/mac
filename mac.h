@@ -44,6 +44,26 @@ typedef struct {
     char data[];
 } frameBuffer;
 
+
+typedef enum states {
+    LOGIN,
+    MAIN_MENU,
+    ADD_USER,
+    VIEW_LIVE_LOGS,
+    SEARCH_LOGS
+} states;
+
+
+
+
+typedef struct {
+    states state;
+    int cx, cy;
+} userWindow;
+
+userWindow W;
+
+
 grid *initGrid(int, int);
 void resizeGrid(grid*,grid*,struct termConfig*);
 void setCursorPostions(grid*);
