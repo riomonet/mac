@@ -279,8 +279,6 @@ void renderForm(grid *g, form *f) {
         writeString(g,f->field[i].label.pt, f->field[i].label.name, 0);
         writeString(g,f->field[i].input.pt, f->field[i].input.buf, "a", UNDERLINE);
     }
-    term_send_pos(W.cy, W.cx);
-    term_send_cmd(SHOW_CURSOR);
 }
 
 //TODO handle tab, backspace, and arrow keys, add submit F8 or something like that
@@ -291,25 +289,26 @@ void mac_handleInput (grid *g) {
     int inputCol = f->field[0].input.pt.col;
     int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
     int curIdx = W.cx - inputCol;
+    //    term_send_pos(W.cy, W.cx-1);
+    //    term_send_cmd(SHOW_CURSOR);
+#define DEBUG 1
+#ifdef DEBUG
     writeNum(g,Point(10,1),f->field[0].input.pt.col,"input start:",0);
     writeNum(g,Point(11,1),W.cx,"cx",0);
     writeNum(g,Point(12,1),curIdx,"curIdx",0);
-    if ((curIdx + inputCol) < lastCol && W.cx - inputCol >= 0 ) {
-        if (isalpha(c)) {
-            writeNum(g,Point(1,1),curIdx,"Forwards: ",0);
-            writeString(g,Point(2,1),f->field[0].input.buf,0);
-            f->field[0].input.buf[curIdx] = c;
-            W.cx++;
-        }
-        if (c == 127) {
-            f->field[0].input.buf[curIdx] = ' ';
-            writeNum(g,Point(1,1),curIdx,"Backwards",0);
-            writeString(g,Point(3,1),f->field[0].input.buf,0);
-            if (curIdx > 0)
-                W.cx--;
-        }
-        term_send_pos(W.cy, W.cx);
+#endif
+    
+    if (isalpha(c) && W.cx < lastCol) {
+	W.cx++;
+	f->field[0].input.buf[curIdx] = c;
     }
+    if (c == 127 && curIdx > 0) {
+	curIdx--;
+	W.cx--;
+	f->field[0].input.buf[curIdx] = ' ';
+    }
+    
+    //    term_send_cmd(HIDE_CURSOR);
 }
 
 /* Forms and menu's must be rerendered if the terminal window changes size.
@@ -325,6 +324,7 @@ void login(grid *g) {
     }
     renderTitle(g, "MARINA 59 | Sign On");
     renderForm(g, &loginForm);
+
 }
 
 /* ============================== Serices provided to the platform layer ============================== */

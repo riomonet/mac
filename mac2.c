@@ -195,10 +195,12 @@ int main(void) {
             ///////	    resizeGrid(back, front, &E);
         }
         resetGrid(back,' ');
+	mac_handleInput(back);
+	term_send_cmd(HIDE_CURSOR);
         mac_renderWindow(back); // TODO(ari): throttle frame rate in platform
         serializeGrid(back, front, fb);
         bltFrameBuffer(fb);
-        mac_handleInput(back);
+	term_send_cmd(SHOW_CURSOR);
         tmp = back;
         back = front;
         front = tmp;
