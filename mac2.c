@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -197,10 +198,10 @@ int main(void) {
         mac_renderWindow(back); // TODO(ari): throttle frame rate in platform
         serializeGrid(back, front, fb);
         bltFrameBuffer(fb);
+        mac_handleInput(back);
         tmp = back;
         back = front;
         front = tmp;
-        mac_handleInput();
     }
     /* ============================== CLEAN UP ======================================== */
 

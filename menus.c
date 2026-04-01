@@ -34,69 +34,69 @@ void setDefaultColors(enum colors bg, enum colors fg) {
 /* ===================================== Utility functions.  ==================================== */
 /* Returns true if y, x are within the visible window */
 int inFrame(grid *g, int y, int x) {
-  if (x < g->nCols && y < g->nRows){
-    return 1;
-  } else {
-    return 0;
-  }
+    if (x < g->nCols && y < g->nRows){
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 /* ===================================== Cell values.  ========================================== */
 
 void setFgCl(grid *g, int y, int x, enum colors color) {
-  if(inFrame(g,y,x)) {
-      int idx = GET_IDX(g,y,x);
-      g->cell[idx].fgColor = color;
+    if(inFrame(g,y,x)) {
+        int idx = GET_IDX(g,y,x);
+        g->cell[idx].fgColor = color;
     }
 }
 
 void setBgCl(grid *g, int y, int x, enum colors color) {
-  if(inFrame(g,y,x)) {
-      int idx = GET_IDX(g,y,x);
-      g->cell[idx].bgColor = color;
+    if(inFrame(g,y,x)) {
+        int idx = GET_IDX(g,y,x);
+        g->cell[idx].bgColor = color;
     }
 }
 
 void setChar(grid *g, int y, int x, char ch) {
-  if(inFrame(g,y,x)) {
-      int idx = GET_IDX(g,y,x);
-      g->cell[idx].char_code = ch;
-  }
+    if(inFrame(g,y,x)) {
+        int idx = GET_IDX(g,y,x);
+        g->cell[idx].char_code = ch;
+    }
 }
 
 void setAttribute(grid *g, int y, int x, enum attributes attr) {
-  if(inFrame(g,y,x)) {
-      int idx = GET_IDX(g,y,x);
-      g->cell[idx].attr = attr;
-  }
+    if(inFrame(g,y,x)) {
+        int idx = GET_IDX(g,y,x);
+        g->cell[idx].attr = attr;
+    }
 }
 
 void setCellState(grid *g, int row, int col, char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     while(*fmt) {
-	switch(*fmt) {
-	case 'c':
-	    char c = va_arg(args, int);
-	    setChar(g, row, col, c);
-	    break;
-	case 'f':
-	    enum colors fg = va_arg(args, enum colors);
-	    setFgCl(g,row,col,fg);
-	    break;
-	case 'b':
-	    enum colors bg = va_arg(args, enum colors);
-	    setBgCl(g,row,col,bg);
-	    break;
-	case 'a':
-	     enum attributes attr = va_arg(args, enum attributes);
-	     setAttribute(g,row, col,attr);
-	     break;
-	default:
-	    fprintf(stdout,"Bad format in setCellState");
-	    exit(1);
-	}
-	fmt++;
+        switch(*fmt) {
+        case 'c':
+            char c = va_arg(args, int);
+            setChar(g, row, col, c);
+            break;
+        case 'f':
+            enum colors fg = va_arg(args, enum colors);
+            setFgCl(g,row,col,fg);
+            break;
+        case 'b':
+            enum colors bg = va_arg(args, enum colors);
+            setBgCl(g,row,col,bg);
+            break;
+        case 'a':
+            enum attributes attr = va_arg(args, enum attributes);
+            setAttribute(g,row, col,attr);
+            break;
+        default:
+            fprintf(stdout,"Bad format in setCellState");
+            exit(1);
+        }
+        fmt++;
     }
     va_end(args);
 }
@@ -116,15 +116,15 @@ void writeString(grid *g, point p, char *str, char *fmt, ...) {
     enum attributes attr = NONE;
 
     if (fmt) {
-	va_list args;
-	va_start(args, fmt);
-	while(*fmt) {
-	    if (*fmt == 'f') fg = va_arg(args,enum colors);
-	    else if (*fmt == 'b') bg = va_arg(args, enum colors);
-	    else if (*fmt == 'a') attr = va_arg(args, enum attributes);
-	    fmt++;
-	}
-	va_end(args);
+        va_list args;
+        va_start(args, fmt);
+        while(*fmt) {
+            if (*fmt == 'f') fg = va_arg(args,enum colors);
+            else if (*fmt == 'b') bg = va_arg(args, enum colors);
+            else if (*fmt == 'a') attr = va_arg(args, enum attributes);
+            fmt++;
+        }
+        va_end(args);
     }
     
     int y = p.row;
@@ -139,28 +139,35 @@ void writeString(grid *g, point p, char *str, char *fmt, ...) {
             setFgCl(g,y,x+i,fg);
         }
         if (attr) {
-          setAttribute(g, y, x + i, attr);
+            setAttribute(g, y, x + i, attr);
         }
     }
 }
+
+void writeNum(grid *g, point p, int num, char *str, char *fmt, ...){
+    char buf[32];
+    snprintf(buf,32,"%s %d", str, num);
+    writeString(g,p,buf,fmt);
+}
+
 
 /* ===================================== Point object caluclations  ==================================== */
 /* Returns a column value given a percentage of nCols */
 int _Col(grid *g, int len,float pos) {
     if (pos < 1) {
-	return (g->nCols - len) * pos;
+        return (g->nCols - len) * pos;
     }
     else {
-	return pos;	
+        return pos;	
     }
 }
 
 /* Returns a row value given a percentage of nRows */
 int _Row(grid *g, float pos) {
     if(pos < 1) {
-    return g->nRows * pos;
+        return g->nRows * pos;
     } else {
-	return pos;
+        return pos;
     }
 }
 
@@ -169,8 +176,8 @@ int _Row(grid *g, float pos) {
  * 'len' at the given proportion, horizontally */
 point _Pt(grid *g, int len, float rwRatio, float clRatio) {
     point p = {
-	.row = _Row(g, rwRatio),
-	.col = _Col(g, len, clRatio)
+        .row = _Row(g, rwRatio),
+        .col = _Col(g, len, clRatio)
     };
     return p;
 }
@@ -178,8 +185,8 @@ point _Pt(grid *g, int len, float rwRatio, float clRatio) {
 /* Return a new point incrementing arg 'p' by nRows and nCols */
 point ptAdd (point p, int nRows, int nCols) {
     point pt =  {
-	.row = p.row + nRows,
-	.col = p.col + nCols
+        .row = p.row + nRows,
+        .col = p.col + nCols
     };
     return pt;
 }
@@ -201,23 +208,23 @@ point Point(float row, float col) {
  * menus have their own points. */
 
 typedef struct field {
-  char name[32];
-  char entry[16];
-  struct{
-    point name;
-    point entry;
-  } map;
+    char name[32];
+    char entry[16];
+    struct{
+        point name;
+        point entry;
+    } map;
 } field;
 
   
 typedef struct input {
     struct {
-	char name[32];
-	point pt;
+        char name[32];
+        point pt;
     } label;
     struct {
-	char buf[16];
-	point pt;
+        char buf[16];
+        point pt;
     } input;
 } input;
 
@@ -230,7 +237,7 @@ typedef struct form {
 /* Constructor for 'input' type. */
 input Input(char *label) {
     input inp = {.label.name = ". . . . . . . . . . . . . . . . ",
-		 .input.buf = "                "};
+                 .input.buf = "                "};
     memcpy(inp.label.name, label, strlen(label));
     return inp;
 }
@@ -240,50 +247,68 @@ form Form(char **inputs, int nFields, point basePt, int label_width, int line_sp
     form f;
     int rowStart = 1;
     for (int i = 0; i < nFields; i++) {
-	f.field[i] = Input(inputs[i]);
-	f.field[i].label.pt.row = basePt.row + rowStart;
-	f.field[i].label.pt.col = basePt.col;
-	f.field[i].input.pt.row = basePt.row + rowStart;
-	f.field[i].input.pt.col = basePt.col + label_width;
-	rowStart += line_space;
+        f.field[i] = Input(inputs[i]);
+        f.field[i].label.pt.row = basePt.row + rowStart;
+        f.field[i].label.pt.col = basePt.col;
+        f.field[i].input.pt.row = basePt.row + rowStart;
+        f.field[i].input.pt.col = basePt.col + label_width;
+        rowStart += line_space;
     }
     f.nFields = nFields;
     return f;
- }
+}
 
 void renderTitle(grid *g, char *title) {
     writeString(g, _Pt(g,strlen(title), 1, HALF), title, 0);
 }
 
-void renderForm(grid *g, form f) {
-  ///reposition-based on grid, establish new basebt based on g .
-  point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
-  f.field[0].label.pt = basePt;
-  f.field[1].label.pt = ptAdd(basePt,2,0);
-  f.field[0].input.pt = ptAdd(basePt,0,25);
-  f.field[1].input.pt = ptAdd(basePt,2,25);
-  
-  for (int i = 0; i < f.nFields; i++) {
-	writeString(g,f.field[i].label.pt, f.field[i].label.name, 0);
-	writeString(g,f.field[i].input.pt, f.field[i].input.buf, "a", UNDERLINE);
-  }
-}
-
 static form loginForm = {.nFields = 0}; 
 
+void renderForm(grid *g, form *f) {
+    ///reposition-based on grid, establish new basebt based on g .
+    f = &loginForm;
+    point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
+    int curCol = W.cx - f->field[0].input.pt.col;
+
+    f->field[0].label.pt = basePt;
+    f->field[1].label.pt = ptAdd(basePt,2,0);
+    f->field[0].input.pt = ptAdd(basePt,0,25);
+    f->field[1].input.pt = ptAdd(basePt,2,25);
+    W.cx =  f->field[0].input.pt.col + curCol;
+    for (int i = 0; i < f->nFields; i++) {
+        writeString(g,f->field[i].label.pt, f->field[i].label.name, 0);
+        writeString(g,f->field[i].input.pt, f->field[i].input.buf, "a", UNDERLINE);
+    }
+    term_send_pos(W.cy, W.cx);
+    term_send_cmd(SHOW_CURSOR);
+}
+
 //TODO handle tab, backspace, and arrow keys, add submit F8 or something like that
-void mac_handleInput () {
+void mac_handleInput (grid *g) {
     form *f;
     if (W.state == LOGIN) f = &loginForm;
-    term_send_pos(W.cy + 1, W.cx + 1);
-    term_send_cmd(SHOW_CURSOR);
     char c = platform_read();
-    int inputCol = f-> field[0].input.pt.col;
+    int inputCol = f->field[0].input.pt.col;
     int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
     int curIdx = W.cx - inputCol;
+    writeNum(g,Point(10,1),f->field[0].input.pt.col,"input start:",0);
+    writeNum(g,Point(11,1),W.cx,"cx",0);
+    writeNum(g,Point(12,1),curIdx,"curIdx",0);
     if ((curIdx + inputCol) < lastCol && W.cx - inputCol >= 0 ) {
-        f->field[0].input.buf[curIdx] = c;
-        W.cx++;
+        if (isalpha(c)) {
+            writeNum(g,Point(1,1),curIdx,"Forwards: ",0);
+            writeString(g,Point(2,1),f->field[0].input.buf,0);
+            f->field[0].input.buf[curIdx] = c;
+            W.cx++;
+        }
+        if (c == 127) {
+            f->field[0].input.buf[curIdx] = ' ';
+            writeNum(g,Point(1,1),curIdx,"Backwards",0);
+            writeString(g,Point(3,1),f->field[0].input.buf,0);
+            if (curIdx > 0)
+                W.cx--;
+        }
+        term_send_pos(W.cy, W.cx);
     }
 }
 
@@ -299,16 +324,16 @@ void login(grid *g) {
         W.cy = loginForm.field[0].input.pt.row;
     }
     renderTitle(g, "MARINA 59 | Sign On");
-    renderForm(g, loginForm);
+    renderForm(g, &loginForm);
 }
 
 /* ============================== Serices provided to the platform layer ============================== */
 void mac_renderWindow(grid *g) {
     switch(W.state) {
     case LOGIN:
-	W.state = LOGIN;
-	login(g);
-	break;
+        W.state = LOGIN;
+        login(g);
+        break;
     case MAIN_MENU:
     case ADD_USER:
     case VIEW_LIVE_LOGS:
@@ -322,11 +347,3 @@ void mac_startup() {
     term_send_cmd(HIDE_CURSOR);
     setDefaultColors(BLACK,AMBER);
 }
-#if 0
-void mac_handleInput(grid *g, char c) {
-    int row = window.row;
-    int col = window.col;
-    ////   setCellState(g,1,1,"c",c);
-    
-}
-#endif
