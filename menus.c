@@ -330,7 +330,5 @@ void mac_renderWindow(grid *g) {
 
 void mac_startup() {
     W.state = LOGIN;
-    term_send_cmd(CLEAR_SCREEN);
-    term_send_cmd(HIDE_CURSOR);
-    setDefaultColors(BLACK,AMBER);
+    setDefaultColors(BLUE,WHITE);
 }

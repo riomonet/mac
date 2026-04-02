@@ -167,6 +167,8 @@ int main(void) {
         perror("SIGINT");
     }
     term_send_cmd(ALT_BUFFER);
+    term_send_cmd(CLEAR_SCREEN);
+    term_send_cmd(HIDE_CURSOR);
     enableRawMode();
     mac_startup();
     
