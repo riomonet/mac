@@ -1,28 +1,12 @@
 static enum colors DEF_BG;
 static enum colors DEF_FG;
 
-
-#if 0
-typedef struct cell {
-    char ch;
-    struct {
-        size_t seqLen;
-        char pos[32]; //TODO make this 16 bytes.
-    } cursor;
-    struct {
-        size_t len;
-        char *color;
-    } fg;
-    struct {
-        size_t len;
-        char *color;
-    } bg;
-    struct {
-        size_t len;
-        char *val;
-    } attributes;
-} cell;
-#endif
+struct termConfig {
+    int nRows; 			/* The number of rows in the terminal window */
+    int nCols;			/* The number of columns in the terminal window. */
+    int cx, cy; 		/* The current cursor postion. */
+    struct termios orig_termios;
+};
 
 typedef struct cell {
   short column;
@@ -44,25 +28,7 @@ typedef struct {
     char data[];
 } frameBuffer;
 
-
-typedef enum states {
-    LOGIN,
-    MAIN_MENU,
-    ADD_USER,
-    VIEW_LIVE_LOGS,
-    SEARCH_LOGS
-} states;
-
-
-
-
-typedef struct {
-    states state;
-    int cx, cy;
-} userWindow;
-
-userWindow W;
-
+struct termConfig E;
 
 grid *initGrid(int, int);
 void resizeGrid(grid*,grid*,struct termConfig*);

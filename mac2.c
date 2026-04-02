@@ -11,8 +11,8 @@
 #include <errno.h>
 #include <assert.h>
 #include "lookup_tables.h"
-#include "term_interop.c"
 #include "mac.h"
+#include "term_interop.c"
 #include "menus.c"
 
 
@@ -124,7 +124,6 @@ void signalHandler(int code) {
     }
 }
 
-
 /* platform layer */
 void resizeGrid(grid *back, grid *front,  struct termConfig *E) {
     free(back);
@@ -204,7 +203,7 @@ int main(void) {
         mac_renderWindow(back); // TODO(ari): throttle frame rate in platform
         serializeGrid(back, front, fb);
         bltFrameBuffer(fb);
-	term_send_pos(W.cy,W.cx+1);
+	term_send_pos(E.cy,E.cx+1);
 	term_send_cmd(SHOW_CURSOR);
         tmp = back;
         back = front;

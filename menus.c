@@ -1,10 +1,25 @@
 #define GET_IDX(g, y, x) (((y) * ((g)->nCols)) + (x))
 
-
 typedef struct point {
     int row;
     int col;
 } point;
+
+typedef enum states {
+    LOGIN,
+    MAIN_MENU,
+    ADD_USER,
+    VIEW_LIVE_LOGS,
+    SEARCH_LOGS
+} states;
+
+typedef struct {
+    states state;
+
+} userWindow;
+userWindow W;
+
+
 
 
 /* ===================================== Start up functions.  ==================================== */
@@ -217,8 +232,9 @@ typedef struct input {
 
 typedef struct form {
     point base;
-    int nFields;
-    input field[8];
+    char nFields;
+    char curActiveField;
+    input field[3]; // NOTE Temporarily allocated here.
 } form;
 
 /* Constructor for 'input' type. */
@@ -229,7 +245,7 @@ input Input(char *label) {
     return inp;
 }
 
-/* Constructor for 'Form' type. */
+Constructor for 'Form' type.
 form Form(char **inputs, int nFields, point basePt, int label_width, int line_space ) {
     form f;
     int rowStart = 1;
@@ -246,78 +262,80 @@ form Form(char **inputs, int nFields, point basePt, int label_width, int line_sp
 }
 
 void renderTitle(grid *g, char *title) {
-    writeString(g, _Pt(g,strlen(title), 1, HALF), title, 0);
+    writeString(g, _Pt(g,strlen(title), 1, HALF), title, "f", WHITE);
 }
 
 static form loginForm = {.nFields = 0}; 
 
 void renderForm(grid *g, form *f) {
-    ///reposition-based on grid, establish new basebt based on g .
+    ///reposition-based on grid, establish new basebt based on g.
+    
     f = &loginForm;
     point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
-    int curCol = W.cx - f->field[0].input.pt.col;
+    int curCol = E.cx - f->field[0].input.pt.col;
 
     f->field[0].label.pt = basePt;
     f->field[1].label.pt = ptAdd(basePt,2,0);
     f->field[0].input.pt = ptAdd(basePt,0,25);
     f->field[1].input.pt = ptAdd(basePt,2,25);
-    W.cx =  f->field[0].input.pt.col + curCol;
+    E.cx =  f->field[0].input.pt.col + curCol;
     for (int i = 0; i < f->nFields; i++) {
         writeString(g,f->field[i].label.pt, f->field[i].label.name, 0);
         writeString(g,f->field[i].input.pt, f->field[i].input.buf, "a", UNDERLINE);
     }
 }
 
-//TODO handle tab, backspace, and arrow keys, add submit F8 or something like that
-void mac_handleInput (grid *g) {
-    form *f;
+void debugCursor(grid *g, form *f) {
 
+	writeNum(g,Point(10,1),f->field[0].input.pt.col,"input col start:",0);
+	writeNum(g,Point(11,1),f->field[0].input.pt.row,"input row:",0);
+	writeNum(g,Point(12,1),E.cx,"cx",0);
+	writeNum(g,Point(13,1),E.cy,"cy",0);
+}
+
+//TODO handle tab, backspace, and arrow keys, add submit F8 or something like that
+void mac_handleInput () {
+    form *f;
     if (W.state == LOGIN) f = &loginForm;
     if (f->nFields) {
 	char c = platform_read();
 	int inputCol = f->field[0].input.pt.col;
 	int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
-	int curIdx = W.cx - inputCol;
-	 
+	int curIdx = E.cx - inputCol;
 
-#define DEBUG 1
-#if DEBUG
-	writeNum(g,Point(10,1),f->field[0].input.pt.col,"input col start:",0);
-	writeNum(g,Point(11,1),f->field[0].input.pt.row,"input row:",0);
-	writeNum(g,Point(12,1),W.cx,"cx",0);
-	writeNum(g,Point(13,1),W.cy,"cy",0);
-	//	writeNum(g,Point(14,1),curIdx,"curIdx",0);
-#endif
-	if (isalnum(c) && W.cx < lastCol) {
-	    W.cx++;
+	if (isalnum(c) && E.cx < lastCol) {
+	    E.cx++;
 	    f->field[0].input.buf[curIdx] = c;
 	} else if (c == 127 && curIdx > 0) {
 	    curIdx--;
-	    W.cx--;
+	    E.cx--;
 	    f->field[0].input.buf[curIdx] = ' ';
 	    // tab to new field -> handle this then arrow keys
 	} else if (c == 9) {
 	    
 	}
     }    
-
 }
+
 
 /* Forms and menu's must be rerendered if the terminal window changes size.
  * The forms basePt must be reset on a SIGWINCH signal prior to rerendering,
- * But the values of the field buffers, must not change. */
+ * But the values of the field buffers, must not change.
+ *
+ * TODO Implement 3 tries and a timeout/exit. Also log failed attempts for fail2ban.
+ */
 void login(grid *g) {
     if (!loginForm.nFields) {
         char *fields[] = {"User", "Password"};
         point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
         loginForm = Form(fields, 2, basePt, LABEL_LEN, DOUBLE_SPACE);
-        W.cx = loginForm.field[0].input.pt.col;
-        W.cy = loginForm.field[0].input.pt.row;
+        E.cx = loginForm.field[0].input.pt.col;
+        E.cy = loginForm.field[0].input.pt.row;
     }
     renderTitle(g, "MARINA 59 | Sign On");
     renderForm(g, &loginForm);
-    if (W.cy != loginForm.field[0].input.pt.row + 1) {
-	W.cy = loginForm.field[0].input.pt.row + 1;    
+    if (E.cy != loginForm.field[0].input.pt.row + 1) {
+	E.cy = loginForm.field[0].input.pt.row + 1;    
     }
 }
 

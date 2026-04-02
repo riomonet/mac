@@ -4,15 +4,6 @@
 volatile sig_atomic_t RESIZE = 0; //SIGWINCH
 volatile sig_atomic_t CLEANUP = 0; //SIGINT
 
-
-struct termConfig {
-    int nRows;
-    int nCols;
-    struct termios orig_termios;
-};
-
-struct termConfig E;
-
 int getWindowSize() {
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
