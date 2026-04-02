@@ -271,31 +271,33 @@ void renderForm(grid *g, form *f) {
 //TODO handle tab, backspace, and arrow keys, add submit F8 or something like that
 void mac_handleInput (grid *g) {
     form *f;
+
     if (W.state == LOGIN) f = &loginForm;
-    char c = platform_read();
-    int inputCol = f->field[0].input.pt.col;
-    int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
-    int curIdx = W.cx - inputCol;
-    //    term_send_pos(W.cy, W.cx-1);
-    //    term_send_cmd(SHOW_CURSOR);
+    if (f->nFields) {
+	char c = platform_read();
+	int inputCol = f->field[0].input.pt.col;
+	int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
+	int curIdx = W.cx - inputCol;
+
+
 #define DEBUG 1
-#ifdef DEBUG
-    writeNum(g,Point(10,1),f->field[0].input.pt.col,"input start:",0);
-    writeNum(g,Point(11,1),W.cx,"cx",0);
-    writeNum(g,Point(12,1),curIdx,"curIdx",0);
+#if DEBUG
+	writeNum(g,Point(10,1),f->field[0].input.pt.col,"input col start:",0);
+	writeNum(g,Point(11,1),f->field[0].input.pt.row,"input row:",0);
+	writeNum(g,Point(12,1),W.cx,"cx",0);
+	writeNum(g,Point(13,1),W.cy,"cy",0);
+	//	writeNum(g,Point(14,1),curIdx,"curIdx",0);
 #endif
-    
-    if (isalpha(c) && W.cx < lastCol) {
-	W.cx++;
-	f->field[0].input.buf[curIdx] = c;
-    }
-    if (c == 127 && curIdx > 0) {
-	curIdx--;
-	W.cx--;
-	f->field[0].input.buf[curIdx] = ' ';
-    }
-    
-    //    term_send_cmd(HIDE_CURSOR);
+	if (isalnum(c) && W.cx < lastCol) {
+	    W.cx++;
+	    f->field[0].input.buf[curIdx] = c;
+	} else if (c == 127 && curIdx > 0) {
+	    curIdx--;
+	    W.cx--;
+	    f->field[0].input.buf[curIdx] = ' ';
+	} 
+    }    
+
 }
 
 /* Forms and menu's must be rerendered if the terminal window changes size.
@@ -311,8 +313,11 @@ void login(grid *g) {
     }
     renderTitle(g, "MARINA 59 | Sign On");
     renderForm(g, &loginForm);
-
+    if (W.cy != loginForm.field[0].input.pt.row + 1) {
+	W.cy = loginForm.field[0].input.pt.row + 1;    
+    }
 }
+
 
 /* ============================== Serices provided to the platform layer ============================== */
 void mac_renderWindow(grid *g) {
@@ -330,5 +335,5 @@ void mac_renderWindow(grid *g) {
 
 void mac_startup() {
     W.state = LOGIN;
-    setDefaultColors(BLUE,WHITE);
+    setDefaultColors(BLACK,GREEN);
 }

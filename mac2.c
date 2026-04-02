@@ -193,7 +193,8 @@ int main(void) {
             initTerm(E);
             //NOTE: do we need to realloc instead of new buffer?
             back  = allocateGrid(E.nCols, E.nRows);
-            front = allocateGrid(E.nCols, E.nRows); 
+            front = allocateGrid(E.nCols, E.nRows);
+	    resetGrid(back,' ');
             zeroFront(front);
             ///////	    resizeGrid(back, front, &E);
         }
