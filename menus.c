@@ -278,7 +278,7 @@ void mac_handleInput (grid *g) {
 	int inputCol = f->field[0].input.pt.col;
 	int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
 	int curIdx = W.cx - inputCol;
-
+	 
 
 #define DEBUG 1
 #if DEBUG
@@ -295,7 +295,10 @@ void mac_handleInput (grid *g) {
 	    curIdx--;
 	    W.cx--;
 	    f->field[0].input.buf[curIdx] = ' ';
-	} 
+	    // tab to new field -> handle this then arrow keys
+	} else if (c == 9) {
+	    
+	}
     }    
 
 }
