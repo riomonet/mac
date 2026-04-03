@@ -14,6 +14,10 @@ typedef enum states {
 } states;
 
 states current_state;
+typedef struct user {
+    char name[15];
+    //TODO login time and day.
+} user;
 
 /* ===================================== Start up functions. =========================== */
 
@@ -340,9 +344,16 @@ int mac_handleInput () {
     return 0;
 }
 
-int auth(form *f) {
-    return strncmp("OfficerLogan   ", f->field[USER].entry, 15);
+int auth(grid *g,form *f) {
+    int userLen = strlen(f->field[USER].entry);
+    char *user = f->field[USER].entry;
+    int pwLen = strlen(f->field[PASSWORD].entry);
+    char *pw = f->field[PASSWORD].entry;
+    // NOTE: For now keeping entry padding for auth comparison. 
+    return ( (!strncmp("OfficerLogan   ", user, 15) &&
+             (!strncmp("Password       ", pw, 15))));
 }
+
 
 /* Forms and menu's must be rerendered if the terminal window changes size.
  * The forms basePt must be reset on a SIGWINCH signal prior to rerendering,
@@ -354,10 +365,12 @@ void login(grid *g) {
     int c = mac_handleInput();
 
     if (c == ENTER ) {
-        int res = auth(&loginForm);
-        writeNum(g,Pt(1,1),res,"compare: ",0);
-        writeNum(g,Pt(2,1),strlen(loginForm.field[USER].entry),"len of entry",0);
-        
+        int res = auth(g, &loginForm);
+        if (res) {
+            // create new logged in user.
+            // set state to main menu
+            // reset login form.???
+        }
     }
 
     point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF); 
