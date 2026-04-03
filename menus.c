@@ -210,6 +210,8 @@ point Pt(float row, float col) {
 #define TOTAL_FIELD_LEN 40
 #define LABEL_LEN 28
 #define DOUBLE_SPACE 2
+#define USER 0
+#define PASSWORD 1
 
 typedef struct field {
     char label[32];
@@ -268,6 +270,7 @@ form Form(char **fields, int nFields, point basePt, fieldMap *offsets) {
     f.curRow = f.basePt.row;
     f.nFields = nFields;
     updateFieldMap(&f, nFields);
+    f.field[USER].entry[15] = 0;
     return f;
 }
 
@@ -296,49 +299,68 @@ void renderForm(grid *g, form *f, point basePt) {
 }
 
 //TODO handle tab, backspace, and arrow keys, and add a submit
-void mac_handleInput () {
+int mac_handleInput () {
     form *f;
     if (current_state == LOGIN) f = &loginForm;
     if (f->nFields) {
-	int c = platform_read();
+        int c = platform_read();
 
-	// TODO: Replace hard coded field entry length.
-	int lastCol = f->map[0].entry.col + 16 - 1; 
+        // TODO: Replace hard coded field entry length.
+        int lastCol = f->map[0].entry.col + 16 - 1; 
 	
-	if (isalnum(c) && E.cx < lastCol) {
-	    f->curCol++;
-	    f->field[f->curField].entry[f->curIdx] = c;
-	    f->curIdx++;
-	} else if (c == 127 && f->curIdx > 0) { /* backspace */
-	    f->curIdx--;
-	    f->curCol--;
-	    f->field[f->curField].entry[f->curIdx] = ' ';
-	} else if (c == 9) { /* TAB */
-	    f->curField = (f->curField + 1) % f->nFields;
-	    f->curRow = f->map[f->curField].entry.row;
-	    f->curCol = f->map[f->curField].entry.col;
-	    f->curIdx = 0;
-	} else if(c == ARROW_DOWN) {
-	    f->curField = (f->curField + 1) % f->nFields;
-	    f->curRow = f->map[f->curField].entry.row;
-	    f->curCol = f->map[f->curField].entry.col;
-	    f->curIdx = 0;
-	}
+        if (isalnum(c) && E.cx < lastCol) {
+            f->curCol++;
+            f->field[f->curField].entry[f->curIdx] = c;
+            f->curIdx++;
+        } else if (c == 127 && f->curIdx > 0) { /* backspace */
+            f->curIdx--;
+            f->curCol--;
+            f->field[f->curField].entry[f->curIdx] = ' ';
+        } else if (c == 9) { /* TAB */
+            f->curField = (f->curField + 1) % f->nFields;
+            f->curRow = f->map[f->curField].entry.row;
+            f->curCol = f->map[f->curField].entry.col;
+            f->curIdx = 0;
+        } else if(c == ARROW_DOWN) {
+            f->curField = (f->curField + 1) % f->nFields;
+            f->curRow = f->map[f->curField].entry.row;
+            f->curCol = f->map[f->curField].entry.col;
+            f->curIdx = 0;
+        } else if(c == ARROW_RIGHT && E.cx < lastCol)  {
+            f->curCol++;
+            f->curIdx++;
+        } else if (c == ARROW_LEFT && f->curIdx > 0)  {
+            f->curCol--;
+            f->curIdx--;
     }
-    E.cx = f->curCol;
-    E.cy = f->curRow;
+        E.cx = f->curCol;
+        E.cy = f->curRow;
+        return c;
+    }
+    return 0;
 }
+
+int auth(form *f) {
+    return strncmp("OfficerLogan   ", f->field[USER].entry, 15);
+}
+
 /* Forms and menu's must be rerendered if the terminal window changes size.
  * The forms basePt must be reset on a SIGWINCH signal prior to rerendering,
  * 
  *
  * 
  * TODO: Implement 3 tries and a timeout/exit. Also log failed attempts for fail2ban. */
-
 void login(grid *g) {
-    mac_handleInput();
-    point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF); 
+    int c = mac_handleInput();
 
+    if (c == ENTER ) {
+        int res = auth(&loginForm);
+        writeNum(g,Pt(1,1),res,"compare: ",0);
+        writeNum(g,Pt(2,1),strlen(loginForm.field[USER].entry),"len of entry",0);
+        
+    }
+
+    point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF); 
     if (!loginForm.nFields) { /* First time called the login form is created. */
 	fieldMap offsets[] = {
 	    FieldMap( Pt(0,0), Pt(0,25) ), 
@@ -350,6 +372,7 @@ void login(grid *g) {
         E.cx = loginForm.map[0].entry.col;
         E.cy = loginForm.map[0].entry.row;
     }
+
     renderTitle(g, "MARINA 59 | Sign On");
     renderForm(g, &loginForm, basePt);
     if (E.cy != loginForm.map[loginForm.curField].entry.row + 1) {
