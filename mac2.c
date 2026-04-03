@@ -143,12 +143,51 @@ void zeroFront(grid *g) {
     }
 }
 
-char platform_read() {
+int platform_read() {
     int nread;
-    char c;
+    char c, seq[3];
     while ((nread = read(STDIN_FILENO,&c,1)) == 0);
     if (nread == -1) exit(1);
-    return c;
+
+    while(1) {
+	switch(c) {
+	case ESC:
+	    /* This is a inadvertent ESC maybe hit once or twice. */
+	    if (read(STDIN_FILENO,seq,1) == 0) return ESC;
+	    if (read(STDIN_FILENO,seq+1,1) == 0) return ESC;
+
+	    /* This is an actual ESC sequence */
+	    if (seq[0] == '[') {
+		if (seq[1] >= '0' && seq[1] <= '9') {
+		    if (read(STDIN_FILENO,seq+2,1) == 0) return ESC;
+		    if (seq[2] == '~') {
+			switch(seq[1]) {
+			case '3': return DEL_KEY;
+			case '5': return PAGE_UP;
+			case '6': return PAGE_DOWN;
+			}
+		    }
+		} else {
+		    switch(seq[1]) {
+		    case 'A': return ARROW_UP;
+		    case 'B': return ARROW_DOWN;
+		    case 'C': return ARROW_RIGHT;
+		    case 'D': return ARROW_LEFT;
+		    case 'H': return HOME_KEY;
+		    case 'F': return END_KEY;	      
+		    }
+		}
+	    } else if (seq[0] == '0') {
+		switch(seq[1]) {
+		case 'H': return HOME_KEY;
+		case 'F': return END_KEY;
+		}
+	    }
+	    break;
+	default:
+	    return c;
+	} 
+    }
 }
 
 int main(void) {
@@ -198,7 +237,7 @@ int main(void) {
             ///////	    resizeGrid(back, front, &E);
         }
         resetGrid(back,' ');
-	mac_handleInput(back);
+	//	mac_handleInput(back);  
 	//	term_send_cmd(HIDE_CURSOR);
         mac_renderWindow(back); // TODO(ari): throttle frame rate in platform
         serializeGrid(back, front, fb);

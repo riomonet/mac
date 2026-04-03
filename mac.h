@@ -49,4 +49,4 @@ void handler(int);
 void setDefaultColors(enum colors, enum colors);
 void term_send_pos(int, int);
 
-char platform_read(); 
+int platform_read(); 

@@ -139,14 +139,12 @@ void writeString(grid *g, point p, char *str, int len, char *fmt, ...) {
         }
     }
 }
-
 void writeNum(grid *g, point p, int num, char *str, char *fmt, ...){
     char buf[32];
     snprintf(buf,32,"%s %d", str, num);
     writeString(g,p,buf,strlen(buf),fmt);
 }
-
-/* ===================================== Point object caluclations  ==================================== */
+/* =============================== Point operations. ======================== */
 /* Returns a column value given a percentage of nCols */
 int _Col(grid *g, int len,float pos) {
     if (pos < 1) {
@@ -200,6 +198,7 @@ point Point(float row, float col) {
     return p;
 }
 
+/* Abreviated 'point' contstructor Pt. */
 point Pt(float row, float col) {
     point p = {.row = row, .col = col};
     return p;
@@ -284,15 +283,12 @@ fieldMap FieldMap(point labelPt,point entryPt ){
 }
 
 void renderForm(grid *g, form *f, point basePt) {
-    //    point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
-
     if (f->basePt.row != basePt.row || f->basePt.col != basePt.col) {
 	f->basePt = basePt;
 	updateFieldMap(f, 2);
 	E.cx = f->curCol;
 	E.cy = f->curRow;
     }
-
     for (int i = 0; i < f->nFields; i++) {
         writeString(g,f->map[i].label, f->field[i].label, f->offsets[i].entry.col, 0);
         writeString(g,f->map[i].entry, f->field[i].entry, 16, "a", UNDERLINE);
@@ -304,7 +300,7 @@ void mac_handleInput () {
     form *f;
     if (current_state == LOGIN) f = &loginForm;
     if (f->nFields) {
-	char c = platform_read();
+	int c = platform_read();
 
 	// TODO: Replace hard coded field entry length.
 	int lastCol = f->map[0].entry.col + 16 - 1; 
@@ -320,6 +316,13 @@ void mac_handleInput () {
 	} else if (c == 9) { /* TAB */
 	    f->curField = (f->curField + 1) % f->nFields;
 	    f->curRow = f->map[f->curField].entry.row;
+	    f->curCol = f->map[f->curField].entry.col;
+	    f->curIdx = 0;
+	} else if(c == ARROW_DOWN) {
+	    f->curField = (f->curField + 1) % f->nFields;
+	    f->curRow = f->map[f->curField].entry.row;
+	    f->curCol = f->map[f->curField].entry.col;
+	    f->curIdx = 0;
 	}
     }
     E.cx = f->curCol;
@@ -327,17 +330,19 @@ void mac_handleInput () {
 }
 /* Forms and menu's must be rerendered if the terminal window changes size.
  * The forms basePt must be reset on a SIGWINCH signal prior to rerendering,
- * But the values of the field buffers, must not change.
+ * 
  *
  * 
  * TODO: Implement 3 tries and a timeout/exit. Also log failed attempts for fail2ban. */
+
 void login(grid *g) {
+    mac_handleInput();
     point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF); 
 
     if (!loginForm.nFields) { /* First time called the login form is created. */
 	fieldMap offsets[] = {
-	    FieldMap(Point(0,0), Point(0,25)), 
-	    FieldMap(Point(2,0), Point(2,25))
+	    FieldMap( Pt(0,0), Pt(0,25) ), 
+	    FieldMap( Pt(2,0), Pt(2,25) )
 	};
 
         char *fields[] = {"User", "Password"};
