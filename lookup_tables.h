@@ -146,5 +146,15 @@ enum KEY_ACTION{
         HOME_KEY,
         END_KEY,
         PAGE_UP,
-        PAGE_DOWN
+        PAGE_DOWN,
+	F5,F6,F7,F8,F9
+	
 };
+
+
+/* Delete:    \x1b[3~ */
+/* F5:        \x1b[15~ */
+/* F6:        \x1b[17~ */
+/* F7:        \x1b[18~ */
+/* F8:        \x1b[19~ */
+/* F9:        \x1b[20~ */
