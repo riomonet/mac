@@ -13,16 +13,10 @@ typedef enum states {
     SEARCH_LOGS
 } states;
 
-typedef struct {
-    states state;
+states current_state;
 
-} userWindow;
-userWindow W;
+/* ===================================== Start up functions. =========================== */
 
-
-
-
-/* ===================================== Start up functions.  ==================================== */
 /* On start we set the default colors for the ap. */
 void setDefaultColors(enum colors bg, enum colors fg) {
     DEF_BG = bg;
@@ -112,7 +106,7 @@ void setCellState(grid *g, int row, int col, char *fmt, ...) {
  *
  *  TODO If string is wider than screen print only up to screen
  * width  we are getting segfaults. */
-void writeString(grid *g, point p, char *str, char *fmt, ...) {
+void writeString(grid *g, point p, char *str, int len, char *fmt, ...) {
     enum colors fg = DEFAULT;
     enum colors bg = DEFAULT;
     enum attributes attr = NONE;
@@ -132,7 +126,7 @@ void writeString(grid *g, point p, char *str, char *fmt, ...) {
     int y = p.row;
     int x = p.col;
     
-    for (size_t i = 0; i < strlen(str); i++) {
+    for (int i = 0; i < len; i++) {
         setChar(g,y,x+i,str[i]);
         if (bg) {
             setBgCl(g,y,x+i,bg);
@@ -149,9 +143,8 @@ void writeString(grid *g, point p, char *str, char *fmt, ...) {
 void writeNum(grid *g, point p, int num, char *str, char *fmt, ...){
     char buf[32];
     snprintf(buf,32,"%s %d", str, num);
-    writeString(g,p,buf,fmt);
+    writeString(g,p,buf,strlen(buf),fmt);
 }
-
 
 /* ===================================== Point object caluclations  ==================================== */
 /* Returns a column value given a percentage of nCols */
@@ -184,6 +177,14 @@ point _Pt(grid *g, int len, float rwRatio, float clRatio) {
     return p;
 }
 
+point ptAddPt(point p, point q) {
+    point pt =  {
+        .row = p.row + q.row,
+        .col = p.col + q.col
+    };
+    return pt;
+}
+
 /* Return a new point incrementing arg 'p' by nRows and nCols */
 point ptAdd (point p, int nRows, int nCols) {
     point pt =  {
@@ -199,6 +200,11 @@ point Point(float row, float col) {
     return p;
 }
 
+point Pt(float row, float col) {
+    point p = {.row = row, .col = col};
+    return p;
+}
+
 /* ============================== Forms ============================== */
 #define HALF .50
 #define ONE_THIRD .33
@@ -206,145 +212,150 @@ point Point(float row, float col) {
 #define LABEL_LEN 28
 #define DOUBLE_SPACE 2
 
-/* screenMap, title is at a point form memebers all have their own points
- * menus have their own points. */
-
 typedef struct field {
-    char name[32];
+    char label[32];
     char entry[16];
-    struct{
-        point name;
-        point entry;
-    } map;
 } field;
 
-  
-typedef struct input {
-    struct {
-        char name[32];
-        point pt;
-    } label;
-    struct {
-        char buf[16];
-        point pt;
-    } input;
-} input;
+typedef struct fieldMap {
+    point label;
+    point entry;
+} fieldMap;
 
 typedef struct form {
-    point base;
-    char nFields;
-    char curActiveField;
-    input field[3]; // NOTE Temporarily allocated here.
+    point basePt;
+    int  nFields;
+    int  curField;
+    int  curRow;
+    int  curCol;
+    int  curIdx;
+    struct fieldMap offsets[2]; // NOTE: Temporarily allocated here.
+    struct fieldMap map[2]; // NOTE: actual is derived from offsets
+    field field[2]; // NOTE Temporarily allocated here.
 } form;
 
-/* Constructor for 'input' type. */
-input Input(char *label) {
-    input inp = {.label.name = ". . . . . . . . . . . . . . . . ",
-                 .input.buf = "                "};
-    memcpy(inp.label.name, label, strlen(label));
-    return inp;
+/* Return a 'field', which consists of a label and an entry. */
+field Field(char *label) {
+    field  f = {.label = ". . . . . . . . . . . . . . . . ",
+                 .entry = "                "};
+    memcpy (f.label, label, strlen(label));
+    return f;
 }
 
-Constructor for 'Form' type.
-form Form(char **inputs, int nFields, point basePt, int label_width, int line_space ) {
-    form f;
-    int rowStart = 1;
+void updateFieldMap(form *f, int nFields) {
     for (int i = 0; i < nFields; i++) {
-        f.field[i] = Input(inputs[i]);
-        f.field[i].label.pt.row = basePt.row + rowStart;
-        f.field[i].label.pt.col = basePt.col;
-        f.field[i].input.pt.row = basePt.row + rowStart;
-        f.field[i].input.pt.col = basePt.col + label_width;
-        rowStart += line_space;
+	f->map[i].label = ptAddPt(f->basePt,f->offsets[i].label);
+	f->map[i].entry = ptAddPt(f->basePt,f->offsets[i].entry);
     }
+    f->curCol = f->map[0].entry.col + f->curIdx;
+    f->curRow = f->map[f->curField].entry.row;
+}
+
+/* 'form' constructor */
+form Form(char **fields, int nFields, point basePt, fieldMap *offsets) {
+    form f;
+    f.curIdx = 0;
+    f.curField = 0;
+    f.basePt = basePt;
     f.nFields = nFields;
+    
+    for (int i = 0; i < nFields; i++) {
+        f.field[i] = Field(fields[i]);
+	f.offsets[i].label = offsets[i].label;
+	f.offsets[i].entry = offsets[i].entry;
+    }
+
+    f.curCol = f.basePt.col + f.offsets[0].entry.col;
+    f.curRow = f.basePt.row;
+    f.nFields = nFields;
+    updateFieldMap(&f, nFields);
     return f;
 }
 
 void renderTitle(grid *g, char *title) {
-    writeString(g, _Pt(g,strlen(title), 1, HALF), title, "f", WHITE);
+    writeString(g, _Pt(g,strlen(title), 1, HALF), title, strlen(title),"f", WHITE);
 }
 
-static form loginForm = {.nFields = 0}; 
+static form loginForm = {.nFields = 0, .curField = 0}; 
 
-void renderForm(grid *g, form *f) {
-    ///reposition-based on grid, establish new basebt based on g.
-    
-    f = &loginForm;
-    point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
-    int curCol = E.cx - f->field[0].input.pt.col;
+fieldMap FieldMap(point labelPt,point entryPt ){
+    fieldMap m = {.label = labelPt, .entry = entryPt};
+	return m;
+}
 
-    f->field[0].label.pt = basePt;
-    f->field[1].label.pt = ptAdd(basePt,2,0);
-    f->field[0].input.pt = ptAdd(basePt,0,25);
-    f->field[1].input.pt = ptAdd(basePt,2,25);
-    E.cx =  f->field[0].input.pt.col + curCol;
+void renderForm(grid *g, form *f, point basePt) {
+    //    point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
+
+    if (f->basePt.row != basePt.row || f->basePt.col != basePt.col) {
+	f->basePt = basePt;
+	updateFieldMap(f, 2);
+	E.cx = f->curCol;
+	E.cy = f->curRow;
+    }
+
     for (int i = 0; i < f->nFields; i++) {
-        writeString(g,f->field[i].label.pt, f->field[i].label.name, 0);
-        writeString(g,f->field[i].input.pt, f->field[i].input.buf, "a", UNDERLINE);
+        writeString(g,f->map[i].label, f->field[i].label, f->offsets[i].entry.col, 0);
+        writeString(g,f->map[i].entry, f->field[i].entry, 16, "a", UNDERLINE);
     }
 }
 
-void debugCursor(grid *g, form *f) {
-
-	writeNum(g,Point(10,1),f->field[0].input.pt.col,"input col start:",0);
-	writeNum(g,Point(11,1),f->field[0].input.pt.row,"input row:",0);
-	writeNum(g,Point(12,1),E.cx,"cx",0);
-	writeNum(g,Point(13,1),E.cy,"cy",0);
-}
-
-//TODO handle tab, backspace, and arrow keys, add submit F8 or something like that
+//TODO handle tab, backspace, and arrow keys, and add a submit
 void mac_handleInput () {
     form *f;
-    if (W.state == LOGIN) f = &loginForm;
+    if (current_state == LOGIN) f = &loginForm;
     if (f->nFields) {
 	char c = platform_read();
-	int inputCol = f->field[0].input.pt.col;
-	int lastCol = inputCol + 16 - 1; // where do we get 16 from ?
-	int curIdx = E.cx - inputCol;
 
+	// TODO: Replace hard coded field entry length.
+	int lastCol = f->map[0].entry.col + 16 - 1; 
+	
 	if (isalnum(c) && E.cx < lastCol) {
-	    E.cx++;
-	    f->field[0].input.buf[curIdx] = c;
-	} else if (c == 127 && curIdx > 0) {
-	    curIdx--;
-	    E.cx--;
-	    f->field[0].input.buf[curIdx] = ' ';
-	    // tab to new field -> handle this then arrow keys
-	} else if (c == 9) {
-	    
+	    f->curCol++;
+	    f->field[f->curField].entry[f->curIdx] = c;
+	    f->curIdx++;
+	} else if (c == 127 && f->curIdx > 0) { /* backspace */
+	    f->curIdx--;
+	    f->curCol--;
+	    f->field[f->curField].entry[f->curIdx] = ' ';
+	} else if (c == 9) { /* TAB */
+	    f->curField = (f->curField + 1) % f->nFields;
+	    f->curRow = f->map[f->curField].entry.row;
 	}
-    }    
+    }
+    E.cx = f->curCol;
+    E.cy = f->curRow;
 }
-
-
 /* Forms and menu's must be rerendered if the terminal window changes size.
  * The forms basePt must be reset on a SIGWINCH signal prior to rerendering,
  * But the values of the field buffers, must not change.
  *
- * TODO Implement 3 tries and a timeout/exit. Also log failed attempts for fail2ban.
- */
+ * 
+ * TODO: Implement 3 tries and a timeout/exit. Also log failed attempts for fail2ban. */
 void login(grid *g) {
-    if (!loginForm.nFields) {
+    point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF); 
+
+    if (!loginForm.nFields) { /* First time called the login form is created. */
+	fieldMap offsets[] = {
+	    FieldMap(Point(0,0), Point(0,25)), 
+	    FieldMap(Point(2,0), Point(2,25))
+	};
+
         char *fields[] = {"User", "Password"};
-        point basePt = _Pt(g ,TOTAL_FIELD_LEN, ONE_THIRD, HALF);
-        loginForm = Form(fields, 2, basePt, LABEL_LEN, DOUBLE_SPACE);
-        E.cx = loginForm.field[0].input.pt.col;
-        E.cy = loginForm.field[0].input.pt.row;
+        loginForm = Form(fields, 2, basePt, offsets);
+        E.cx = loginForm.map[0].entry.col;
+        E.cy = loginForm.map[0].entry.row;
     }
     renderTitle(g, "MARINA 59 | Sign On");
-    renderForm(g, &loginForm);
-    if (E.cy != loginForm.field[0].input.pt.row + 1) {
-	E.cy = loginForm.field[0].input.pt.row + 1;    
+    renderForm(g, &loginForm, basePt);
+    if (E.cy != loginForm.map[loginForm.curField].entry.row + 1) {
+	E.cy = loginForm.map[loginForm.curField].entry.row + 1;    
     }
 }
 
-
 /* ============================== Serices provided to the platform layer ============================== */
 void mac_renderWindow(grid *g) {
-    switch(W.state) {
+    switch(current_state) {
     case LOGIN:
-        W.state = LOGIN;
         login(g);
         break;
     case MAIN_MENU:
@@ -355,6 +366,6 @@ void mac_renderWindow(grid *g) {
 }
 
 void mac_startup() {
-    W.state = LOGIN;
+    current_state = LOGIN;
     setDefaultColors(BLACK,GREEN);
 }
