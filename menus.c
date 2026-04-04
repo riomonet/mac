@@ -190,47 +190,12 @@ point Pt(float row, float col) {
     return p;
 }
 
-/* ============================== Forms ============================== */
-
-#define HALF .50
-#define ONE_3RD .33
-#define TWO_3RD .66
-#define ONE_4TH .25
-#define THREE_4TH .75
-#define ONE_5TH .20
-#define TWO_5TH .40
-#define THREE_5TH .60
-#define FOUR_5TH .80
-
-#define FIELD_LEN 40
-#define LABEL_LEN 25
-
-#define USER 0
-#define PASSWORD 1
-
-typedef struct field {
-    char label[32];
-    char entry[32];
-} field;
-
-
-typedef struct form {
-    point basePt;
-    int  nFields;
-    int  curField;
-    int  curRow;
-    int  curCol;
-    int  curIdx;
-    struct fieldMap offsets[2]; // NOTE: Temporarily allocated here.
-    struct fieldMap map[2]; // NOTE: actual is derived from offsets
-    field field[2]; // NOTE Temporarily allocated here.
-} form;
-
-
-static form loginForm = {.nFields = 0, .curField = 0};
-
+/* ================ Constructors for menus, forms, ... =============== */
 
 void updateFieldMap(form *f, int nFields) {
+    if (f->basePt.row < 0) f->basePt.row = 0;
+    if (f->basePt.col < 0) f->basePt.col = 0;
+    
     for (int i = 0; i < nFields; i++) {
         f->map[i].label = ptAddPt(f->basePt,f->offsets[i].label);
         f->map[i].entry = ptAddPt(f->basePt,f->offsets[i].entry);
@@ -238,10 +203,6 @@ void updateFieldMap(form *f, int nFields) {
     f->curCol = f->map[0].entry.col + f->curIdx;
     f->curRow = f->map[f->curField].entry.row;
 }
-
-
-
-/* ================ Constructors for menus, forms, ... =============== */
 
 /* Return a 'field', which consists of a label and an entry. */
 field Field(char *label) {
@@ -274,7 +235,7 @@ form Form(char **fields, int nFields, point basePt, fieldMap *offsets) {
     f.curRow = f.basePt.row;
     f.nFields = nFields;
     updateFieldMap(&f, nFields);
-    f.field[USER].entry[15] = 0;
+    f.field[USER].entry[15] = 0; //NOTE This a hack!!!
     return f;
 }
 
@@ -303,16 +264,17 @@ void renderForm(grid *g, form *f, point basePt) {
 }
 
 
+
 //TODO handle tab, backspace, and arrow keys, and add a submit
 int mac_handleInput () {
     form *f;
-    if (current_state == LOGIN) f = &loginForm;
-    if (f->nFields) {
+    //    if (current_state == LOGIN) f = &loginForm;
+    f = &Forms[LOGIN];
+    if (f->basePt.row > 0) {
         int c = platform_read();
 
         // TODO: Replace hard coded field entry length.
         int lastCol = f->map[0].entry.col + 16 - 1; 
-	
         if (isalnum(c) && E.cx < lastCol) {
             f->curCol++;
             f->field[f->curField].entry[f->curIdx] = c;
@@ -346,68 +308,58 @@ int mac_handleInput () {
 }
 
 int auth(form *f) {
-    //    int userLen = strlen(f->field[USER].entry);
-    char *user = f->field[USER].entry;
-    //    int pwLen = strlen(f->field[PASSWORD].entry);
-    char *pw = f->field[PASSWORD].entry;
     // NOTE: For now keeping entry padding for auth comparison. 
+    char *user = f->field[USER].entry;
+    char *pw = f->field[PASSWORD].entry;
+
     return ( (!strncmp("OfficerLogan   ", user, 15) &&
              (!strncmp("Password       ", pw, 15))));
 }
 
+point extractBase(grid *g, base_point bp) {
+    return _Pt(g,bp.len,bp.yGeometry,bp.xGeometry);
+}
 
+//Form(char **fields, int nFields, point basePt, fieldMap *offsets) {
+void initializeFormGenerationProcedure() {
+    point pt = Pt(-1,-1);
+    for(int STATE = 0; STATE < SENTINEL; STATE++) {
+	Forms[STATE] = Form(fields[STATE], nFields[STATE], pt, offsets[STATE]);
+    }
+}
 
-/* Forms and menu's must be rerendered if the terminal window changes size.
- * The forms basePt must be reset on a SIGWINCH signal prior to rerendering,
- * 
- * TODO: Implement 3 tries and a timeout/exit. Also log failed attempts for fail2ban. */
-void login(grid *g) {
+/* Render screen depending on global variabl 'current_state'. */
+ void screenDispatch(grid *g) {
     int c = mac_handleInput();
-    if (c == ENTER ) {
-        int res = auth(&loginForm);
-        if (res) {
-            current_state = MAIN_MENU;
-            // create new logged in user.
-            // reset login form.???
-        }
-    }
+    renderTitle(g, titles[current_state]);
+    renderForm(g,&Forms[current_state], BASE_PT(g,current_state));
 
-    point basePt = _Pt(g ,FIELD_LEN, ONE_3RD, HALF); 
-    if (!loginForm.nFields) { /* First time called the login form is created. */
-        fieldMap offsets[] = {
-	    FieldMap( Pt(0,0), Pt(0,25) ), 
-	    FieldMap( Pt(2,0), Pt(2,25) )
-	};
+    //renderFooterMenu(Forms[current_state]); TBD
+    //TODO: move to lookuptables
+    //renderInstructions(g,"Press ENTER to submit credentials:");
 
-        char *fields[] = {"User", "Password"};
-        loginForm = Form(fields, 2, basePt, offsets);
-        E.cx = loginForm.map[0].entry.col;
-        E.cy = loginForm.map[0].entry.row;
-    }
-    renderTitle(g, "MARINA 59 | Sign On");
-    renderInstructions(g,"Press ENTER to submit credentials:");
-    renderForm(g, &loginForm, basePt);
-    
-    if (E.cy != loginForm.map[loginForm.curField].entry.row + 1) {
-	E.cy = loginForm.map[loginForm.curField].entry.row + 1;    
+    if (E.cy != Forms[current_state].map[Forms[current_state].curField].entry.row + 1) {
+	E.cy = Forms[current_state].map[Forms[current_state].curField].entry.row + 1;
     }
 }
 /* ============================== Serices provided to the platform layer ============================== */
 void mac_renderWindow(grid *g) {
     switch(current_state) {
     case LOGIN:
-        login(g);
+        screenDispatch(g);
         break;
-    case MAIN_MENU:
-        
-        break;
-    case ADD_USER:
-    case VIEW_LIVE_LOGS:
-    case SEARCH_LOGS: break;
+    case MAC:
+	screenDispatch(g);
+	break;
+    /* case ADD_USER: */
+    /* case VIEW_LIVE_LOGS: */
+    /* case SEARCH_LOGS: break; */
+    default: break;
     }
 }
 
 void mac_startup() {
     current_state = LOGIN;
     setDefaultColors(BLACK,GREEN);
+    initializeFormGenerationProcedure();
 }

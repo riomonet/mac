@@ -209,12 +209,11 @@ int main(void) {
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(HIDE_CURSOR);
     enableRawMode();
-    mac_startup();
-    
     initTerm();
     grid *front = allocateGrid(E.nCols, E.nRows);
     grid *back = allocateGrid(E.nCols, E.nRows);
     grid *tmp;
+    mac_startup();
     //    resetGrid(front,' ');
     zeroFront(front);
     resetGrid(back,' ');
