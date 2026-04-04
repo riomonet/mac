@@ -13,6 +13,7 @@
 #include "lookup_tables.h"
 #include "mac.h"
 #include "term_interop.c"
+#include "menus.h"
 #include "menus.c"
 
 

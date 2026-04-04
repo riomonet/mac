@@ -122,7 +122,7 @@ struct attr_obj attribute[] = {
 };
 
 /* Credit: Salvatore San Fillipo kilo.c, copy and past*/
-enum KEY_ACTION{
+enum KEY_ACTION {
         KEY_NULL = 0,       /* NULL */
         CTRL_C = 3,         /* Ctrl-c */
         CTRL_D = 4,         /* Ctrl-d */
@@ -152,9 +152,14 @@ enum KEY_ACTION{
 };
 
 
+
 /* Delete:    \x1b[3~ */
 /* F5:        \x1b[15~ */
 /* F6:        \x1b[17~ */
 /* F7:        \x1b[18~ */
 /* F8:        \x1b[19~ */
 /* F9:        \x1b[20~ */
+
+
+
+

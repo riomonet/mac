@@ -1,23 +1,5 @@
 #define GET_IDX(g, y, x) (((y) * ((g)->nCols)) + (x))
 
-typedef struct point {
-    int row;
-    int col;
-} point;
-
-typedef enum states {
-    LOGIN,
-    MAIN_MENU,
-    ADD_USER,
-    VIEW_LIVE_LOGS,
-    SEARCH_LOGS
-} states;
-
-states current_state;
-typedef struct user {
-    char name[15];
-    //TODO login time and day.
-} user;
 
 /* ===================================== Start up functions. =========================== */
 
@@ -228,13 +210,9 @@ point Pt(float row, float col) {
 
 typedef struct field {
     char label[32];
-    char entry[16];
+    char entry[32];
 } field;
 
-typedef struct fieldMap {
-    point label;
-    point entry;
-} fieldMap;
 
 typedef struct form {
     point basePt;
