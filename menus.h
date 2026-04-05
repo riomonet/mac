@@ -2,6 +2,8 @@
 #define FMP(rl, cl, re, ce) { .label = { .row = rl, .col = cl },  .entry = { .row = re, .col = ce } }
 #define BPT(l,yG,xG) {.len = l, .yGeometry = yG, .xGeometry = xG}
 #define NUM_FIELDS(arr) (sizeof(arr) / sizeof((arr)[0]))
+#define BASE_PT(g,state) _Pt(g,basePoints[state].len,basePoints[state].yGeometry,basePoints[state].xGeometry)
+
 
 #define HALF .50
 #define ONE_3RD .33
@@ -38,6 +40,11 @@ typedef enum states {
     SENTINEL
 } states;
 
+typedef enum panel_t {
+    FORM,
+    MENU
+} panel_t;
+
 typedef struct base_point {
     int len;
     float yGeometry;
@@ -56,6 +63,8 @@ typedef struct form {
     int  curRow;
     int  curCol;
     int  curIdx;
+    point cursor_home;
+    panel_t panelType;
     struct fieldMap offsets[10]; // NOTE: Temporarily allocated here.
     struct fieldMap map[10]; // NOTE: actual is derived from offsets
     field field[10]; // NOTE Temporarily allocated here.
@@ -95,15 +104,17 @@ base_point basePoints[] = {
     [MAC] = basePt_mac
 };
 
-#define BASE_PT(g,state) _Pt(g,basePoints[state].len,basePoints[state].yGeometry,basePoints[state].xGeometry)
-
 int nFields[] = {
     [LOGIN] = NUM_FIELDS(fields_login),
     [MAC] =  NUM_FIELDS(fields_mac)
 };
 
-//static form loginForm = {.nFields = 0, .curField = 0};
-form Forms[128];
+panel_t panel_type[] = {
+    [LOGIN] = FORM,
+    [MAC] = MENU
+};
+
+form Panels[128];
 
 
 

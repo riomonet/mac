@@ -200,6 +200,7 @@ void updateFieldMap(form *f, int nFields) {
         f->map[i].label = ptAddPt(f->basePt,f->offsets[i].label);
         f->map[i].entry = ptAddPt(f->basePt,f->offsets[i].entry);
     }
+    f->cursor_home = Pt(f->map[0].entry.row,f->map[0].entry.col);
     f->curCol = f->map[0].entry.col + f->curIdx;
     f->curRow = f->map[f->curField].entry.row;
 }
@@ -218,39 +219,47 @@ fieldMap FieldMap(point labelPt,point entryPt ){
 }
 
 /* 'form' constructor */
-form Form(char **fields, int nFields, point basePt, fieldMap *offsets) {
+form Panel(char **fields, int nFields, point basePt, fieldMap *offsets, panel_t panelType) {
     form f;
     f.curIdx = 0;
     f.curField = 0;
     f.basePt = basePt;
     f.nFields = nFields;
-    
-    for (int i = 0; i < nFields; i++) {
-        f.field[i] = Field(fields[i]);
-        f.offsets[i].label = offsets[i].label;
-        f.offsets[i].entry = offsets[i].entry;
-    }
+    f.panelType = panelType;
 
-    f.curCol = f.basePt.col + f.offsets[0].entry.col;
-    f.curRow = f.basePt.row;
-    f.nFields = nFields;
-    updateFieldMap(&f, nFields);
-    f.field[USER].entry[15] = 0; //NOTE This a hack!!!
+    switch (f.panelType) {
+    case FORM:
+	for (int i = 0; i < nFields; i++) {
+	    f.field[i] = Field(fields[i]);
+	    f.offsets[i].label = offsets[i].label;
+	    f.offsets[i].entry = offsets[i].entry;
+	}
+	f.cursor_home = Pt(f.offsets[0].entry.row,f.offsets[0].entry.col);
+	f.curCol = f.basePt.col + f.offsets[0].entry.col;
+	f.curRow = f.basePt.row;
+	f.nFields = nFields;
+	updateFieldMap(&f, nFields);
+	f.field[USER].entry[15] = 0; // NOTE This a hack!!!
+	break;
+    case MENU: break;
+    }
+    
+    
+    
     return f;
 }
-
 
 /* ================ Function for rendering components to the grid  =============== */
 
 void renderTitle(grid *g, char *title) {
     writeString(g, _Pt(g,strlen(title), 1, HALF), title, strlen(title),"f", WHITE);
-}
+} 
 
 void renderInstructions(grid *g, char *inst) {
-    writeString(g ,_Pt(g,strlen(inst),ONE_5TH,ONE_5TH),inst,strlen(inst), "f", MAGENTA);
+    writeString(g ,_Pt(g,strlen(inst),ONE_5TH,ONE_5TH),inst,strlen(inst), "f", CYAN);
 }
 
-void renderForm(grid *g, form *f, point basePt) {
+void renderPanel(grid *g, form *f, point basePt) {
     if (f->basePt.row != basePt.row || f->basePt.col != basePt.col) {
 	f->basePt = basePt;
 	updateFieldMap(f, f->nFields);
@@ -264,12 +273,11 @@ void renderForm(grid *g, form *f, point basePt) {
 }
 
 
-
 //TODO handle tab, backspace, and arrow keys, and add a submit
 int mac_handleInput () {
     form *f;
     //    if (current_state == LOGIN) f = &loginForm;
-    f = &Forms[LOGIN];
+    f = &Panels[LOGIN];
     if (f->basePt.row > 0) {
         int c = platform_read();
 
@@ -324,7 +332,7 @@ point extractBase(grid *g, base_point bp) {
 void initializeFormGenerationProcedure() {
     point pt = Pt(-1,-1);
     for(int STATE = 0; STATE < SENTINEL; STATE++) {
-	Forms[STATE] = Form(fields[STATE], nFields[STATE], pt, offsets[STATE]);
+	Panels[STATE] = Panel(fields[STATE], nFields[STATE], pt, offsets[STATE], panel_type[STATE]);
     }
 }
 
@@ -332,14 +340,14 @@ void initializeFormGenerationProcedure() {
  void screenDispatch(grid *g) {
     int c = mac_handleInput();
     renderTitle(g, titles[current_state]);
-    renderForm(g,&Forms[current_state], BASE_PT(g,current_state));
+    renderPanel(g,&Panels[current_state], BASE_PT(g,current_state));
 
     //renderFooterMenu(Forms[current_state]); TBD
     //TODO: move to lookuptables
-    //renderInstructions(g,"Press ENTER to submit credentials:");
+    renderInstructions(g,"Press ENTER to submit credentials:");
 
-    if (E.cy != Forms[current_state].map[Forms[current_state].curField].entry.row + 1) {
-	E.cy = Forms[current_state].map[Forms[current_state].curField].entry.row + 1;
+    if (E.cy != Panels[current_state].map[Panels[current_state].curField].entry.row + 1) {
+	E.cy = Panels[current_state].map[Panels[current_state].curField].entry.row + 1;
     }
 }
 /* ============================== Serices provided to the platform layer ============================== */
@@ -360,6 +368,6 @@ void mac_renderWindow(grid *g) {
 
 void mac_startup() {
     current_state = LOGIN;
-    setDefaultColors(BLACK,GREEN);
+    setDefaultColors(BLACK,AMBER);
     initializeFormGenerationProcedure();
 }
