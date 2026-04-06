@@ -31,7 +31,7 @@ struct color colors[] = {
     [GREEN]   = { .name = "GREEN",   .fg = "\x1b[38;2;70;255;00m", .fgLen = 17,.bg = "\x1b[48;2;0;170;0m", .bgLen = 15},
     [BROWN]   = { .name = "BROWN",   .fg = "\x1b[38;2;170;85;0m", .fgLen = 16,.bg = "\x1b[48;2;170;85;0m", .bgLen = 16 },
     [BLUE]    = { .name = "BLUE",    .fg = "\x1b[38;2;0;0;170m", .fgLen = 15,.bg = "\x1b[48;2;0;0;170m", .bgLen = 15 },
-    [MAGENTA] = { .name = "MAGENTA", .fg = "\x1b[38;2;255;85;255m", .fgLen = 18,.bg = "\x1b[48;2;255;85;255m", .bgLen = 18 },
+    [MAGENTA] = { .name = "MAGENTA", .fg = "\x1b[38;2;98;65;180m", .fgLen = 18,.bg = "\x1b[48;2;255;00;255m", .bgLen = 18 },
     [CYAN]    = { .name = "CYAN",    .fg = "\x1b[38;2;85;255;255m", .fgLen = 18,.bg = "\x1b[48;2;85;255;255m", .bgLen = 18 },
     [WHITE]   = { .name = "WHITE",   .fg = "\033[97m", .fgLen = 5, .bg = "\033[107m", .bgLen = 6 },
     [AMBER]   = { .name = "AMBER",   .fg = "\033[38;2;255;172;0m", .fgLen = 17 , .bg = "\033[48;2;255;165;0m", .bgLen = 17}

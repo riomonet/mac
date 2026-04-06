@@ -192,74 +192,77 @@ point Pt(float row, float col) {
 
 /* ================ Constructors for menus, forms, ... =============== */
 
-void updateFieldMap(form *f, int nFields) {
+void updateFieldMap(panel *f, int nFields) {
     if (f->basePt.row < 0) f->basePt.row = 0;
     if (f->basePt.col < 0) f->basePt.col = 0;
+
+    states STATE = f->state;
     
     for (int i = 0; i < nFields; i++) {
-        f->map[i].label = ptAddPt(f->basePt,f->offsets[i].label);
-        f->map[i].entry = ptAddPt(f->basePt,f->offsets[i].entry);
+        f->map[i].label = ptAddPt(f->basePt,offsets[STATE][i].label);
+        f->map[i].entry = ptAddPt(f->basePt,offsets[STATE][i].entry);
     }
     f->cursor_home = Pt(f->map[0].entry.row,f->map[0].entry.col);
     f->curCol = f->map[0].entry.col + f->curIdx;
     f->curRow = f->map[f->curField].entry.row;
 }
 
-/* Return a 'field', which consists of a label and an entry. */
-field Field(char *label) {
-    field  f = {.label = ". . . . . . . . . . . . . . . . ",
-                 .entry = "                "};
-    memcpy (f.label, label, strlen(label));
-    return f;
-}
 
-fieldMap FieldMap(point labelPt,point entryPt ){
+fieldMap FieldMap (point labelPt, point entryPt){
     fieldMap m = {.label = labelPt, .entry = entryPt};
 	return m;
 }
 
-/* 'form' constructor */
-form Panel(char **fields, int nFields, point basePt, fieldMap *offsets, panel_t panelType) {
-    form f;
-    f.curIdx = 0;
-    f.curField = 0;
-    f.basePt = basePt;
-    f.nFields = nFields;
-    f.panelType = panelType;
 
-    switch (f.panelType) {
-    case FORM:
-	for (int i = 0; i < nFields; i++) {
-	    f.field[i] = Field(fields[i]);
-	    f.offsets[i].label = offsets[i].label;
-	    f.offsets[i].entry = offsets[i].entry;
-	}
-	f.cursor_home = Pt(f.offsets[0].entry.row,f.offsets[0].entry.col);
-	f.curCol = f.basePt.col + f.offsets[0].entry.col;
-	f.curRow = f.basePt.row;
-	f.nFields = nFields;
-	updateFieldMap(&f, nFields);
-	f.field[USER].entry[15] = 0; // NOTE This a hack!!!
-	break;
-    case MENU: break;
+/* 'field' constructor */
+field Field(char *label, int i) {
+    field f;    
+    if (i == -1) {
+	field  f = {.label = ". . . . . . . . . . . . . . . . ",
+		    .entry = "                "};
+	memcpy (f.label, label, strlen(label));
+	return f;
+    } else {
+	snprintf(f.label,32,"%d. ", i + 1);
+	strcpy(f.entry,label);
     }
-    
-    
-    
     return f;
 }
 
-/* ================ Function for rendering components to the grid  =============== */
+/* 'panel' constructor */
+panel Panel(states STATE) {
+    panel f;
+    f.curIdx = 0;
+    f.curField = 0; 
+    f.basePt = Pt(-1,-1);
+    f.state = STATE;
+    f.nFields = nFields[STATE];
+    f.cursor_home = (point){.row = 0, .col = 0};
+    switch (panel_type[STATE]) {
+    case FORM:
+	for (int i = 0; i < f.nFields; i++) {
+	    f.field[i] = Field(fields[STATE][i], -1);
+	} break;
+    case MENU:
+	for (int i = 0; i < f.nFields; i++) {
+	    f.field[i] = Field(fields[STATE][i], i);
+	} break;
+    }
+    return f;
+}
+
+ /* ================ Function for rendering components to the grid  =============== */
 
 void renderTitle(grid *g, char *title) {
     writeString(g, _Pt(g,strlen(title), 1, HALF), title, strlen(title),"f", WHITE);
 } 
 
 void renderInstructions(grid *g, char *inst) {
-    writeString(g ,_Pt(g,strlen(inst),ONE_5TH,ONE_5TH),inst,strlen(inst), "f", CYAN);
+    writeString(g ,Pt(4, 6),inst,strlen(inst), "f", MAGENTA);
 }
 
-void renderPanel(grid *g, form *f, point basePt) {
+void renderPanel(grid *g, panel *f, point basePt) {
+
     if (f->basePt.row != basePt.row || f->basePt.col != basePt.col) {
 	f->basePt = basePt;
 	updateFieldMap(f, f->nFields);
@@ -267,15 +270,17 @@ void renderPanel(grid *g, form *f, point basePt) {
 	E.cy = f->curRow;
     }
     for (int i = 0; i < f->nFields; i++) {
-        writeString(g,f->map[i].label, f->field[i].label, f->offsets[i].entry.col, 0);
-        writeString(g,f->map[i].entry, f->field[i].entry, 16, "a", UNDERLINE);
+        writeString(g,f->map[i].label, f->field[i].label, offsets[f->state][i].entry.col, 0);
+	if(panel_type[f->state] == FORM)
+	    writeString(g,f->map[i].entry, f->field[i].entry, 16, "a", UNDERLINE);
+	else if(panel_type[f->state] == MENU) {
+	    writeString(g,f->map[i].entry, f->field[i].entry, strlen(f->field[i].entry), 0);
+	}
     }
 }
 
-
-//TODO handle tab, backspace, and arrow keys, and add a submit
 int mac_handleInput () {
-    form *f;
+    panel *f;
     //    if (current_state == LOGIN) f = &loginForm;
     f = &Panels[LOGIN];
     if (f->basePt.row > 0) {
@@ -315,7 +320,7 @@ int mac_handleInput () {
     return 0;
 }
 
-int auth(form *f) {
+int auth(panel *f) {
     // NOTE: For now keeping entry padding for auth comparison. 
     char *user = f->field[USER].entry;
     char *pw = f->field[PASSWORD].entry;
@@ -330,9 +335,8 @@ point extractBase(grid *g, base_point bp) {
 
 //Form(char **fields, int nFields, point basePt, fieldMap *offsets) {
 void initializeFormGenerationProcedure() {
-    point pt = Pt(-1,-1);
     for(int STATE = 0; STATE < SENTINEL; STATE++) {
-	Panels[STATE] = Panel(fields[STATE], nFields[STATE], pt, offsets[STATE], panel_type[STATE]);
+	Panels[STATE] = Panel(STATE);
     }
 }
 
@@ -340,11 +344,11 @@ void initializeFormGenerationProcedure() {
  void screenDispatch(grid *g) {
     int c = mac_handleInput();
     renderTitle(g, titles[current_state]);
+    renderInstructions(g,instructions[current_state]);
     renderPanel(g,&Panels[current_state], BASE_PT(g,current_state));
-
+    
     //renderFooterMenu(Forms[current_state]); TBD
-    //TODO: move to lookuptables
-    renderInstructions(g,"Press ENTER to submit credentials:");
+
 
     if (E.cy != Panels[current_state].map[Panels[current_state].curField].entry.row + 1) {
 	E.cy = Panels[current_state].map[Panels[current_state].curField].entry.row + 1;
@@ -367,7 +371,7 @@ void mac_renderWindow(grid *g) {
 }
 
 void mac_startup() {
-    current_state = LOGIN;
-    setDefaultColors(BLACK,AMBER);
+    current_state = MAC;
+    setDefaultColors(BLACK,GREEN);
     initializeFormGenerationProcedure();
 }

@@ -54,9 +54,11 @@ typedef struct base_point {
 typedef struct field {
     char label[32];
     char entry[32];
+    int label_len, entry_len;
 } field;
 
-typedef struct form {
+
+typedef struct panel {
     point basePt;
     int  nFields;
     int  curField;
@@ -64,16 +66,21 @@ typedef struct form {
     int  curCol;
     int  curIdx;
     point cursor_home;
-    panel_t panelType;
-    struct fieldMap offsets[10]; // NOTE: Temporarily allocated here.
+    states state;
     struct fieldMap map[10]; // NOTE: actual is derived from offsets
     field field[10]; // NOTE Temporarily allocated here.
-} form;
+} panel;
 
 states current_state;
 
 fieldMap offsets_login[] = { FMP(0,0,0,25), FMP(2,0,2,25) };
-fieldMap offsets_mac[] = { FMP(0,0,0,0), FMP(2,0,0,0), FMP(4,0,0,0), FMP(6,0,0,0), FMP(8,0,0,0) };
+fieldMap offsets_mac[] = { FMP(0,0,0,3),
+			   FMP(1,0,1,3),
+			   FMP(2,0,2,3),
+			   FMP(3,0,3,3),
+			   FMP(4,0,4,3) };
+
+fieldMap offsets_addUser[] = {};
 
 char *fields_login[] = {"User", "Password"};
 char *fields_mac[] = {"View Users", "Add User", "Logs View", "Live View"};
@@ -81,8 +88,11 @@ char *fields_mac[] = {"View Users", "Add User", "Logs View", "Live View"};
 char title_login[] = "MARINA 59 | Sign On";
 char title_mac[] =  "MARINA 59 | Access Control";
 
+char inst_login[] = "Press Enter to submit credentials:";
+char inst_mac[] = "Select one of the the following:";
+
 const base_point basePt_login = BPT(FIELD_LEN, ONE_3RD,HALF);
-const base_point basePt_mac = BPT(20, ONE_5TH,ONE_5TH );
+const base_point basePt_mac = BPT(1, 6, 11);
 
 fieldMap *offsets[] = {
     [LOGIN] = offsets_login,
@@ -99,6 +109,12 @@ char *titles[] = {
     [MAC] = title_mac
 };
 
+char *instructions[] = {
+    [LOGIN] = inst_login,
+    [MAC] = inst_mac
+};
+
+
 base_point basePoints[] = {
     [LOGIN] = basePt_login,
     [MAC] = basePt_mac
@@ -114,7 +130,8 @@ panel_t panel_type[] = {
     [MAC] = MENU
 };
 
-form Panels[128];
+panel Panels[128];
+
 
 
 
