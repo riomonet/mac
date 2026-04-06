@@ -111,20 +111,36 @@ void writeString(grid *g, point p, char *str, int len, char *fmt, ...) {
     
     int y = p.row;
     int x = p.col;
-    
-    for (int i = 0; i < len; i++) {
-        setChar(g,y,x+i,str[i]);
-        if (bg) {
-            setBgCl(g,y,x+i,bg);
+
+    if (str == NULL) {
+        for (int i = 0; i < len; i++) {
+            setChar(g,y, x+i,0x20);
+            if (bg) {
+                setBgCl(g,y,x+i,bg);
+            }
+            if (fg) {
+                setFgCl(g,y,x+i,fg);
+            }
+            if (attr) {
+                setAttribute(g, y, x + i, attr);
+            }
         }
-        if (fg) {
-            setFgCl(g,y,x+i,fg);
-        }
-        if (attr) {
-            setAttribute(g, y, x + i, attr);
+    } else {
+        for (int i = 0; i < len; i++) {
+            setChar(g,y,x+i,str[i]);
+            if (bg) {
+                setBgCl(g,y,x+i,bg);
+            }
+            if (fg) {
+                setFgCl(g,y,x+i,fg);
+            }
+            if (attr) {
+                setAttribute(g, y, x + i, attr);
+            }
         }
     }
 }
+
 void writeNum(grid *g, point p, int num, char *str, char *fmt, ...){
     char buf[32];
     snprintf(buf,32,"%s %d", str, num);
@@ -340,19 +356,85 @@ void initializeFormGenerationProcedure() {
     }
 }
 
+enum t_attrb{
+    PROT = 1,
+    UNPROT =2,
+    IC = 4
+};
+
+typedef struct FIELD {
+    int row;
+    int col;
+    int len;
+    char *initial;
+    int attrb;
+    enum colors color;
+    char *name;
+} FIELD;
+
+#define FDM(r, c, l, d, a, clr, n) (FIELD) {     \
+ .row      = r,                                 \
+ .col      = c,                                 \
+ .len      = l,                                 \
+ .initial  = d,                                 \
+ .color    = clr,                               \
+ .attrb    = a,                                 \
+ .name     = n,                                 \
+ }
+
+#define Spc "                 "
+
+FIELD login[] = {                                                                             
+	FDM( 1, 30, 19, "MARINA 59 | SIGN ON", PROT, WHITE, NULL),
+	FDM( 4, 5,  39, "Press Enter to submit your credentials:", PROT, MAGENTA, NULL),
+	FDM( 6, 9,  19, "USER . . . . . . . ", PROT, GREEN, NULL),
+    FDM( 6, 35, 16, NULL, UNPROT|IC, GREEN, "user"),
+	FDM( 7, 9,  19, "PASSWORD . . . . . ", PROT, GREEN, NULL),
+    FDM( 7, 35, 16, NULL, UNPROT, GREEN, "password")
+};
+
+void render_Screen(grid *g, FIELD *sc, int nElmnts) {
+    for (int i = 0; i < nElmnts; i++) {
+        char *fmt = "f";
+        if ((sc[i].attrb & UNPROT) == UNPROT) {
+            fmt = "fa";
+            writeString(g,
+                        Pt(sc[i].row,sc[i].col),
+                        sc[i].initial,
+                        sc[i].len,
+                        fmt,
+                        sc[i].color,
+                        UNDERLINE);
+        } else {
+            writeString(g,
+                        Pt(sc[i].row,sc[i].col),
+                        sc[i].initial,
+                        sc[i].len,
+                        fmt,
+                        sc[i].color);
+        }
+        if ((sc[i].attrb & IC) == IC) {
+            E.cy = sc[i].row + 1;
+            E.cx = sc[i].col;
+        }
+    }
+}
+
 /* Render screen depending on global variabl 'current_state'. */
  void screenDispatch(grid *g) {
-    int c = mac_handleInput();
-    renderTitle(g, titles[current_state]);
-    renderInstructions(g,instructions[current_state]);
-    renderPanel(g,&Panels[current_state], BASE_PT(g,current_state));
+     render_Screen(g, login, 6);
+
+    /* int c = mac_handleInput(); */
+    /* renderTitle(g, titles[current_state]); */
+    /* renderInstructions(g,instructions[current_state]); */
+    /* renderPanel(g,&Panels[current_state], BASE_PT(g,current_state)); */
     
-    //renderFooterMenu(Forms[current_state]); TBD
+    /* //renderFooterMenu(Forms[current_state]); TBD */
 
 
-    if (E.cy != Panels[current_state].map[Panels[current_state].curField].entry.row + 1) {
-	E.cy = Panels[current_state].map[Panels[current_state].curField].entry.row + 1;
-    }
+    /* if (E.cy != Panels[current_state].map[Panels[current_state].curField].entry.row + 1) { */
+	/* E.cy = Panels[current_state].map[Panels[current_state].curField].entry.row + 1; */
+    /* } */
 }
 /* ============================== Serices provided to the platform layer ============================== */
 void mac_renderWindow(grid *g) {
@@ -361,7 +443,7 @@ void mac_renderWindow(grid *g) {
         screenDispatch(g);
         break;
     case MAC:
-	screenDispatch(g);
+        screenDispatch(g);
 	break;
     /* case ADD_USER: */
     /* case VIEW_LIVE_LOGS: */
@@ -373,5 +455,6 @@ void mac_renderWindow(grid *g) {
 void mac_startup() {
     current_state = MAC;
     setDefaultColors(BLACK,GREEN);
-    initializeFormGenerationProcedure();
+    //    initializeFormGenerationProcedure();
 }
+
