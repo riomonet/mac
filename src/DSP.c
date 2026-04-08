@@ -76,14 +76,13 @@ int DSP_read() {
     }
 }
 
-void DSP_CLEANUP(void);
-int DSP_RECIEVE (FIELD *map,input *cbook) {
-    // find home and place the cursor
+
+// TODO: fill out cpy_bk
+int DSP_RECIEVE (FIELD *map,input *cpy_bk) {
+
     int i = 0;
     int active_field = 0;
     int active_idx = 0;
-    term_send_col(GREEN);
-    term_send_attr(UNDERLINE);
 
     /* Find IC and set term to that position */
     while (map[i].row != SENTINEL) {
@@ -92,7 +91,9 @@ int DSP_RECIEVE (FIELD *map,input *cbook) {
             break;
         } i++;
     }
-
+    
+    term_send_col(map[active_field].color);
+    term_send_attr(UNDERLINE);
     term_send_pos( map[active_field].row,
                    map[active_field].col);
     term_send_cmd(SHOW_CURSOR);
@@ -101,65 +102,73 @@ int DSP_RECIEVE (FIELD *map,input *cbook) {
         int c = DSP_read();
         if (c == 'q') {
             DSP_CLEANUP();
-            exit(0);
+
         }
 
         if (isalnum(c)) {
             char ch[1] = {c};
-            if (active_idx < map[i].len) {
+            if (active_idx < map[i].len - 1) {
                 write(STDOUT_FILENO,ch,1);
                 active_idx++;
                 term_send_pos( map[active_field].row,
                                map[active_field].col + active_idx);
             }
             continue;
-        } switch (c) {
-
+        }
+        
+        switch (c) {
         case (127): //Backspace == 127
             if (active_idx > 0) {
                 term_send_pos( map[active_field].row,
-map[active_field].col + active_idx - 1);
+                               map[active_field].col + active_idx - 1);
                 write(STDOUT_FILENO," ",1);
                 active_idx--;
-                term_send_pos( map[active_field].row,
-                               map[active_field].col + active_idx);
+            } break; 
 
-            }
 
-            break; 
-
-        case ('\t'):       // Tab == 9
-        case(ARROW_DOWN):
+        case('\t'):      // Tab == 9
             term_send_cmd(HIDE_CURSOR);
             while(1) {
                 active_field++;
                 if ((map[active_field].attrb & UNPROT) == UNPROT) {
-                    term_send_pos( map[active_field].row,
-                                   map[active_field].col);
-                    term_send_cmd(SHOW_CURSOR);
                     active_idx = 0;
-                    break;
+                    break; // Break out of inner while loop.
                 }
-                if (map[active_field].row == SENTINEL) {
-                    active_field = 0;
-                }
-            }
-        case(ARROW_RIGHT): break;
-        case(ARROW_LEFT):break;
+                if (map[active_field].row == SENTINEL) active_field = 0;
+            } break;
 
-        case('\r'): return 9900;
+        case(ARROW_UP):   break;
+        case(ARROW_DOWN): break;
+
+        case(ARROW_RIGHT):
+            if (active_idx < map[i].len - 1) {
+                active_idx++;                    
+            } break;
+            
+        case (ARROW_LEFT):
+            if (active_idx > 0) {
+                active_idx--;
+            } break;
+            
+        case '\r': return 9900;
         }
+
+        term_send_pos( map[active_field].row,
+                       map[active_field].col + active_idx);
+        term_send_cmd(SHOW_CURSOR);
     }
 }
 
+// TODO: Draw cbook outputs to the screen at the correct location.
+// TODO: Instead of nElments use SENTINEL, the last field in map.
 void DSP_SEND(FIELD *map,input *cbook, int nElmnts) {
     char blanks[32];
     memset(blanks,' ', 32);
     for (int i = 0; i < nElmnts; i++) {
         term_send_pos(map[i].row,map[i].col);
         term_send_col(map[i].color);
-        if((map[i].attrb & PROT) == PROT) {
-            term_send_str(map[i].initial,map[i].len);
+        if ((map[i].attrb & PROT) == PROT) {
+            term_send_str(map[i].initial, map[i].len);
         } else {
             term_send_attr(UNDERLINE);
             term_send_str(blanks, map[i].len);
@@ -198,6 +207,6 @@ void DSP_CLEANUP () {
     // TODO currently this is Reset to Black, need to query original state.
     printf("\x1b]11;rgb:00/00/00\e\\"); 
     fflush(stdout);
-    return;
+    exit(0);
 }
 

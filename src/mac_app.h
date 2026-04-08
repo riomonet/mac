@@ -60,6 +60,7 @@ typedef struct input {
 
 struct termConfig E;
 
+void DSP_CLEANUP(void);
 void handler(int);
 void setDefaultColors(enum colors, enum colors);
 void term_send_pos(int, int);
@@ -83,4 +84,13 @@ FIELD fieldmap_login[] = {
 input copybook_login[]= {
     DCP("user", 24),
     DCP("password", 24)
+};
+
+FIELD fieldmap_main[] = {                                                      
+	DMS( 1, 40, 21, "MARINA 59 | MAIN MENU", PROT, WHITE, NULL),
+    {.row = SENTINEL}
+};
+
+input copybook_main[]= {
+    DCP("select", 2),
 };

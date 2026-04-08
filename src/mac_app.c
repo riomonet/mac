@@ -11,17 +11,15 @@
 #include <errno.h>
 #include <assert.h>
 #include "lookup_tables.h"
-#include "mac_app.h"
-#include "term_interop.c"
-#include "DSP.c"    // The display manager
+#include "mac_app.h"        
+#include "term_interop.c"   // RawMode
+#include "DSP.c"            // Display manager
 
 int main(void) {
     DSP_start();
     while (1) {
         DSP_SEND(fieldmap_login,copybook_login,6);
         int EAB = DSP_RECIEVE(fieldmap_login,copybook_login);
-        if (EAB == 0)
-            CLEANUP = 1;
         if( CLEANUP == 1) {
             DSP_CLEANUP();
             exit(0);
