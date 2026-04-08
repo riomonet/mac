@@ -114,7 +114,7 @@ void writeString(grid *g, point p, char *str, int len, char *fmt, ...) {
 
     if (str == NULL) {
         for (int i = 0; i < len; i++) {
-            setChar(g,y, x+i,0x20);
+            setChar(g,y, x+i,' ');
             if (bg) {
                 setBgCl(g,y,x+i,bg);
             }
@@ -206,67 +206,6 @@ point Pt(float row, float col) {
     return p;
 }
 
-/* ================ Constructors for menus, forms, ... =============== */
-
-void updateFieldMap(panel *f, int nFields) {
-    if (f->basePt.row < 0) f->basePt.row = 0;
-    if (f->basePt.col < 0) f->basePt.col = 0;
-
-    states STATE = f->state;
-    
-    for (int i = 0; i < nFields; i++) {
-        f->map[i].label = ptAddPt(f->basePt,offsets[STATE][i].label);
-        f->map[i].entry = ptAddPt(f->basePt,offsets[STATE][i].entry);
-    }
-    f->cursor_home = Pt(f->map[0].entry.row,f->map[0].entry.col);
-    f->curCol = f->map[0].entry.col + f->curIdx;
-    f->curRow = f->map[f->curField].entry.row;
-}
-
-
-fieldMap FieldMap (point labelPt, point entryPt){
-    fieldMap m = {.label = labelPt, .entry = entryPt};
-	return m;
-}
-
-
-/* 'field' constructor */
-field Field(char *label, int i) {
-    field f;    
-    if (i == -1) {
-	field  f = {.label = ". . . . . . . . . . . . . . . . ",
-		    .entry = "                "};
-	memcpy (f.label, label, strlen(label));
-	return f;
-    } else {
-	snprintf(f.label,32,"%d. ", i + 1);
-	strcpy(f.entry,label);
-    }
-    return f;
-}
-
-/* 'panel' constructor */
-panel Panel(states STATE) {
-    panel f;
-    f.curIdx = 0;
-    f.curField = 0; 
-    f.basePt = Pt(-1,-1);
-    f.state = STATE;
-    f.nFields = nFields[STATE];
-    f.cursor_home = (point){.row = 0, .col = 0};
-    switch (panel_type[STATE]) {
-    case FORM:
-	for (int i = 0; i < f.nFields; i++) {
-	    f.field[i] = Field(fields[STATE][i], -1);
-	} break;
-    case MENU:
-	for (int i = 0; i < f.nFields; i++) {
-	    f.field[i] = Field(fields[STATE][i], i);
-	} break;
-    }
-    return f;
-}
-
  /* ================ Function for rendering components to the grid  =============== */
 
 void renderTitle(grid *g, char *title) {
@@ -277,174 +216,107 @@ void renderInstructions(grid *g, char *inst) {
     writeString(g ,Pt(4, 6),inst,strlen(inst), "f", MAGENTA);
 }
 
-void renderPanel(grid *g, panel *f, point basePt) {
+/* int recieve (input *cb) { */
+    
+/*     f = &Panels[LOGIN]; */
+/*     if (f->basePt.row > 0) { */
+/*         int c = platform_read(); */
 
-    if (f->basePt.row != basePt.row || f->basePt.col != basePt.col) {
-	f->basePt = basePt;
-	updateFieldMap(f, f->nFields);
-	E.cx = f->curCol;
-	E.cy = f->curRow;
-    }
-    for (int i = 0; i < f->nFields; i++) {
-        writeString(g,f->map[i].label, f->field[i].label, offsets[f->state][i].entry.col, 0);
-	if(panel_type[f->state] == FORM)
-	    writeString(g,f->map[i].entry, f->field[i].entry, 16, "a", UNDERLINE);
-	else if(panel_type[f->state] == MENU) {
-	    writeString(g,f->map[i].entry, f->field[i].entry, strlen(f->field[i].entry), 0);
-	}
-    }
-}
+/*         // TODO: Replace hard coded field entry length. */
+/*         int lastCol = f->map[0].entry.col + 16 - 1; */
+/*         if (isalnum(c) && E.cx < lastCol) { */
+/*             f->curCol++; */
+/*             f->field[f->curField].entry[f->curIdx] = c; */
+/*             f->curIdx++; */ 
+/*         } else if (c == 127 && f->curIdx > 0) { /\* backspace *\/ */
+/*             f->curIdx--; */
+/*             f->curCol--; */
+/*             f->field[f->curField].entry[f->curIdx] = ' '; */
+/*         } else if (c == 9) { /\* TAB *\/ */
+/*             f->curField = (f->curField + 1) % f->nFields; */
+/*             f->curRow = f->map[f->curField].entry.row; */
+/*             f->curCol = f->map[f->curField].entry.col; */
+/*             f->curIdx = 0; */
+/*         } else if(c == ARROW_DOWN) { */
+/*             f->curField = (f->curField + 1) % f->nFields; */
+/*             f->curRow = f->map[f->curField].entry.row; */
+/*             f->curCol = f->map[f->curField].entry.col; */
+/*             f->curIdx = 0; */
+/*         } else if(c == ARROW_RIGHT && E.cx < lastCol)  { */
+/*             f->curCol++; */
+/*             f->curIdx++; */
+/*         } else if (c == ARROW_LEFT && f->curIdx > 0)  { */
+/*             f->curCol--; */
+/*             f->curIdx--; */
+/*     } */
+/*         E.cx = f->curCol; */
+/*         E.cy = f->curRow; */
+/*         return c; */
+/*     } */
+/*     return 0; */
+/* } */
 
-int mac_handleInput () {
-    panel *f;
-    //    if (current_state == LOGIN) f = &loginForm;
-    f = &Panels[LOGIN];
-    if (f->basePt.row > 0) {
-        int c = platform_read();
 
-        // TODO: Replace hard coded field entry length.
-        int lastCol = f->map[0].entry.col + 16 - 1; 
-        if (isalnum(c) && E.cx < lastCol) {
-            f->curCol++;
-            f->field[f->curField].entry[f->curIdx] = c;
-            f->curIdx++;
-        } else if (c == 127 && f->curIdx > 0) { /* backspace */
-            f->curIdx--;
-            f->curCol--;
-            f->field[f->curField].entry[f->curIdx] = ' ';
-        } else if (c == 9) { /* TAB */
-            f->curField = (f->curField + 1) % f->nFields;
-            f->curRow = f->map[f->curField].entry.row;
-            f->curCol = f->map[f->curField].entry.col;
-            f->curIdx = 0;
-        } else if(c == ARROW_DOWN) {
-            f->curField = (f->curField + 1) % f->nFields;
-            f->curRow = f->map[f->curField].entry.row;
-            f->curCol = f->map[f->curField].entry.col;
-            f->curIdx = 0;
-        } else if(c == ARROW_RIGHT && E.cx < lastCol)  {
-            f->curCol++;
-            f->curIdx++;
-        } else if (c == ARROW_LEFT && f->curIdx > 0)  {
-            f->curCol--;
-            f->curIdx--;
-    }
-        E.cx = f->curCol;
-        E.cy = f->curRow;
-        return c;
-    }
-    return 0;
-}
-
-int auth(panel *f) {
+int auth(char *user, char *password) {
     // NOTE: For now keeping entry padding for auth comparison. 
-    char *user = f->field[USER].entry;
-    char *pw = f->field[PASSWORD].entry;
 
     return ( (!strncmp("OfficerLogan   ", user, 15) &&
-             (!strncmp("Password       ", pw, 15))));
-}
+             (!strncmp("Password       ", password, 15))));
 
-point extractBase(grid *g, base_point bp) {
-    return _Pt(g,bp.len,bp.yGeometry,bp.xGeometry);
-}
 
-//Form(char **fields, int nFields, point basePt, fieldMap *offsets) {
-void initializeFormGenerationProcedure() {
-    for(int STATE = 0; STATE < SENTINEL; STATE++) {
-	Panels[STATE] = Panel(STATE);
+
+int DSP_RECIEVE (FIELD *map,input *cbook) {
+    // find home and place the cursor
+    int i = 0;
+    int active_field = 0;
+    while (map[i].row != -1) {
+        if((map[i].attrb & IC) == IC) {
+            active_field = i;
+            break;
+        }
+        ++i;
     }
+
+    term_send_pos(map[active_field].row,map[active_field].col);
+    term_send_cmd(SHOW_CURSOR);
+
+    int c = platform_read();
+    switch (c) {
+    case 'a':
+        write(STDOUT_FILENO,"X",1);
+        break;
+    case 'q':
+        return 0;
+        break;
+    }
+    return 1;
 }
 
-enum t_attrb{
-    PROT = 1,
-    UNPROT =2,
-    IC = 4
-};
-
-typedef struct FIELD {
-    int row;
-    int col;
-    int len;
-    char *initial;
-    int attrb;
-    enum colors color;
-    char *name;
-} FIELD;
-
-#define FDM(r, c, l, d, a, clr, n) (FIELD) {     \
- .row      = r,                                 \
- .col      = c,                                 \
- .len      = l,                                 \
- .initial  = d,                                 \
- .color    = clr,                               \
- .attrb    = a,                                 \
- .name     = n,                                 \
- }
-
-#define Spc "                 "
-
-FIELD login[] = {                                                                             
-	FDM( 1, 30, 19, "MARINA 59 | SIGN ON", PROT, WHITE, NULL),
-	FDM( 4, 5,  39, "Press Enter to submit your credentials:", PROT, MAGENTA, NULL),
-	FDM( 6, 9,  19, "USER . . . . . . . ", PROT, GREEN, NULL),
-    FDM( 6, 35, 16, NULL, UNPROT|IC, GREEN, "user"),
-	FDM( 7, 9,  19, "PASSWORD . . . . . ", PROT, GREEN, NULL),
-    FDM( 7, 35, 16, NULL, UNPROT, GREEN, "password")
-};
-
-void render_Screen(grid *g, FIELD *sc, int nElmnts) {
+void DSP_SEND(FIELD *map,input *cbook, int nElmnts) {
     for (int i = 0; i < nElmnts; i++) {
-        char *fmt = "f";
-        if ((sc[i].attrb & UNPROT) == UNPROT) {
-            fmt = "fa";
-            writeString(g,
-                        Pt(sc[i].row,sc[i].col),
-                        sc[i].initial,
-                        sc[i].len,
-                        fmt,
-                        sc[i].color,
-                        UNDERLINE);
+        term_send_pos(map[i].row,map[i].col);
+        term_send_col(map[i].color);
+        if((map[i].attrb & PROT) == PROT) {
+            term_send_str(map[i].initial,map[i].len);
         } else {
-            writeString(g,
-                        Pt(sc[i].row,sc[i].col),
-                        sc[i].initial,
-                        sc[i].len,
-                        fmt,
-                        sc[i].color);
+            term_send_attr(UNDERLINE);
+            term_send_str("                ", 16);
         }
-        if ((sc[i].attrb & IC) == IC) {
-            E.cy = sc[i].row + 1;
-            E.cx = sc[i].col;
-        }
+        term_send_cmd(TERM_RESET);     
     }
-}
-
-/* Render screen depending on global variabl 'current_state'. */
- void screenDispatch(grid *g) {
-     render_Screen(g, login, 6);
-
-    /* int c = mac_handleInput(); */
-    /* renderTitle(g, titles[current_state]); */
-    /* renderInstructions(g,instructions[current_state]); */
-    /* renderPanel(g,&Panels[current_state], BASE_PT(g,current_state)); */
-    
-    /* //renderFooterMenu(Forms[current_state]); TBD */
-
-
-    /* if (E.cy != Panels[current_state].map[Panels[current_state].curField].entry.row + 1) { */
-	/* E.cy = Panels[current_state].map[Panels[current_state].curField].entry.row + 1; */
-    /* } */
 }
 /* ============================== Serices provided to the platform layer ============================== */
-void mac_renderWindow(grid *g) {
+void mac_renderWindow() {
     switch(current_state) {
     case LOGIN:
-        screenDispatch(g);
+        DSP_SEND(fieldmap_login,copybook_login,6);
+        int EAB = DSP_RECIEVE(fieldmap_login,copybook_login);
+        if (EAB == 0)
+            CLEANUP = 1;
         break;
     case MAC:
-        screenDispatch(g);
-	break;
+
+        break;
     /* case ADD_USER: */
     /* case VIEW_LIVE_LOGS: */
     /* case SEARCH_LOGS: break; */
@@ -453,8 +325,8 @@ void mac_renderWindow(grid *g) {
 }
 
 void mac_startup() {
-    current_state = MAC;
+    term_send_cmd(NOWRAP);
+    current_state = LOGIN;
     setDefaultColors(BLACK,GREEN);
-    //    initializeFormGenerationProcedure();
 }
 

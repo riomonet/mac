@@ -28,6 +28,7 @@ typedef struct {
     char data[];
 } frameBuffer;
 
+
 struct termConfig E;
 
 grid *initGrid(int, int);
@@ -48,5 +49,7 @@ void underline(grid*, int, int, int, enum colors, enum colors);
 void handler(int);
 void setDefaultColors(enum colors, enum colors);
 void term_send_pos(int, int);
-
+void term_send_col(enum colors col);
+void term_send_str(char *str, int len);
+void term_send_attr(enum attributes attr);
 int platform_read(); 

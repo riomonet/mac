@@ -1,30 +1,12 @@
-#define PT(r, c) {.row = r, .col = c}
-#define FMP(rl, cl, re, ce) { .label = { .row = rl, .col = cl },  .entry = { .row = re, .col = ce } }
-#define BPT(l,yG,xG) {.len = l, .yGeometry = yG, .xGeometry = xG}
-#define NUM_FIELDS(arr) (sizeof(arr) / sizeof((arr)[0]))
-#define BASE_PT(g,state) _Pt(g,basePoints[state].len,basePoints[state].yGeometry,basePoints[state].xGeometry)
+/* static enum colors DEF_BG; */
+/* static enum colors DEF_FG; */
 
-
-#define HALF .50
-#define ONE_3RD .33
-#define TWO_3RD .66
-#define ONE_4TH .25
-#define THREE_4TH .75
-#define ONE_5TH .20
-#define TWO_5TH .40
-#define THREE_5TH .60
-#define FOUR_5TH .80
-
-#define FIELD_LEN 40
-#define LABEL_LEN 25
-
-#define USER 0
-#define PASSWORD 1
-
-typedef struct point {
-    int row;
-    int col;
-} point;
+struct termConfig {
+    int nRows; 			/* The number of rows in the terminal window */
+    int nCols;			/* The number of columns in the terminal window. */
+    int cx, cy; 		/* The current cursor postion. */
+    struct termios orig_termios;
+};
 
 typedef enum states {
     LOGIN,
@@ -32,7 +14,7 @@ typedef enum states {
     //    ADD_USER,
     //    VIEW_LIVE_LOGS,
     //    SEARCH_LOGS,
-    SENTINEL
+    //SENTINEL
 } states;
 
 states current_state;
@@ -76,6 +58,18 @@ typedef struct input {
 #define DCP(n, l) (input) {.name = n, .len = l}
 #define SENTINEL -1
 
+struct termConfig E;
+
+void handler(int);
+void setDefaultColors(enum colors, enum colors);
+void term_send_pos(int, int);
+void term_send_col(enum colors col);
+void term_send_str(char *str, int len);
+void term_send_attr(enum attributes attr);
+/* int DSP_read(); */
+/* int DSP_send();  */
+
+/* ============================ SCREEN DEFINTIONS ================================*/
 FIELD fieldmap_login[] = {                                                      
 	DMS( 1, 40, 19, "MARINA 59 | SIGN ON", PROT, WHITE, NULL),
 	DMS( 5, 5,  22, "Press Enter to submit:", PROT, MAGENTA, NULL),
@@ -90,10 +84,3 @@ input copybook_login[]= {
     DCP("user", 24),
     DCP("password", 24)
 };
-
-
-
-
-
-
-

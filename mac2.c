@@ -13,8 +13,9 @@
 #include "lookup_tables.h"
 #include "mac.h"
 #include "term_interop.c"
+#include "display_manager.c"
 #include "menus.h"
-#include "menus.c"
+#include "mac_app.c"
 //#include "bms.h"
 
 
@@ -101,6 +102,22 @@ void term_send_pos(int y, int x) {
     char buf[32];
     snprintf(buf,32,"\x1b[%d;%dH",y,x);
     write(STDOUT_FILENO, buf, strlen(buf));
+}
+
+void term_send_col(enum colors col) {
+    char *color = colors[col].fg;
+    int len =colors[col].fgLen;
+    write(STDOUT_FILENO, color, len);
+}
+
+void term_send_attr(enum attributes attr) {
+    char *a= attribute[attr].seqOn;
+    int len =attribute[attr].len;
+    write(STDOUT_FILENO, a, len);
+}
+
+void term_send_str(char *str, int len) {
+    write(STDOUT_FILENO, str,len);
 }
 
 /* platform layerSets the char value of each cell in grid 'g' to 'chVal', as
@@ -211,43 +228,41 @@ int main(void) {
     term_send_cmd(HIDE_CURSOR);
     enableRawMode();
     initTerm();
-    grid *front = allocateGrid(E.nCols, E.nRows);
-    grid *back = allocateGrid(E.nCols, E.nRows);
-    grid *tmp;
+    /* grid *front = allocateGrid(E.nCols, E.nRows); */
+    /* grid *back = allocateGrid(E.nCols, E.nRows); */
+    /* grid *tmp; */
     mac_startup();
     //    resetGrid(front,' ');
-    zeroFront(front);
-    resetGrid(back,' ');
+    //    zeroFront(front);
+    //    resetGrid(back,' ');
     frameBuffer *fb = initFrameBuffer();
     /* ============================== MAIN GAME LOOP  ======================================== */
     while(1) {
         if (CLEANUP) {
             goto CLEAN_UP;
         }
-        if (RESIZE) { // TODO(ari): move this to function _resize.
-            RESIZE = 0;
-            free(back);
-            free(front);
+        /* if (RESIZE) { // TODO(ari): move this to function _resize. */
+        /*     RESIZE = 0; */
+        /*     free(back); */
+        /*     free(front); */
 
-            initTerm(E);
-            //NOTE: do we need to realloc instead of new buffer?
-            back  = allocateGrid(E.nCols, E.nRows);
-            front = allocateGrid(E.nCols, E.nRows);
-	    resetGrid(back,' ');
-            zeroFront(front);
-            ///////	    resizeGrid(back, front, &E);
-        }
-        resetGrid(back,' ');
-	//	mac_handleInput(back);  
-	//	term_send_cmd(HIDE_CURSOR);
-        mac_renderWindow(back); // TODO(ari): throttle frame rate in platform
-        serializeGrid(back, front, fb);
-        bltFrameBuffer(fb);
-	term_send_pos(E.cy,E.cx+1);
-	term_send_cmd(SHOW_CURSOR);
-        tmp = back;
-        back = front;
-        front = tmp;
+        /*     initTerm(E); */
+        /*     //NOTE: do we need to realloc instead of new buffer? */
+        /*     back  = allocateGrid(E.nCols, E.nRows); */
+        /*     front = allocateGrid(E.nCols, E.nRows); */
+        /*     resetGrid(back,' '); */
+        /*     zeroFront(front); */
+        /*     ///////	    resizeGrid(back, front, &E); */
+        /* } */
+        //        resetGrid(back,' ');
+        mac_renderWindow(); // TODO(ari): throttle frame rate in platform
+        //       serializeGrid(back, front, fb);
+        //        bltFrameBuffer(fb);
+        /* term_send_pos(E.cy,E.cx+1); */
+        /* term_send_cmd(SHOW_CURSOR); */
+        /* tmp = back; */
+        /* back = front; */
+        /* front = tmp; */
     }
     /* ============================== CLEAN UP ======================================== */
 
