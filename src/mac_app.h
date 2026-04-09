@@ -70,6 +70,13 @@ void term_send_attr(enum attributes attr);
 /* int DSP_read(); */
 /* int DSP_send();  */
 
+
+struct cb {
+    int num_inputs;
+    input *arr;
+};
+
+
 /* ============================ SCREEN DEFINTIONS ================================*/
 FIELD fieldmap_login[] = {                                                      
 	DMS( 1, 40, 19, "MARINA 59 | SIGN ON", PROT, WHITE, NULL),
@@ -81,10 +88,14 @@ FIELD fieldmap_login[] = {
     {.row = SENTINEL}
 };
 
+
+
 input copybook_login[]= {
     DCP("user", 24),
-    DCP("password", 24)
+    DCP("password", 24),
+    {.name = NULL}
 };
+
 
 FIELD fieldmap_main[] = {                                                      
 	DMS( 1, 40, 21, "MARINA 59 | MAIN MENU", PROT, WHITE, NULL),
@@ -94,3 +105,13 @@ FIELD fieldmap_main[] = {
 input copybook_main[]= {
     DCP("select", 2),
 };
+
+
+
+
+/*
+  1. choice pass in number of unprots
+  2. carete a struct of the array and nInputs; and pass that as the copy book
+  3. 
+
+ */

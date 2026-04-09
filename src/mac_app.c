@@ -19,7 +19,7 @@ int main(void) {
     DSP_start();
     while (1) {
         DSP_SEND(fieldmap_login,copybook_login,6);
-        int EAB = DSP_RECIEVE(fieldmap_login,copybook_login);
+        int EAB = DSP_RECIEVE(fieldmap_login, copybook_login);
         if( CLEANUP == 1) {
             DSP_CLEANUP();
             exit(0);
