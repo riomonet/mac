@@ -29,6 +29,14 @@ void signalHandler(int code) {
     }
 }
 
+cb_field *get_cb_field(char *name, cb_field *cb, int num_cb_fields) {
+    for(int i = 0; i < num_cb_fields; i++) {
+        if (strcmp(name,cb[i].name) == 0)
+            return &cb[i];
+    }
+    return NULL;
+}
+
 int DSP_read() {
     int nread;
     char c, seq[3];
@@ -194,19 +202,21 @@ int DSP_RECIEVE (FIELD *map,cb_field *cb) {
 
 // TODO: Draw cbook outputs to the screen at the correct location.
 // TODO: Instead of nElments use SENTINEL, the last field in map.
-void DSP_SEND(FIELD *map,cb_field *cp_book, int nElmnts) {
-    char blanks[32];
-    memset(blanks,' ', 32);
-    for (int i = 0; i < nElmnts; i++) {
-        term_send_pos(map[i].row,map[i].col);
+void DSP_SEND(FIELD *map,cb_field *copybook) {
+    int i = 0;
+    while(map[i].row != SENTINEL) {
+        term_send_pos(map[i].row, map[i].col);
         term_send_col(map[i].color);
-        if ((map[i].attrb & PROT) == PROT) {
+        if (map[i].attrb & PROT) {
             term_send_str(map[i].initial, map[i].len);
         } else {
+            cb_field *f = get_cb_field(map[i].name, copybook, 2);
             term_send_attr(UNDERLINE);
-            term_send_str(blanks, map[i].len);
+            term_send_str(f->output, 16);
+
         }
         term_send_cmd(TERM_RESET);
+        i++;
     }
 }
 

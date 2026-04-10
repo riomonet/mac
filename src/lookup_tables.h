@@ -113,6 +113,18 @@ enum attributes {
     RESET
 };
 
+enum ext_attr {
+    EXT_BOLD = 1,
+    EXT_FAINT = 2,
+    EXT_ITALIC = 4,
+    EXT_UNDERLINE = 8, 
+    EXT_BLINKING = 16,
+    EXT_INVERSE = 32,
+    EXT_HIDDEN = 64,
+    EXT_STRIKE = 128,
+};
+
+
 struct attr_obj attribute[] = {
     [BOLD] = {.name = "BOLD", .seqOn = "\x1b[1m", .seqOff = "\x1b[21m", .len =4 },
     [FAINT] = {.name = "FAINT", .seqOn = "\x1b[2m",.seqOff = "\x1b[22m", .len =4},

@@ -26,15 +26,15 @@ int main(void) {
             cb_login_init(copybook_login);
             int logged_in = 0;
             while(!logged_in) {
-                DSP_SEND( fieldmap_login,
-                          copybook_login,
-                          MAX_SLOTS(fieldmap_login));
+                DSP_SEND(fieldmap_login, copybook_login);
                 int res = DSP_RECIEVE(fieldmap_login, copybook_login);
                 if (res == ENTER) {
-                    if (auth(copybook_login[0].input,
+                    if (auth (copybook_login[0].input,
                              copybook_login[1].input)) {
                         current_state = MAC;
-                        memcpy(current_operator,copybook_login[0].name,16);
+                        memcpy(current_operator,
+                               copybook_login[0].name,
+                               sizeof(current_operator));
                         cb_login_free(copybook_login);
                         logged_in = 1;
                     }

@@ -7,10 +7,10 @@ FIELD fieldmap_login[] = {
     DMS( 10, 38, 16, NULL, UNPROT, GREEN, "password"),
     {.row = SENTINEL}
 };
-#define NUM_NAMED_FIELDS 2
+#define MAX_CB_LOGIN_F 2
 
 cb_field *cb_login_create() {
-    cb_field *arr = malloc(sizeof(cb_field) * NUM_NAMED_FIELDS);
+    cb_field *arr = malloc(sizeof(cb_field) *MAX_CB_LOGIN_F);
     arr[0].name = "user";
     arr[1].name = "password";
     return arr;
@@ -23,11 +23,12 @@ void cb_login_init(cb_field *copybook_login) {
     copybook_login[1].output = malloc(16);
     memset(copybook_login[0].input,' ', 16);
     memset(copybook_login[1].input,' ', 16);
+    memset(copybook_login[0].output,' ', 16);
+    memset(copybook_login[1].output,' ', 16);
 }
 
 void cb_login_free(cb_field *copybook_login) {
-
-    for(int i = 0; i < NUM_NAMED_FIELDS; i++) {
+    for(int i = 0; i < MAX_CB_LOGIN_F; i++) {
         free(copybook_login[i].input);
         free(copybook_login[i].output);
     }

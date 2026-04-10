@@ -18,11 +18,14 @@ typedef enum states {
 } states;
 
 states current_state;
+char current_operator[16];
+
 
 enum t_attrb{
     PROT = 1,
-    UNPROT =2,
-    IC = 4
+    UNPROT = 2,
+    IC = 4,
+    MDT = 8
 };
 
 typedef struct FIELD {
@@ -38,7 +41,8 @@ typedef struct FIELD {
 typedef struct cb_field {
     char *name;
     short len;
-    short attrb;
+    char attrb;
+    char ext_attrb;
     char *input;
     char *output;
 } cb_field;
@@ -69,7 +73,7 @@ void term_send_attr(enum attributes attr);
 /* int DSP_read(); */
 /* int DSP_send();  */
 
-char current_operator[16];
+
 
 /* ============================ SCREEN DEFINTIONS ================================*/
 
