@@ -1,0 +1,25 @@
+OfficerLogan                 Marina Access Control                 10/11/2035   
+                                   MAIN MENU                       10:20 AM
+
+           
+
+      Please make a selection and press key Enter:
+
+          1. Add a new customer to the database.
+          2. View/Edit/Search current customers.
+          3. View and search access history.
+          4. View live access log.
+
+
+
+
+
+
+
+
+
+
+
+SELECTION=> 
+
+      F1=Logout    F2=Search   F3=TechSupport

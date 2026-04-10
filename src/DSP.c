@@ -77,7 +77,7 @@ int DSP_read() {
 }
 
 // TODO: fill out cpy_bk
-int DSP_RECIEVE (FIELD *map,input *cb) {
+int DSP_RECIEVE (FIELD *map,cb_field *cb) {
     
     int i = 0;
     int active_field = 0; // index into Map array. Inputs are non sequential.
@@ -98,7 +98,7 @@ int DSP_RECIEVE (FIELD *map,input *cb) {
     }
 
     //NOTE: Will need for later to debug Inputs buffer.
-    #if 1
+    #if 0
     char buf[32];
     term_send_pos(1,1);
     snprintf(buf, 32, "num inputs: %d",num_inputs);
@@ -114,7 +114,6 @@ int DSP_RECIEVE (FIELD *map,input *cb) {
                    map[active_field].col);
     term_send_cmd(SHOW_CURSOR);
     
-
     while (1) {
         int c = DSP_read();
         if (c == 'q') {
@@ -124,8 +123,13 @@ int DSP_RECIEVE (FIELD *map,input *cb) {
             char ch[1] = {c};
             if (active_idx < map[active_field].len - 1) {
                 write(STDOUT_FILENO,ch,1);
+                cb[active_input].input[active_idx] = c;
                 active_idx++;
-                term_send_pos( map[active_field].row,
+                        term_send_pos(1,1);
+                        term_send_str(cb[0].input,23);
+                        term_send_pos(2,1);
+                        term_send_str(cb[1].input,23);
+                 term_send_pos( map[active_field].row,
                                map[active_field].col + active_idx);
             }
             continue;
@@ -137,20 +141,32 @@ int DSP_RECIEVE (FIELD *map,input *cb) {
                 term_send_pos( map[active_field].row,
                                map[active_field].col + active_idx - 1);
                 write(STDOUT_FILENO," ",1);
+                cb[active_input].input[active_idx -1] = ' ';
                 active_idx--;
+                        term_send_pos(1,1);
+                        term_send_str(cb[0].input,23);
+                        term_send_pos(2,1);
+                        term_send_str(cb[1].input,23);
             } break; 
 
-        case TAB:      
+        case TAB: 
             term_send_cmd(HIDE_CURSOR);
             while(1) {
                 active_field++;
                 if ((map[active_field].attrb & UNPROT) == UNPROT) {
                     active_idx = 0;
+                    active_input++;
+                    if (active_input == num_inputs) {
+                        active_input = 0;
+                    }
                     break; // Break out of inner while loop.
                 }
-                if (map[active_field].row == SENTINEL) active_field = 0;
-            } break;
-
+                if (map[active_field].row == SENTINEL) {
+                    active_field = 0;
+                }
+            }
+            break;
+            
         case ARROW_UP:   break;
         case ARROW_DOWN: break;
 
@@ -167,8 +183,9 @@ int DSP_RECIEVE (FIELD *map,input *cb) {
         case ENTER:
             term_send_attr(RESET);
             return 9900;
+            
+        default: break;
         }
-
         term_send_pos( map[active_field].row,
                        map[active_field].col + active_idx);
         term_send_cmd(SHOW_CURSOR);
@@ -177,7 +194,7 @@ int DSP_RECIEVE (FIELD *map,input *cb) {
 
 // TODO: Draw cbook outputs to the screen at the correct location.
 // TODO: Instead of nElments use SENTINEL, the last field in map.
-void DSP_SEND(FIELD *map,input *cbook, int nElmnts) {
+void DSP_SEND(FIELD *map,cb_field *cp_book, int nElmnts) {
     char blanks[32];
     memset(blanks,' ', 32);
     for (int i = 0; i < nElmnts; i++) {
