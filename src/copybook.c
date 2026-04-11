@@ -1,10 +1,41 @@
-FIELD fieldmap_login[] = {                                                      
-    DMS( 1, 40, 19, "MARINA 59 | SIGN ON", PROT, _NONE, WHITE, NULL),
-    DMS( 5, 5,  22, "Press Enter to submit:", PROT, _NONE, MAGENTA, NULL),
-    DMS( 8, 9,  27,  "USER . . . . . . . . . . . ", PROT, _NONE, GREEN, NULL),
-    DMS( 8, 38, 16,"",IC, EXT_UNDERLINE, GREEN, "user"),
-    DMS( 10, 9,  27, "PASSWORD . . . . . . . . . ", PROT,_NONE, GREEN, NULL),
-    DMS( 10, 38, 16, "",0, EXT_UNDERLINE, GREEN, "password"),
+typedef struct cb_field {
+    // used by SEND() to match cb and fm fields.
+    char *name;
+
+    // Ownded by DSPM, writted during read. The length
+    // of the fiedl up to the last nonspace character.
+    // if applicatoin sets len -1, Display manager moves
+    // cursor there. 
+    short len;
+
+    // Ownded by DSPM. MDT_flag marked when field
+    // has been written to by user.
+    char flag;  
+
+    // Owned by application, can apply
+    // brightness,hidden, protected, to change
+    // field characteristics during send.
+    char attrb;
+
+    // Owned by application can apply
+    // blink, reverse, underline, OFF/normal etc..
+    // During send. 
+    char hilight;
+
+    // Owned by applicatoin. Used to change
+    // color of field during send.
+    enum colors color;
+    
+    char *input;      //  Owned by Display Manager. 
+    char *output;     // Owned by Application. 
+} cb_field;
+
+
+struct copybook {
+    int n_map_fields;
+    int n_cb_fields;
+    cb_field *arr;
+    cb_field **cross_map;
 };
 
 struct copybook *cb_create(FIELD *map, int map_len) {
@@ -34,7 +65,7 @@ struct copybook *cb_create(FIELD *map, int map_len) {
     return cb;
 }
 
-void cb_login_free(struct copybook * cb) {
+void cb_free(struct copybook * cb) {
     for(int i = 0; i < cb->n_cb_fields; i++) {
         free(cb->arr[i].input);
         free(cb->arr[i].output);
@@ -42,8 +73,4 @@ void cb_login_free(struct copybook * cb) {
     free(cb->arr);
     free(cb->cross_map);
     free(cb);
-}
-
-int auth(char *username, char *password) {
-    return 0;
 }

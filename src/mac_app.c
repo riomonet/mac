@@ -10,11 +10,21 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <assert.h>
-#include "lookup_tables.h"
+#include "helper_macros.h"
+#include "colors.h"
+#include "attr.h"
+#include "term_cmds.h"
+#include "term_cmds.c"
 #include "mac_app.h"        
 #include "term_interop.c"   // RawMode
+#include "screens.h"
+#include "copybook.c"
 #include "DSP.c"            // Display manager
-#include "screen_login.c"
+
+
+int auth(char *username, char *password) {
+    return 0;
+}
 
 int main(void) {
     DSP_start();
@@ -35,7 +45,7 @@ int main(void) {
                         memcpy(current_operator,
                                cb->arr[0].name,
                                sizeof(current_operator));
-                        cb_login_free(cb);
+                        cb_free(cb);
                         logged_in = 1;
                     }
                 }
@@ -43,11 +53,10 @@ int main(void) {
             break;
         default:
             break;
-
-            /* if( CLEANUP == 1) { */
-            /*     DSP_CLEANUP(); */
-            /*     exit(0); */
-            /* } */
+            if( CLEANUP == 1) {
+                DSP_CLEANUP();
+                exit(0);
+            }
         }
         return 0;
     }

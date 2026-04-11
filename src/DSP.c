@@ -1,25 +1,39 @@
-/* service provided to mac*/
-void term_send_pos(int y, int x) {
-    char buf[32];
-    snprintf(buf,32,"\x1b[%d;%dH",y,x);
-    write(STDOUT_FILENO, buf, strlen(buf));
-}
+/* Credit: Salvatore San Fillipo kilo.c, copy and past*/
+enum KEY_ACTION {
+        KEY_NULL = 0,       /* NULL */
+        CTRL_C = 3,         /* Ctrl-c */
+        CTRL_D = 4,         /* Ctrl-d */
+        CTRL_F = 6,         /* Ctrl-f */
+        CTRL_H = 8,         /* Ctrl-h */
+        TAB = 9,            /* Tab */
+        CTRL_L = 12,        /* Ctrl+l */
+        ENTER = 13,         /* Enter */
+        CTRL_Q = 17,        /* Ctrl-q */
+        CTRL_S = 19,        /* Ctrl-s */
+        CTRL_U = 21,        /* Ctrl-u */
+        ESC = 27,           /* Escape */
+        BACKSPACE =  127,   /* Backspace */
+        /* The following are just soft codes, not really reported by the
+         * terminal directly. */
+        ARROW_LEFT = 1000,
+        ARROW_RIGHT,
+        ARROW_UP,
+        ARROW_DOWN,
+        DEL_KEY,
+        HOME_KEY,
+        END_KEY,
+        PAGE_UP,
+        PAGE_DOWN,
+	F5,F6,F7,F8,F9
+	
+};
 
-void term_send_col(enum colors col) {
-    char *color = colors[col].fg;
-    int len =colors[col].fgLen;
-    write(STDOUT_FILENO, color, len);
-}
-
-void term_send_attr(enum attributes attr) {
-    char *a= attribute[attr].seqOn;
-    int len =attribute[attr].len;
-    write(STDOUT_FILENO, a, len);
-}
-
-void term_send_str(char *str, int len) {
-    write(STDOUT_FILENO, str,len);
-}
+/* Delete:    \x1b[3~ */
+/* F5:        \x1b[15~ */
+/* F6:        \x1b[17~ */
+/* F7:        \x1b[18~ */
+/* F8:        \x1b[19~ */
+/* F9:        \x1b[20~ */
 
 
 void signalHandler(int code) {
@@ -27,33 +41,6 @@ void signalHandler(int code) {
     case SIGWINCH: RESIZE = 1; break;
     case SIGINT: CLEANUP = 1; break;
     }
-}
-
-cb_field *get_cb_field(char *name, cb_field *cb, int num_cb_fields) {
-    for(int i = 0; i < num_cb_fields; i++) {
-        if (strcmp(name,cb[i].name) == 0)
-            return &cb[i];
-    }
-    return NULL;
-}
-
-void term_send_ext_attr(enum ext_attr attr) {
-    if (attr & EXT_BOLD)
-        term_send_attr(BOLD);
-    if (attr & EXT_FAINT)
-        term_send_attr(FAINT);
-    if (attr & EXT_ITALIC)
-        term_send_attr(ITALIC);
-    if (attr & EXT_UNDERLINE)
-        term_send_attr(UNDERLINE);
-    if (attr & EXT_BLINKING)
-        term_send_attr(BLINKING);
-    if (attr & EXT_INVERSE)
-        term_send_attr(INVERSE);
-    if (attr & EXT_HIDDEN)
-        term_send_attr(HIDDEN);
-    if (attr & EXT_STRIKE)
-        term_send_attr(STRIKE);
 }
 
 int DSP_read() {
@@ -114,16 +101,12 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
         if (c == 'q') {
             DSP_CLEANUP();
         }
-        if (isalnum(c)) {
+        if (isalnum(c) || c == ' ') {
             char ch[1] = {c};
             if (active_idx < map[active_field].len - 1) {
                 write(STDOUT_FILENO,ch,1);
                 cb->cross_map[active_field]->input[active_idx] = c;
                 active_idx++;
-                        /* term_send_pos(1,1); */
-                        /* term_send_str(cb->arr[0].input,23); */
-                        /* term_send_pos(2,1); */
-                        /* term_send_str(cb->arr[1].input,23); */
                 term_send_pos( map[active_field].row,
                                map[active_field].col + active_idx);
             }
@@ -138,10 +121,6 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
                 write(STDOUT_FILENO," ",1);
                 cb->cross_map[active_field]->input[active_idx - 1] = ' ';
                 active_idx--;
-                        /* term_send_pos(1,1); */
-                        /* term_send_str(cb->arr[0].input,23); */
-                        /* term_send_pos(2,1); */
-                        /* term_send_str(cb->arr[1].input,23); */
             } break; 
 
         case TAB: 

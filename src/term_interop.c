@@ -1,3 +1,11 @@
+struct termConfig {
+    int nRows; 			/* The number of rows in the terminal window */
+    int nCols;			/* The number of columns in the terminal window. */
+    int cx, cy; 		/* The current cursor postion. */
+    struct termios orig_termios;
+};
+
+struct termConfig E;
 
 /* Global Signal handling switches, these are switched on
  * when signal is recieved */
@@ -56,20 +64,20 @@ void enableRawMode() {
     }
 }
 
-int getCursorPostion(int *rows, int *cols) {
-    char buf[32] = {};
-    unsigned int i = 0;
-    if (write (STDOUT_FILENO, "\x1b[6n", 4) != 4) {
-	return -1;
-    }
-    while (i < (sizeof(buf) - 1)) {
-	if(read (STDIN_FILENO, &buf[i], 1) != 1) break;
-	if(buf[i]  == 'R') break;
-	i++;
-    }
-    buf[i] = '\0';
-    if (buf[0] != '\x1b' || buf[1] != '[') return -1;
-    if (sscanf(&buf[2], "%d;%d",rows,cols) != 2) return -1;
-    return 0;
-}
+/* int getCursorPostion(int *rows, int *cols) { */
+/*     char buf[32] = {}; */
+/*     unsigned int i = 0; */
+/*     if (write (STDOUT_FILENO, "\x1b[6n", 4) != 4) { */
+/*         return -1; */
+/*     } */
+/*     while (i < (sizeof(buf) - 1)) { */
+/*         if(read (STDIN_FILENO, &buf[i], 1) != 1) break; */
+/*         if(buf[i]  == 'R') break; */
+/*         i++; */
+/*     } */
+/*     buf[i] = '\0'; */
+/*     if (buf[0] != '\x1b' || buf[1] != '[') return -1; */
+/*     if (sscanf(&buf[2], "%d;%d",rows,cols) != 2) return -1; */
+/*     return 0; */
+/* } */
 
