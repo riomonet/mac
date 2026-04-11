@@ -22,20 +22,20 @@ int main(void) {
     while (1) {
         switch (current_state) {
         case LOGIN:
-            cb_field *copybook_login = cb_login_create();
-            cb_login_init(copybook_login);
+            struct copybook *cb = cb_create(fieldmap_login,
+                                            MAX_SLOTS(fieldmap_login));
             int logged_in = 0;
             while(!logged_in) {
-                DSP_SEND(fieldmap_login, copybook_login);
-                int res = DSP_RECIEVE(fieldmap_login, copybook_login);
+                int ic =  DSP_SEND(fieldmap_login, cb);
+                int res = DSP_RECIEVE(fieldmap_login, cb, ic);
                 if (res == ENTER) {
-                    if (auth (copybook_login[0].input,
-                             copybook_login[1].input)) {
+                    if (auth (cb->arr[0].input,
+                              cb->arr[1].input)) {
                         current_state = MAC;
                         memcpy(current_operator,
-                               copybook_login[0].name,
+                               cb->arr[0].name,
                                sizeof(current_operator));
-                        cb_login_free(copybook_login);
+                        cb_login_free(cb);
                         logged_in = 1;
                     }
                 }

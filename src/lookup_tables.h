@@ -53,7 +53,6 @@ struct rgb_color rgb_colors[] = {
 //amber new #ffb700 | 255;172;00// "\033[38;2;255;165;0m old
 //green alt #4aff00 | 70;255;00 // "\x1b[38;2;96;255;96m" old
 
-
 enum term_commands {
     CLEAR_SCREEN,
     SHOW_CURSOR,
@@ -114,6 +113,7 @@ enum attributes {
 };
 
 enum ext_attr {
+    _NONE = 0,
     EXT_BOLD = 1,
     EXT_FAINT = 2,
     EXT_ITALIC = 4,
@@ -123,7 +123,6 @@ enum ext_attr {
     EXT_HIDDEN = 64,
     EXT_STRIKE = 128,
 };
-
 
 struct attr_obj attribute[] = {
     [BOLD] = {.name = "BOLD", .seqOn = "\x1b[1m", .seqOff = "\x1b[21m", .len =4 },
