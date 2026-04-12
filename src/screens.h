@@ -34,7 +34,7 @@ FIELD fieldmap_login[] = {
 };
 
 FIELD fieldmap_mac[] = {                                                      
-    DMS(1,  1, 16, "", PROT, NONE,GREEN, "user"),
+    DMS(1,  0, 16, "", PROT, NONE,GREEN, "user"),
     DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL),
     DMS(1, 67, 10, "12/01/2034", PROT,NONE,WHITE,NULL), //TODO: change to named field
     DMS(2, 35,  9, "MAIN MENU", PROT, NONE, WHITE,NULL),
@@ -44,5 +44,11 @@ FIELD fieldmap_mac[] = {
     DMS(9,10,38,   "2. View/Edit/Search current customers.",PROT, NONE,GREEN, NULL),
     DMS(10,10,34,  "3. View and search access history.",PROT, NONE,GREEN, NULL),
     DMS(11,10,24,  "4. View live access log.",PROT, NONE,GREEN, NULL),
+    DMS(23,0,11,"SELECTION=>",PROT,NONE,WHITE,NULL),
+    DMS(23,13,5,"",IC,UNDERLINE,GREEN,"select"),
+    DMS(24,0,100,"",PROT,UNDERLINE,GREEN,"hl"),
+    DMS(26,6,9,"F1=Logout",PROT,NONE,WHITE,NULL),  
+    DMS(26,19,9, "F2=Search",PROT,NONE,WHITE,NULL),
+    DMS(26,31,14,"F3=TechSupport",PROT,NONE,WHITE,NULL)
 };
 
