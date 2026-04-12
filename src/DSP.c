@@ -156,7 +156,7 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
             
         case ENTER:
             term_send_cmd(RESET);
-            return 9900;
+            return ENTER;
             
         default: break;
         }
@@ -170,6 +170,8 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
 }
 
 int DSP_SEND(FIELD *map, struct copybook *cb) {
+    term_send_cmd(CLEAR_SCREEN);
+    term_send_cmd(NOWRAP);
     int ic = 0;
     for(int i = 0; i < cb->n_map_fields; i++) {
         if (map[i].attrb & IC) {

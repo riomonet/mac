@@ -54,14 +54,14 @@ struct copybook *cb_create(FIELD *map, int map_len) {
                               (sizeof(cb_field) *
                                (nFields + 1)));
             cb->arr[nFields].name = map[i].name;
-            if(!(map[i].attrb & PROT)) {
+            //            if(!(map[i].attrb & PROT)) {
                 cb->arr[nFields].input = malloc(map[i].len);
                 cb->arr[nFields].output = malloc(map[i].len);
                 memset(cb->arr[nFields].input, ' ',map[i].len);
                 memset(cb->arr[nFields].output, ' ',map[i].len);
                 cb->arr[nFields].color = map[i].color;
                 cb->arr[nFields].hlite = map[i].hlite;
-            }
+                //            }
             nFields++;
         }
     }
