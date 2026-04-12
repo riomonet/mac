@@ -7,7 +7,7 @@ enum term_commands {
     HIDE_CURSOR,
     ALT_BUFFER,
     ORIG_BUFFER,
-    TERM_RESET,
+    RESET,
     NOWRAP,
     WRAP
 };
@@ -24,10 +24,9 @@ struct term_cmd_obj term_cmds[] = {
     [HIDE_CURSOR] = { .name = "HIDE_CURSOR", .escape_seq = "\x1b[?25l", .len = 6 },
     [ALT_BUFFER] = { .name = "ALT_BUFFER", .escape_seq = "\x1b[?1049h", .len = 8 },
     [ORIG_BUFFER] = { .name = "ORIG_BUFFER", .escape_seq = "\x1b[?1049l", .len = 8 },
-    [TERM_RESET] = { .name = "RESET", .escape_seq = "\x1b[0m", .len = 4 },
+    [RESET] = { .name = "RESET", .escape_seq = "\x1b[0m", .len = 4 },
     [NOWRAP] = {.name = "NOWRAP", .escape_seq = "\x1b[?7l", .len = 5},
-    [WRAP] = {.name = "NOWRAP", .escape_seq = "\x1b[?7h", .len = 5}
-    
+    [WRAP] = {.name = "NOWRAP", .escape_seq = "\x1b[?7h", .len = 5},
 };
 
 

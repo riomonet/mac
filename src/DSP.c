@@ -95,6 +95,8 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
 
     int active_field = ic; // index into Map array. Inputs are non sequential.
     int active_idx = 0;   // col number
+    term_send_hlite(cb->cross_map[active_field]->hlite);
+    term_send_col(cb->cross_map[active_field]->color);
 
     while (1) {
         int c = DSP_read();
@@ -125,6 +127,7 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
 
         case TAB: 
             term_send_cmd(HIDE_CURSOR);
+            term_send_cmd(RESET);
             while(1) {
                 active_field++;
                 if (active_field == cb->n_map_fields) {
@@ -152,7 +155,7 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
             } break;
             
         case ENTER:
-            term_send_attr(RESET);
+            term_send_cmd(RESET);
             return 9900;
             
         default: break;
@@ -160,6 +163,9 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
         term_send_pos(map[active_field].row,
                       map[active_field].col + active_idx);
         term_send_cmd(SHOW_CURSOR);
+        term_send_hlite(cb->cross_map[active_field]->hlite);
+        term_send_col(cb->cross_map[active_field]->color);
+
     }
 }
 
@@ -170,13 +176,15 @@ int DSP_SEND(FIELD *map, struct copybook *cb) {
             ic = i;
         }
         term_send_pos(map[i].row, map[i].col);
-        term_send_col(map[i].color);
         if (!map[i].name) {
+            term_send_col(map[i].color);
             term_send_str(map[i].initial, map[i].len);
         } else {
+            term_send_col(cb->cross_map[i]->color);
+            term_send_hlite(cb->cross_map[i]->hlite);
             term_send_str(cb->cross_map[i]->output,map[i].len);
         }
-        term_send_cmd(TERM_RESET);
+        term_send_cmd(RESET);
     }
     term_send_pos(map[ic].row, map[ic].col);
     term_send_cmd(SHOW_CURSOR);
@@ -207,7 +215,7 @@ void DSP_start() {
 void DSP_CLEANUP () {
     term_send_cmd(ORIG_BUFFER);
     term_send_cmd(SHOW_CURSOR);
-    term_send_cmd(TERM_RESET);
+    term_send_cmd(RESET);
     term_send_cmd(CLEAR_SCREEN);
     term_send_pos(1,1);
     // TODO currently this is Reset to Black, need to query original state.

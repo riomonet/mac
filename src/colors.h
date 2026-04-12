@@ -2,7 +2,6 @@
 #define COLORS_H
 
 enum colors {
-    DEFAULT,
     BLACK,
     RED,
     GREEN,

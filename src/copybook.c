@@ -1,6 +1,10 @@
+#define DEBUG
+
 typedef struct cb_field {
-    // used by SEND() to match cb and fm fields.
+    // 'name' only used for debug.
+    #ifdef DEBUG
     char *name;
+    #endif
 
     // Ownded by DSPM, writted during read. The length
     // of the fiedl up to the last nonspace character.
@@ -10,17 +14,17 @@ typedef struct cb_field {
 
     // Ownded by DSPM. MDT_flag marked when field
     // has been written to by user.
-    char flag;  
+    char field_FA;  
 
     // Owned by application, can apply
     // brightness,hidden, protected, to change
     // field characteristics during send.
-    char attrb;
+    enum intensity intensity;
 
     // Owned by application can apply
     // blink, reverse, underline, OFF/normal etc..
     // During send. 
-    char hilight;
+    enum hlite hlite;
 
     // Owned by applicatoin. Used to change
     // color of field during send.
@@ -55,13 +59,24 @@ struct copybook *cb_create(FIELD *map, int map_len) {
                 cb->arr[nFields].output = malloc(map[i].len);
                 memset(cb->arr[nFields].input, ' ',map[i].len);
                 memset(cb->arr[nFields].output, ' ',map[i].len);
-                cb->cross_map[i] = &cb->arr[nFields];
+                cb->arr[nFields].color = map[i].color;
+                cb->arr[nFields].hlite = map[i].hlite;
             }
             nFields++;
         }
     }
     cb->n_cb_fields = nFields;
     cb->n_map_fields = map_len;
+
+    /* Realloc changes the base addrss of 'cb->arr'
+     * so we set the values of 'cb->cross_map' int
+     * the following loop. */
+    int j=0;
+    for(int i = 0; i<map_len; i++) {
+        if(map[i].name) {
+            cb->cross_map[i] = &cb->arr[j++];
+        }
+    }
     return cb;
 }
 

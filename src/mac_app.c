@@ -36,6 +36,9 @@ int main(void) {
                                             MAX_SLOTS(fieldmap_login));
             int logged_in = 0;
             while(!logged_in) {
+                cb->arr[0].color = AMBER;
+                cb->arr[1].color = BROWN;
+                cb->arr[1].hlite = INVERSE;
                 int ic =  DSP_SEND(fieldmap_login, cb);
                 int res = DSP_RECIEVE(fieldmap_login, cb, ic);
                 if (res == ENTER) {
