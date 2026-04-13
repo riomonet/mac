@@ -101,7 +101,7 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
     while (1) {
         if(RESIZE) {
             DSP_SEND(map, cb);
-            term_send_pos( map[active_field].row,
+            term_send_pos(map[active_field].row,
                            map[active_field].col + active_idx);
             term_send_cmd(RESET);
             term_send_hlite(cb->cross_map[active_field]->hlite);
@@ -218,6 +218,8 @@ void DSP_start() {
     term_send_cmd(ALT_BUFFER);
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(HIDE_CURSOR);
+    printf("\x1b]11;rgb:00/00/00\e\\"); 
+    fflush(stdout);
     enableRawMode();
     initTerm();
     return;
