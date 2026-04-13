@@ -26,29 +26,34 @@ typedef struct FIELD {
 
 FIELD fieldmap_login[] = {                                                      
     DMS( 1, 40, 19, "MARINA 59 | SIGN ON", PROT, NONE, WHITE, NULL),
-    DMS( 5, 5,  22, "Press Enter to submit:", PROT, NONE, MAGENTA, NULL),
+    DMS( 5, 5,  22, "Press Enter to submit:", PROT, NONE, BLUE, NULL),
     DMS( 8, 9,  27,  "USER . . . . . . . . . . . ", PROT, NONE, GREEN, NULL),
     DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
     DMS( 10, 9,  27, "PASSWORD . . . . . . . . . ", PROT, NONE, GREEN, NULL),
     DMS( 10, 38, 16, "",0, UNDERLINE, GREEN, "password"),
 };
 
-FIELD fieldmap_mac[] = {                                                      
-    DMS(1,  0, 16, "", PROT, NONE,GREEN, "user"),
+
+FIELD fieldmap_mac[] = {
+    DMS(1,  0, 5, "user:", PROT, NONE,WHITE, NULL),
+    DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
     DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL),
-    DMS(1, 67, 10, "12/01/2034", PROT,NONE,WHITE,NULL), //TODO: change to named field
+    DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field
     DMS(2, 35,  9, "MAIN MENU", PROT, NONE, WHITE,NULL),
-    DMS(2, 67,  8, "10:20 AM",PROT, NONE, WHITE, NULL), //TODO: change to names field
-    DMS(6,  6, 44, "Please make a selection and press key Enter:",PROT, NONE, MAGENTA, NULL),
-    DMS(8,10,38,   "1. Add a new customer to the database.",PROT, NONE,GREEN, NULL),
-    DMS(9,10,38,   "2. View/Edit/Search current customers.",PROT, NONE,GREEN, NULL),
-    DMS(10,10,34,  "3. View and search access history.",PROT, NONE,GREEN, NULL),
-    DMS(11,10,24,  "4. View live access log.",PROT, NONE,GREEN, NULL),
-    DMS(23,0,11,"SELECTION=>",PROT,NONE,WHITE,NULL),
-    DMS(23,13,5,"",IC,UNDERLINE,GREEN,"select"),
-    DMS(24,0,100,"",PROT,UNDERLINE,GREEN,"hl"),
-    DMS(26,6,9,"F1=Logout",PROT,NONE,WHITE,NULL),  
-    DMS(26,19,9, "F2=Search",PROT,NONE,WHITE,NULL),
-    DMS(26,31,14,"F3=TechSupport",PROT,NONE,WHITE,NULL)
+    DMS(2, 67,  8, "",PROT, NONE, WHITE, "time"), //TODO: change to names field
+    DMS(6,  6, 28, "Select one of the following:",PROT, NONE, BLUE, NULL),
+    DMS(8,10,15,   "1. Add customer",PROT, NONE,GREEN, NULL),
+    DMS(9,10,17,   "2. View customers",PROT, NONE,GREEN, NULL),
+    DMS(10,10,17,  "3. Access history",PROT, NONE,GREEN, NULL),
+    DMS(11,10,15,  "4. Live montior",PROT, NONE,GREEN, NULL),
+    DMS(23,0,9,"Selection",PROT,NONE,GREEN,NULL),
+    DMS(24,0,4, "===>",PROT,NONE,GREEN,NULL),
+    DMS(24,6,96,"",IC,UNDERLINE,GREEN,"select"),
+    //Have to give hl a name so it can be rendered from cb.output
+    DMS(26,0,100,"",PROT,UNDERLINE,GREEN,"tl"),
+    DMS(27,6,9,"F6=Logout",PROT,NONE,BLUE,NULL),  
+    DMS(27,19,9, "F7=Search",PROT,NONE,BLUE,NULL),
+    DMS(27,31,16,"F8=Redraw screen",PROT,NONE,BLUE,NULL),
+    DMS(28,0,100,"",PROT,UNDERLINE,GREEN,"bl"),
 };
 
