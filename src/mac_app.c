@@ -20,6 +20,7 @@
 #include "term_interop.c"   // RawMode
 #include "screens.h"
 #include "copybook.c"
+#include "DSP.h"
 #include "DSP.c"            // Display manager
 
 
@@ -42,6 +43,11 @@ struct date_time date_today() {
     return dt;
 }
 
+int auth(char *username, char *password) {
+    return 1;
+}
+
+
 int name_to_idx(struct copybook *cb, char *str) {
     for (int i = 0; i < cb->n_cb_fields; i++) {
         if (strcmp(str, cb->arr[i].name) == 0)
@@ -50,8 +56,12 @@ int name_to_idx(struct copybook *cb, char *str) {
     return -1;
 }
 
-int auth(char *username, char *password) {
-    return 1;
+void set_cb_output(struct copybook *cb, char **fields, char **values, int len)  {
+    int f_idx;
+    for(int i = 0; i < len; i++) {
+        f_idx = name_to_idx(cb,fields[i]);
+        memcpy(cb->arr[f_idx].output, values[i], strlen(values[i]));
+    }
 }
 
 int main(void) {
@@ -87,15 +97,11 @@ int main(void) {
             }
             break;
         case MAC:
-            /* User name */
-            memcpy(cb_mac->arr[name_to_idx(cb_mac,"user")].output,
-                   current_operator, 14);
-            /* Date and time */
             struct date_time dt = date_today();
-            memcpy(cb_mac->arr[name_to_idx(cb_mac,"date")].output,
-                   dt.date, strlen(dt.date));
-            memcpy(cb_mac->arr[name_to_idx(cb_mac,"time")].output,
-                   dt.time, strlen(dt.time));
+            char *fields[] = {"user","date","time"};
+            char *vals [] = {current_operator,dt.date, dt.time};
+            set_cb_output(cb_mac,fields,vals,3 );
+            
             int ic =  DSP_SEND(fieldmap_mac, cb_mac);
             int res = DSP_RECIEVE(fieldmap_mac, cb_mac, ic);
             break;
