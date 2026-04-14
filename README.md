@@ -2,4 +2,4 @@
 
 ## About
 
-Mac is a TUI front end for crud apps. Written in c without no libraries other than the std c libraries.  It follows a transactional pattern and declaritive menu system similiar to IBM CICS on as/400.
+Mac is a framework for building, business minded crud apps that have a tui interface. It is minimalist.  The architecture is patterned after IBM Mainframes. It is transactional and has built in display manager that operates in raw mode, as well as a simple macro for defining screens(field Map) and a copy book for communicating between the display manager and your application. The app is intended to be served with ttyd or via ssh. 
