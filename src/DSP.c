@@ -67,7 +67,7 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
         if(RESIZE) {
             DSP_SEND(map, cb);
             term_send_pos(map[active_field].row,
-                           map[active_field].col + active_idx);
+                          map[active_field].col + active_idx);
             term_send_cmd(RESET);
             term_send_hlite(cb->cross_map[active_field]->hlite);
             term_send_col(cb->cross_map[active_field]->color);

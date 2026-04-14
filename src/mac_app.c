@@ -11,6 +11,7 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <assert.h>
+#include "network.c"
 #include "helper_macros.h"
 #include "colors.h"
 #include "attr.h"
@@ -64,6 +65,42 @@ void set_cb_output(struct copybook *cb, char **fields, char **values, int len)  
     }
 }
 
+/* ============================== PERSIST ============================== */
+
+struct me {
+    char name [32];
+    char phone [16];
+};
+
+struct me create_me(char *name, char *phone) {
+    struct me m;
+    strcpy(m.name, name);
+    strcpy(m.phone, phone);
+   return m;
+}
+
+
+struct me spenders() {
+    
+}
+
+
+
+enum asset_type {
+    client_t,
+    car_t,
+    boat_t
+};
+
+/*  */
+void write_file() {}
+void update_file(){}
+void read_file() {}
+void load_files(){}
+
+
+
+/* ============================== MAIN ============================== */
 int main(void) {
     DSP_start();
     date_today();
@@ -97,9 +134,10 @@ int main(void) {
             }
             break;
         case MAC:
+            // For screen header display fields
             struct date_time dt = date_today();
-            char *fields[] = {"user","date","time"};
-            char *vals [] = {current_operator,dt.date, dt.time};
+            char *fields[] = {"user", "date", "time"};
+            char *vals [] =  {current_operator, dt.date, dt.time};
             set_cb_output(cb_mac,fields,vals,3 );
             
             int ic =  DSP_SEND(fieldmap_mac, cb_mac);
