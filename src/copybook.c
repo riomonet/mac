@@ -1,5 +1,7 @@
 #define DEBUG
 
+
+    
 typedef struct cb_field {
     // 'name' only used for debug.
     #ifdef DEBUG
@@ -7,10 +9,13 @@ typedef struct cb_field {
     #endif
 
     // Ownded by DSPM, writted during read. The length
-    // of the fiedl up to the last nonspace character.
+    // of the field up to the last nonspace character.
     // if applicatoin sets len -1, Display manager moves
     // cursor there. 
     short len;
+
+    //created when the copybook is created. 
+    short field_width; 
 
     // Ownded by DSPM. MDT_flag marked when field
     // has been written to by user.
@@ -29,8 +34,10 @@ typedef struct cb_field {
     // Owned by applicatoin. Used to change
     // color of field during send.
     enum colors color;
+
+    char is_persistent; // weather we write this to disk or not. 
     
-    char *input;      //  Owned by Display Manager. 
+    char *input;      //  Owned by Display Manager.
     char *output;     // Owned by Application. 
 } cb_field;
 
@@ -42,6 +49,9 @@ struct copybook {
     cb_field **cross_map;
 };
 
+
+/* TODO: Better to count nfields in an initial loop,
+ *  then allocate all at once to prevent heap fragmentation */
 struct copybook *cb_create(FIELD *map, int map_len) {
     int nFields = 0;
     struct copybook *cb = malloc(sizeof(struct copybook));
@@ -55,12 +65,13 @@ struct copybook *cb_create(FIELD *map, int map_len) {
                                (nFields + 1)));
             cb->arr[nFields].name = map[i].name;
             //            if(!(map[i].attrb & PROT)) {
-                cb->arr[nFields].input = malloc(map[i].len);
-                cb->arr[nFields].output = malloc(map[i].len);
-                memset(cb->arr[nFields].input, ' ',map[i].len);
-                memset(cb->arr[nFields].output, ' ',map[i].len);
-                cb->arr[nFields].color = map[i].color;
-                cb->arr[nFields].hlite = map[i].hlite;
+	    cb->arr[nFields].field_width = map[i].len;
+	    cb->arr[nFields].input = malloc(map[i].len);
+	    cb->arr[nFields].output = malloc(map[i].len);
+	    memset(cb->arr[nFields].input, ' ',map[i].len);
+	    memset(cb->arr[nFields].output, ' ',map[i].len);
+	    cb->arr[nFields].color = map[i].color;
+	    cb->arr[nFields].hlite = map[i].hlite;
                 //            }
             nFields++;
         }
@@ -88,4 +99,12 @@ void cb_free(struct copybook * cb) {
     free(cb->arr);
     free(cb->cross_map);
     free(cb);
+}
+
+int name_to_idx(struct copybook *cb, char *str) {
+    for (int i = 0; i < cb->n_cb_fields; i++) {
+        if (strcmp(str, cb->arr[i].name) == 0)
+            return i;
+    }
+    return -1;
 }

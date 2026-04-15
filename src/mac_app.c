@@ -23,6 +23,7 @@
 #include "copybook.c"
 #include "DSP.h"
 #include "DSP.c"            // Display manager
+#include "records.c"
 
 
 struct date_time {
@@ -49,13 +50,6 @@ int auth(char *username, char *password) {
 }
 
 
-int name_to_idx(struct copybook *cb, char *str) {
-    for (int i = 0; i < cb->n_cb_fields; i++) {
-        if (strcmp(str, cb->arr[i].name) == 0)
-            return i;
-    }
-    return -1;
-}
 
 void set_cb_output(struct copybook *cb, char **fields, char **values, int len)  {
     int f_idx;
@@ -65,40 +59,6 @@ void set_cb_output(struct copybook *cb, char **fields, char **values, int len)  
     }
 }
 
-/* ============================== PERSIST ============================== */
-
-struct me {
-    char name [32];
-    char phone [16];
-};
-
-struct me create_me(char *name, char *phone) {
-    struct me m;
-    strcpy(m.name, name);
-    strcpy(m.phone, phone);
-   return m;
-}
-
-
-struct me spenders() {
-    
-}
-
-
-
-enum asset_type {
-    client_t,
-    car_t,
-    boat_t
-};
-
-/*  */
-void write_file() {}
-void update_file(){}
-void read_file() {}
-void load_files(){}
-
-
 
 /* ============================== MAIN ============================== */
 int main(void) {
@@ -106,6 +66,10 @@ int main(void) {
     date_today();
     struct copybook *cb_mac = cb_create(fieldmap_mac,
                                         MAX_SLOTS(fieldmap_mac));
+    struct copybook *cb_client = cb_create(fieldmap_client,
+                                        MAX_SLOTS(fieldmap_client));
+    
+    
     current_state = LOGIN;
     int logged_in = 0;
     while (1) {
@@ -114,8 +78,11 @@ int main(void) {
             struct copybook *cb = cb_create(fieldmap_login,
                                             MAX_SLOTS(fieldmap_login));
             while(!logged_in) {
+		struct client cl;
                 int ic =  DSP_SEND(fieldmap_login, cb);
                 int res = DSP_RECIEVE(fieldmap_login, cb, ic);
+				
+		#if 1
                 if (res == ENTER) {
                     if (auth (cb->arr[name_to_idx(cb,"user")].input, 
                               cb->arr[name_to_idx(cb,"password")].input)) {
@@ -131,6 +98,7 @@ int main(void) {
                         // reset copybook outputs
                     }
                 }
+		#endif
             }
             break;
         case MAC:
@@ -139,9 +107,10 @@ int main(void) {
             char *fields[] = {"user", "date", "time"};
             char *vals [] =  {current_operator, dt.date, dt.time};
             set_cb_output(cb_mac,fields,vals,3 );
-            
-            int ic =  DSP_SEND(fieldmap_mac, cb_mac);
-            int res = DSP_RECIEVE(fieldmap_mac, cb_mac, ic);
+
+	    
+            /* int ic =  DSP_SEND(fieldmap_mac, cb_mac); */
+            /* int res = DSP_RECIEVE(fieldmap_mac, cb_mac, ic); */
             break;
         default:
             break;

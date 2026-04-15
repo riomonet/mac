@@ -31,6 +31,7 @@ FIELD fieldmap_login[] = {
     DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
     DMS( 10, 9,  27, "PASSWORD . . . . . . . . . ", PROT, NONE, GREEN, NULL),
     DMS( 10, 38, 16, "",0, UNDERLINE, GREEN, "password"),
+    DMS( 12, 38, 16, "",0, UNDERLINE, GREEN, "data"),
 };
 
 
@@ -56,4 +57,36 @@ FIELD fieldmap_mac[] = {
     DMS(28,31,16,"F8=Redraw screen",PROT,NONE,BLUE,NULL),
     DMS(29,0,100,"",PROT,UNDERLINE,GREEN,"bl"),
 };
+
+
+FIELD fieldmap_client[] = {
+    DMS(1,  0, 5, "User:", PROT, NONE,WHITE, NULL),
+    DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
+    DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL),
+    DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field
+    DMS(2, 35,  9, "Add new user", PROT, NONE, WHITE,NULL),
+    DMS(2, 67,  8, "",PROT, NONE, WHITE, "time"), //TODO: change to names field
+    DMS( 5, 5,  37, "Tab to change fields, Enter to submit", PROT, NONE, BLUE, NULL),
+
+    // labels
+    DMS( 8, 9,  28,  "First Name . . . . . . . . .", PROT, NONE, GREEN, NULL),
+    DMS( 10, 9,  28, "Last Name . . . . . . . . . ", PROT, NONE, GREEN, NULL),
+    DMS( 8, 9,  28,  "Phone . . . . . . . . . . . ", PROT, NONE, GREEN, NULL),
+    DMS( 10, 9,  24, "Email . . . . . . . . . . . ", PROT, NONE, GREEN, NULL),
+    DMS( 8, 38,  16, "" ,IC, UNDERLINE, GREEN, "fname"),
+    DMS( 10, 38, 16, "" ,0 , UNDERLINE, GREEN, "lname"),
+    DMS( 8, 38,  16, "" ,0 , UNDERLINE, GREEN, "phone"),  
+    DMS( 10, 38, 16, "" ,0 , UNDERLINE, GREEN, "email"),
+    //Have to give hl a name so it can be rendered from cb.output
+    DMS(26,0,100,"",PROT,UNDERLINE,GREEN,"tl"),
+    DMS(28,6,9,"F6=Logout",PROT,NONE,BLUE,NULL),  
+    DMS(28,19,9, "F7=Search",PROT,NONE,BLUE,NULL),
+    DMS(28,31,16,"F8=Redraw screen",PROT,NONE,BLUE,NULL),
+    DMS(29,0,100,"",PROT,UNDERLINE,GREEN,"bl"),
+};
+    
+
+
+
+
 
