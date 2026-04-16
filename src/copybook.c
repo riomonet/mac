@@ -103,3 +103,11 @@ int name_to_idx(struct copybook *cb, char *str) {
     }
     return -1;
 }
+
+void set_cb_output(struct copybook *cb, char **fields, char **values, int len)  {
+    int f_idx;
+    for(int i = 0; i < len; i++) {
+        f_idx = name_to_idx(cb,fields[i]);
+        memcpy(cb->arr[f_idx].io_buf, values[i], strlen(values[i]));
+    }
+}

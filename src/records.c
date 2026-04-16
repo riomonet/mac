@@ -40,7 +40,7 @@ struct record {
     char  status;       // active or inactive
     int id;
     union record_data data;
-    char filler [62];
+    char filler [52];
 };
 
 struct table {
