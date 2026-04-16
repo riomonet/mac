@@ -31,7 +31,6 @@ FIELD fieldmap_login[] = {
     DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
     DMS( 10, 9,  27, "PASSWORD . . . . . . . . . ", PROT, NONE, GREEN, NULL),
     DMS( 10, 38, 16, "",0, UNDERLINE, GREEN, "password"),
-    DMS( 12, 38, 16, "",0, UNDERLINE, GREEN, "data"),
 };
 
 

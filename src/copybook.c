@@ -1,6 +1,4 @@
 #define DEBUG
-
-
     
 typedef struct cb_field {
     // 'name' only used for debug.
@@ -37,8 +35,8 @@ typedef struct cb_field {
 
     char is_persistent; // weather we write this to disk or not. 
     
-    char *input;      //  Owned by Display Manager.
-    char *output;     // Owned by Application. 
+    char *io_buf;      //  Owned by Display Manager.
+
 } cb_field;
 
 
@@ -66,10 +64,8 @@ struct copybook *cb_create(FIELD *map, int map_len) {
             cb->arr[nFields].name = map[i].name;
             //            if(!(map[i].attrb & PROT)) {
 	    cb->arr[nFields].field_width = map[i].len;
-	    cb->arr[nFields].input = malloc(map[i].len);
-	    cb->arr[nFields].output = malloc(map[i].len);
-	    memset(cb->arr[nFields].input, ' ',map[i].len);
-	    memset(cb->arr[nFields].output, ' ',map[i].len);
+	    cb->arr[nFields].io_buf = malloc(map[i].len);
+	    memset(cb->arr[nFields].io_buf, ' ',map[i].len);
 	    cb->arr[nFields].color = map[i].color;
 	    cb->arr[nFields].hlite = map[i].hlite;
                 //            }
@@ -93,8 +89,7 @@ struct copybook *cb_create(FIELD *map, int map_len) {
 
 void cb_free(struct copybook * cb) {
     for(int i = 0; i < cb->n_cb_fields; i++) {
-        free(cb->arr[i].input);
-        free(cb->arr[i].output);
+        free(cb->arr[i].io_buf);
     }
     free(cb->arr);
     free(cb->cross_map);

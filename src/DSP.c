@@ -81,7 +81,7 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
             char ch[1] = {c};
             if (active_idx < map[active_field].len - 1) {
                 write(STDOUT_FILENO,ch,1);
-                cb->cross_map[active_field]->input[active_idx] = c;
+                cb->cross_map[active_field]->io_buf[active_idx] = c;
                 active_idx++;
                 term_send_pos( map[active_field].row,
                                map[active_field].col + active_idx);
@@ -95,7 +95,7 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
                 term_send_pos( map[active_field].row,
                                map[active_field].col + active_idx - 1);
                 write(STDOUT_FILENO," ",1);
-                cb->cross_map[active_field]->input[active_idx - 1] = ' ';
+                cb->cross_map[active_field]->io_buf[active_idx - 1] = ' ';
                 active_idx--;
             } break; 
 
@@ -158,7 +158,7 @@ int DSP_SEND(FIELD *map, struct copybook *cb) {
         } else {
             term_send_col(cb->cross_map[i]->color);
             term_send_hlite(cb->cross_map[i]->hlite);
-            term_send_str(cb->cross_map[i]->output,map[i].len);
+            term_send_str(cb->cross_map[i]->io_buf,map[i].len);
         }
         term_send_cmd(RESET);
     }
