@@ -54,7 +54,6 @@ union record_data
 record_data_create(struct copybook *cb) {
     union record_data data;
     char *d = (char *)&data;
-
     for(int i = 0; i <cb->n_cb_fields; i++) {
         memcpy(d, cb->arr[i].io_buf, cb->arr[i].field_width);
         d += cb->arr[i].field_width;
