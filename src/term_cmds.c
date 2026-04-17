@@ -10,7 +10,6 @@ void term_send_pos(int y, int x) {
     write(STDOUT_FILENO, buf, strlen(buf));
 }
 
-
 // NOTE: maybe change this storage in feildmap and cp to a byte;
 void term_send_col(enum colors col) {
     char *color = colors[col].fg;
