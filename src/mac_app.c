@@ -32,7 +32,8 @@
 int main(void) {
     DSP_start();
     date_today();
-    init_DB();
+    struct db db;
+    init_db(&db);
     current_state = LOGIN;
     int logged_in = 0;
     //TODO: init all copybooks somewhere else. when do i free this one?

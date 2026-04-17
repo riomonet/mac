@@ -23,7 +23,7 @@ void term_send_str(char *str, int len) {
 
 void term_send_hlite (char dsp_attr) {
     int len = 4;
-    if (dsp_attr & UNDERLINE) write(STDOUT_FILENO, "\x1b[4m", len );
+    if (dsp_attr & UNDERLINE) write(STDOUT_FILENO, "\x1b[4m", len );  
     if (dsp_attr & INVERSE)   write(STDOUT_FILENO, "\x1b[7m", len );
     if (dsp_attr & BLINK)     write(STDOUT_FILENO, "\x1b[5m", len );
     if (dsp_attr & STRIKE)    write(STDOUT_FILENO, "\x1b[9m", len );
