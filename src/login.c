@@ -1,5 +1,7 @@
 int auth(char *username, char *password) {
-    return 1;
+    if(username != NULL && password != NULL)
+	return 1; //tmp
+    return 1; //tmp
 }
 
 int login(struct copybook *cb) {

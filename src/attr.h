@@ -1,30 +1,27 @@
 #ifndef ATTR_H
 #define ATTR_H
 
-enum attributes {
-    HIDDEN ,
-    NUMERIC,
+enum DSP_ATTR {
+    NONE      =  0,
+    UNDERLINE =  1u,
+    BLINK     =  1u << 1,
+    INVERSE   =  1u << 2,
+    STRIKE    =  1U << 3,
+    //bits 4 and 5 reserved for future use;
+    BOLD      =  0b01000000,
+    FAINT     =  0b10000000,
+    ITALIC    =  0b11000000
 };
 
-enum intensity {
-    NORMAL = 0b00,
-    BOLD   = 0b01,
-    FAINT  = 0b10,
-    ITALIC = 0b11
-};
-enum hlite {
-    NONE      =  0b000,
-    UNDERLINE =  0b001,
-    BLINKING  =  0b010,
-    INVERSE   =  0b100,
-    STRIKE    =  0b101
-};
-    
-// these are for fieldmaps
-enum t_attrb{
-    PROT    = 0b01,
-    IC      = 0b10,
-    MDT     = 0x80
+enum FLD_ATTR {
+    PROT      =  1u,
+    IC        =  1u << 1,
+    NUMERIC   =  1u << 2,
+    HIDDEN    =  1u << 3,
+    MDT       =  1u << 4,
+    PERSIST   =  1u << 5,
 };
 
 #endif
+
+

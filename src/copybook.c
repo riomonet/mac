@@ -1,44 +1,13 @@
-#define DEBUG
-    
+
 typedef struct cb_field {
-    // 'name' only used for debug.
-    #ifdef DEBUG
     char *name;
-    #endif
-
-    // Ownded by DSPM, writted during read. The length
-    // of the field up to the last nonspace character.
-    // if applicatoin sets len -1, Display manager moves
-    // cursor there. 
     short len;
-
-    //created when the copybook is created. 
     short field_width; 
-
-    // Ownded by DSPM. MDT_flag marked when field
-    // has been written to by user.
-    char field_FA;  
-
-    // Owned by application, can apply
-    // brightness,hidden, protected, to change
-    // field characteristics during send.
-    enum intensity intensity;
-
-    // Owned by application can apply
-    // blink, reverse, underline, OFF/normal etc..
-    // During send. 
-    enum hlite hlite;
-
-    // Owned by applicatoin. Used to change
-    // color of field during send.
+    char dsp_attr;
+    char fld_attr;
     enum colors color;
-
-    char is_persistent; // weather we write this to disk or not. 
-    
-    char *io_buf;      //  Owned by Display Manager.
-
+    char *io_buf;      
 } cb_field;
-
 
 struct copybook {
     int n_map_fields;
@@ -47,8 +16,7 @@ struct copybook {
     cb_field **cross_map;
 };
 
-
-/* TODO: Better to count nfields in an initial loop,
+/* TODO: Maybe, better to count nfields in an initial loop,
  *  then allocate all at once to prevent heap fragmentation */
 struct copybook *cb_create(FIELD *map, int map_len) {
     int nFields = 0;
@@ -62,13 +30,12 @@ struct copybook *cb_create(FIELD *map, int map_len) {
                               (sizeof(cb_field) *
                                (nFields + 1)));
             cb->arr[nFields].name = map[i].name;
-            //            if(!(map[i].attrb & PROT)) {
 	    cb->arr[nFields].field_width = map[i].len;
 	    cb->arr[nFields].io_buf = malloc(map[i].len);
 	    memset(cb->arr[nFields].io_buf, ' ',map[i].len);
 	    cb->arr[nFields].color = map[i].color;
-	    cb->arr[nFields].hlite = map[i].hlite;
-                //            }
+	    cb->arr[nFields].fld_attr = map[i].fld_attr;
+	    cb->arr[nFields].dsp_attr = map[i].dsp_attr;
             nFields++;
         }
     }

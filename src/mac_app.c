@@ -49,7 +49,7 @@ int main(void) {
         } break;
             
         case MAC: {
-            int res = main_menu(cb_mac);
+            current_state = main_menu(cb_mac);
             logged_in = 0;
             current_state = LOGIN;
         } break;

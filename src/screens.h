@@ -4,23 +4,23 @@ typedef struct FIELD {
     int col;
     int len;
     char *initial;
-    enum t_attrb attrb;
-    enum hlite hlite; 
-    enum colors color;
+    char dsp_attr;
+    char fld_attr;
+    enum colors color; 
     char *name;
 } FIELD;
 
 
 /* Field definitionn macro */
-#define DMS(r, c, l, d, a, hl, clr, n) (FIELD) {  \
- .row      = r,                                 \
- .col      = c,                                 \
- .len      = l,                                 \
- .initial  = d,                                 \
- .attrb    = a,                                 \
- .hlite    = hl,                                \
- .color    = clr,                               \
- .name     = n,                                 \
+#define DMS(r, c, l, def_val, fld, dsp, clr, n) (FIELD) {  \
+ .row        = r,                                 \
+ .col        = c,                                 \
+ .len        = l,                                 \
+ .initial    = def_val,                           \
+ .fld_attr  =  fld,      			  \
+ .dsp_attr  =  dsp,                               \
+ .color      = clr,                               \
+ .name       = n,                                 \
  }
 
 
@@ -35,7 +35,7 @@ FIELD fieldmap_login[] = {
 
 
 FIELD fieldmap_mac[] = {
-    DMS(1,  0, 5, "User:", PROT, NONE,WHITE, NULL),
+    DMS(1,  0, 5, "User:", PROT, NONE, WHITE, NULL),
     DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
     DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL),
     DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field

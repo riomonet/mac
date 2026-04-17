@@ -22,7 +22,7 @@ void setDefaultColors(enum colors background, enum colors foreground);
 void term_send_pos(int row, int column);
 void term_send_col(enum colors foreground);
 void term_send_str(char *str, int len);
-void term_send_attr(enum attributes attr);
+void term_send_attr(enum DSP_ATTR attr);
 
 
 
