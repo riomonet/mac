@@ -23,9 +23,10 @@ void init_table(struct table *tbl, enum REC_TYPE type) {
     tbl->capacity = start_cap;
     tbl->len = 0; //len is the user id.
     tbl->type = type;
-    tbl->rows = malloc(start_cap * sizeof(struct record));
+    tbl->rec_id = 1000;
+    tbl->rec_index = malloc(start_cap * sizeof(int)); 
+    tbl->records = malloc(start_cap * sizeof(struct record));
 }
-
 
 void init_db(struct db *db) {
     init_table(&db->clients, REC_CLIENT);
@@ -33,31 +34,31 @@ void init_db(struct db *db) {
     init_table(&db->boats, REC_CLIENT);
 }
 
-
-
-
-
-
-
-
-
-
-//create_table(REC_CLIENT);
-
-/* int get_new_id(struct table *table) { */
-/*     if (table->len == table->capacity - 1) { */
-/*         int new_capacity = 2 * table->capacity * */
-/*             record_size(table->type); */
-/*         table->data = realloc(table->data,new_capacity); */
-/*         table->capacity = new_capacity; */
-/*     } */
-/*     table->len++; */
-/*     return (table->len + id_offset); */
-/* } */
-
-
+int get_rec_id(struct table *table) {
+    if (table->len == table->capacity - 1) {
+        size_t new_capacity = 2 * table->capacity;
+        table->records = realloc(table->records,new_capacity * sizeof(struct record));
+	table->rec_id_lookup = realloc(table->rec_id_lookup, new_capacity * sizeof(int));
+        table->capacity = new_capacity;
+    }
+    table->len++;
+    table->rec_id++;
     
+    //NOTE: Not an invariant, only for insertion. 
+    table->rec_id_lookup[rec_id] = rec_id;
+    return rec_id;
+}
 
+int db_add_record(struct record rec, enum REC_TYPE type) {
+    
+            
+}
+
+
+/* load from file */
+void db_load() {
+}
+    
 
 
 

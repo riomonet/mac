@@ -1,3 +1,5 @@
+
+// https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_chapter/libc_32.html
 int auth(char *username, char *password) {
     if(username != NULL && password != NULL)
 	return 1; //tmp
