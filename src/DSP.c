@@ -54,23 +54,22 @@ int DSP_read() {
     }
 }
 
-
-
-int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
+int DSP_RECIEVE (FIELD *map, int map_len, int ic) {
 
     int active_field = ic; // index into Map array. Inputs are non sequential.
     int active_idx = 0;   // col number
-    term_send_hlite(cb->cross_map[active_field]->dsp_attr);
-    term_send_col(cb->cross_map[active_field]->color);
+
+    term_send_hlite(map[active_field].meta->dsp_attr);
+    term_send_col(map[active_field].meta->color);
 
     while (1) {
         if(RESIZE) {
-            DSP_SEND(map, cb);
+            DSP_SEND(map);
             term_send_pos(map[active_field].row,
                           map[active_field].col + active_idx);
             term_send_cmd(RESET);
-            term_send_hlite(cb->cross_map[active_field]->dsp_attr);
-            term_send_col(cb->cross_map[active_field]->color);
+            term_send_hlite(map[active_field].meta->dsp_attr);
+            term_send_col(map[active_field].meta->color);
             RESIZE = 0;
         }
         int c = DSP_read();
@@ -81,7 +80,7 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
             char ch[1] = {c};
             if (active_idx < map[active_field].len - 1) {
                 write(STDOUT_FILENO,ch,1);
-                cb->cross_map[active_field]->io_buf[active_idx] = c;
+                map[active_field].io[active_idx] = c;
                 active_idx++;
                 term_send_pos( map[active_field].row,
                                map[active_field].col + active_idx);
@@ -95,7 +94,7 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
                 term_send_pos( map[active_field].row,
                                map[active_field].col + active_idx - 1);
                 write(STDOUT_FILENO," ",1);
-                cb->cross_map[active_field]->io_buf[active_idx - 1] = ' ';
+                map[active_field].io[active_idx - 1] = ' ';
                 active_idx--;
             } break; 
 
@@ -104,7 +103,7 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
             term_send_cmd(RESET);
             while(1) {
                 active_field++;
-                if (active_field == cb->n_map_fields) {
+                if (active_field == map_len) {
                     active_field = 0 ;
                 }
                 if (!(map[active_field].fld_attr & PROT)) {
@@ -137,17 +136,16 @@ int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic) {
         term_send_pos(map[active_field].row,
                       map[active_field].col + active_idx);
         term_send_cmd(SHOW_CURSOR);
-        term_send_hlite(cb->cross_map[active_field]->dsp_attr
-			);
-        term_send_col(cb->cross_map[active_field]->color);
+        term_send_hlite(map[active_field].meta->dsp_attr);
+        term_send_col(map[active_field].meta->color);
     }
 }
 
-int DSP_SEND(FIELD *map, struct copybook *cb) {
+int DSP_SEND(FIELD *map) {
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(NOWRAP);
     int ic = 0;
-    for(int i = 0; i < cb->n_map_fields; i++) {
+    for(int i = 0; i < LOGIN_N_MAP_FIELDS; i++) {
         if (map[i].fld_attr & IC) {
             ic = i;
         }
@@ -156,9 +154,9 @@ int DSP_SEND(FIELD *map, struct copybook *cb) {
             term_send_col(map[i].color);
             term_send_str(map[i].initial, map[i].len);
         } else {
-            term_send_col(cb->cross_map[i]->color);
-	    term_send_hlite(cb->cross_map[i]->dsp_attr);
-            term_send_str(cb->cross_map[i]->io_buf,map[i].len);
+            term_send_col(map[i].meta->color);
+            term_send_hlite(map[i].meta->dsp_attr);
+            term_send_str(map[i].io,map[i].len);
         }
         term_send_cmd(RESET);
     }

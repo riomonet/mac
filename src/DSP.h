@@ -39,8 +39,9 @@ enum KEY_ACTION {
 /* F9:        \x1b[20~ */
 
 int DSP_read();
-int DSP_RECIEVE (FIELD *map, struct copybook *cb, int ic);
-int DSP_SEND(FIELD *map, struct copybook *cb);
+int DSP_RECIEVE (FIELD *map, int len, int ic);
+//int DSP_SEND(FIELD *map, struct copybook *cb);
+int DSP_SEND(FIELD *map);
 void DSP_start();
 void DSP_CLEANUP();
 #endif

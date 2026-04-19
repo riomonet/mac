@@ -1,24 +1,22 @@
 
 // https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_chapter/libc_32.html
 int auth(char *username, char *password) {
-    if(username != NULL && password != NULL)
-	return 1; //tmp
-    return 1; //tmp
+    if (username || password || !username || !password){
+        
+    }
+
+    return 1; //tmpx
 }
 
-int login(struct copybook *cb) {
-    
-    int ic =  DSP_SEND(fieldmap_login, cb);
-    int res = DSP_RECIEVE(fieldmap_login, cb, ic);
+int login() {
+    init_login_fieldmap_cb();
+    int ic =  DSP_SEND(fieldmap_login);
+    int res = DSP_RECIEVE(fieldmap_login,len_fieldmap_login, ic);
 				
     if (res == ENTER) {
-        if (auth (cb->arr[name_to_idx(cb,"user")].io_buf, 
-                  cb->arr[name_to_idx(cb,"password")].io_buf)) {
+        if (auth (cb.login_cb.user.io,
+                  cb.login_cb.password.io)){
             current_state = MAC;
-            memcpy(current_operator,
-                   cb->arr[0].io_buf,
-                   sizeof(current_operator));
-            cb_free(cb);
             return 1;
         } else {
             //send failure message

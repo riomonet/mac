@@ -6,6 +6,7 @@ typedef uint32_t u32;
 typedef enum states {
     LOGIN,
     MAC,
+    CLIENT,
     //    ADD_USER,
     //    VIEW_LIVE_LOGS,
     //    SEARCH_LOGS,

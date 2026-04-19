@@ -57,7 +57,6 @@ struct table_cars {
 
 struct db {
     struct table_clients clients;
-    struct table_cars cars;
 };
 
 

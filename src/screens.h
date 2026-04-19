@@ -7,9 +7,10 @@ typedef struct FIELD {
     char dsp_attr;
     char fld_attr;
     enum colors color; 
-    char *name;
+    char *name;// &io from specific
+    char *io;
+    struct cb_field *meta;
 } FIELD;
-
 
 /* Field definitionn macro */
 #define DMS(r, c, l, def_val, fld, dsp, clr, n) (FIELD) {  \
@@ -24,16 +25,17 @@ typedef struct FIELD {
  }
 
 
-FIELD fieldmap_login[] = {                                                      
+#define len_fieldmap_login 6
+FIELD fieldmap_login[] = {
+    DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
+    DMS( 10, 38, 16, "",0, UNDERLINE, GREEN, "password"),
+    DMS( 8, 9,  27,  "USER . . . . . . . . . . . ", PROT, NONE, GREEN, NULL),
+    DMS( 10, 9,  27, "PASSWORD . . . . . . . . . ", PROT, NONE, GREEN, NULL),
     DMS( 1, 40, 19, "Marina 59 | Sign On", PROT, NONE, WHITE, NULL),
     DMS( 5, 5,  37, "Tab to change fields, Enter to submit", PROT, NONE, BLUE, NULL),
-    DMS( 8, 9,  27,  "USER . . . . . . . . . . . ", PROT, NONE, GREEN, NULL),
-    DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
-    DMS( 10, 9,  27, "PASSWORD . . . . . . . . . ", PROT, NONE, GREEN, NULL),
-    DMS( 10, 38, 16, "",0, UNDERLINE, GREEN, "password"),
 };
 
-
+#define LEN_FIELDMAP_MAC 19
 FIELD fieldmap_mac[] = {
     DMS(1,  0, 5, "User:", PROT, NONE, WHITE, NULL),
     DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
@@ -57,7 +59,12 @@ FIELD fieldmap_mac[] = {
     DMS(29,0,100,"",PROT,UNDERLINE,GREEN,"bl"),
 };
 
-
-
-
-
+#define LEN_FIELDMAP_ADDCLIENT 5
+FIELD fieldmap_addclient[] = {
+    DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
+    DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field
+    DMS(2, 67,  8, "",PROT, NONE, WHITE, "time"), //TODO: change to names fieldx
+    DMS(1,  0, 5, "User:", PROT, NONE, WHITE, NULL),
+    DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL),
+};
+    

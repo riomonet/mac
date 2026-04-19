@@ -46,7 +46,7 @@ struct client_record new_client_record( char fname[CLIENT_FNAME_LEN],
     return r;
 }
 
-struct table_clients create_client_table() {
+struct table_clients init_client_table() {
     struct table_clients tbl = {0};
     int initial_capacity = 8;
     tbl.capacity = initial_capacity;
@@ -74,6 +74,9 @@ int table_push_client(struct table_clients *tbl, struct client_record *rec) {
     return rec->id;
 }
 
+void init_db(struct db *db) {
+    db->clients = init_client_table();
+ }
 
 
 

@@ -21,6 +21,7 @@
 #include "term_interop.c"   // RawMode
 #include "date_time.c"
 #include "screens.h"
+#include "copybooks.h"
 #include "copybook.c"
 #include "DSP.h"
 #include "DSP.c"            // Display manager
@@ -36,31 +37,32 @@ int main(void) {
     int logged_in = 0;
 
     //TODO: init all copybooks somewhere else. when do i free this one?
-    struct copybook *cb_mac = cb_create(fieldmap_mac,
-                                        MAX_SLOTS(fieldmap_mac));
 
-    struct table_clients client_table = create_client_table();
-    struct client_record  r = new_client_record_string("ari","zbalozki","636-233-2333","email");
-    table_push_client(&client_table, &r);
-    r = new_client_record_string("allison","zbalozki","888","someemail");
-    table_push_client(&client_table, &r);
-    
-
-    while (0) {
+    while (1) {
         switch (current_state) {
         case LOGIN: {
-            struct copybook *cb = cb_create(fieldmap_login, MAX_SLOTS(fieldmap_login));
             while (!logged_in) {
                 logged_in = login(cb);
             }
         } break;
             
         case MAC: {
-            current_state = main_menu(cb_mac);
-            logged_in = 0;
-            current_state = LOGIN;
+            current_state = main_menu();
+            //            logged_in = 0;
+            current_state = CLIENT;
         } break;
-            
+        case CLIENT: {
+            /* struct copybook *cb = cb_create(fieldmap_client, */
+            /*                                         MAX_SLOTS(fieldmap_client)); */
+            struct date_time dt = date_today();
+            char *fields[] = {"user", "date", "time"};
+            char *vals [] =  {current_operator, dt.date, dt.time};
+            /* set_cb_output(cb, fields, vals, 3); */
+            //int ic =  DSP_SEND(fieldmap_mac, cb);
+            int ic =  DSP_SEND(fieldmap_mac);
+            int res = DSP_RECIEVE(fieldmap_mac, LEN_FIELDMAP_ADDCLIENT, ic);
+
+        } break;
         default: {
         } break;
 
