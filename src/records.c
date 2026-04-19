@@ -1,63 +1,82 @@
 #include "records.h"
 
-struct record record_create(struct copybook *cb, enum REC_TYPE type) {
-    union record_data data;
-    char *d = (char *)&data;
 
-    for(int i = 0; i <cb->n_cb_fields; i++) {
-        memcpy(d, cb->arr[i].io_buf, cb->arr[i].field_width);
-        d += cb->arr[i].field_width;
-    }
-
-    struct record rec = {
-        .type = type,
-        .version = 1,
-        .is_active = REC_ACTIVE,
-        .data = data,
-    };
-    return rec;
-}
-
-void init_table(struct table *tbl, enum REC_TYPE type) {
-    int start_cap = 8;
-    tbl->capacity = start_cap;
-    tbl->len = 0; //len is the user id.
-    tbl->type = type;
-    tbl->rec_id = 1000;
-    tbl->rec_index = malloc(start_cap * sizeof(int)); 
-    tbl->records = malloc(start_cap * sizeof(struct record));
-}
-
-void init_db(struct db *db) {
-    init_table(&db->clients, REC_CLIENT);
-    init_table(&db->cars, REC_CLIENT);
-    init_table(&db->boats, REC_CLIENT);
-}
-
-int get_rec_id(struct table *table) {
-    if (table->len == table->capacity - 1) {
-        size_t new_capacity = 2 * table->capacity;
-        table->records = realloc(table->records,new_capacity * sizeof(struct record));
-	table->rec_id_lookup = realloc(table->rec_id_lookup, new_capacity * sizeof(int));
-        table->capacity = new_capacity;
-    }
-    table->len++;
-    table->rec_id++;
+#if 0
+struct client_record new_client_record_cb() {
     
-    //NOTE: Not an invariant, only for insertion. 
-    table->rec_id_lookup[rec_id] = rec_id;
-    return rec_id;
-}
-
-int db_add_record(struct record rec, enum REC_TYPE type) {
     
-            
+}
+
+struct client_record new_client_record_file() {
+    struct client_record;
+}
+#endif
+
+/* String must be NUL terminated. */
+struct client_record new_client_record_string(char *fname,
+                                              char *lname,
+                                              char *phone,
+                                              char *email) {
+    struct client_record r = {0};
+    memset(r.fname, 0x20, sizeof(r.fname));
+    memset(r.lname, 0x20, sizeof(r.lname));
+    memset(r.phone, 0x20, sizeof(r.phone));
+    memset(r.email, 0x20, sizeof(r.email));
+    memcpy(r.fname, fname,strlen(fname));
+    memcpy(r.lname, lname,strlen(lname));
+    memcpy(r.phone, phone,strlen(phone));
+    memcpy(r.email, email,strlen(email));
+    r.archived = REC_ACTIVE;
+    r.version_typ = VERSION_CLIENT | REC_CLIENT;
+    return r;
+}
+
+/* Fields must be prepadded fixed width. */
+struct client_record new_client_record( char fname[CLIENT_FNAME_LEN],
+                                        char lname[CLIENT_LNAME_LEN],
+                                        char phone[CLIENT_PHONE_LEN],
+                                        char email[CLIENT_EMAIL_LEN]) {
+    struct client_record r = {0};
+    memcpy(r.fname, fname,sizeof(r.fname));
+    memcpy(r.lname, lname,sizeof(r.lname));
+    memcpy(r.phone, phone,sizeof(r.phone));
+    memcpy(r.email, email,sizeof(r.email));
+    r.archived = REC_ACTIVE;
+    r.version_typ = VERSION_CLIENT | REC_CLIENT;
+    return r;
+}
+
+struct table_clients create_client_table() {
+    struct table_clients tbl = {0};
+    int initial_capacity = 8;
+    tbl.capacity = initial_capacity;
+    tbl.len = 0;
+    tbl.next_avail_id = 1000;
+    tbl.records = malloc(tbl.capacity * sizeof(struct client_record));
+    return tbl;
+}
+
+int get_next_client_id(struct table_clients *tbl) {
+    return tbl->next_avail_id++;
+}
+
+int table_push_client(struct table_clients *tbl, struct client_record *rec) {
+    if (tbl->len == tbl->capacity - 1) {
+        size_t new_capacity = 2 * tbl->capacity;
+        tbl->records = realloc(tbl->records,new_capacity * sizeof(struct client_record));
+        tbl->capacity = new_capacity;
+    }
+    
+    rec->id = get_next_client_id(tbl);
+    tbl->records[tbl->len] = *rec;
+    tbl->len++;
+
+    return rec->id;
 }
 
 
-/* load from file */
-void db_load() {
-}
+
+
     
 
 

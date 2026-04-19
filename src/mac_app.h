@@ -1,5 +1,7 @@
 /* static enum colors DEF_BG; */
 /* static enum colors DEF_FG; */
+typedef uint32_t u32;
+
 
 typedef enum states {
     LOGIN,

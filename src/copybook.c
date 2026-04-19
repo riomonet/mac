@@ -1,4 +1,3 @@
-
 typedef struct cb_field {
     char *name;
     short len;

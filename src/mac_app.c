@@ -32,17 +32,23 @@
 int main(void) {
     DSP_start();
     date_today();
-    struct db db;
-    init_db(&db);
     current_state = LOGIN;
     int logged_in = 0;
+
     //TODO: init all copybooks somewhere else. when do i free this one?
     struct copybook *cb_mac = cb_create(fieldmap_mac,
                                         MAX_SLOTS(fieldmap_mac));
-    while (1) {
+
+    struct table_clients client_table = create_client_table();
+    struct client_record  r = new_client_record_string("ari","zbalozki","636-233-2333","email");
+    table_push_client(&client_table, &r);
+    r = new_client_record_string("allison","zbalozki","888","someemail");
+    table_push_client(&client_table, &r);
+    
+
+    while (0) {
         switch (current_state) {
         case LOGIN: {
-         
             struct copybook *cb = cb_create(fieldmap_login, MAX_SLOTS(fieldmap_login));
             while (!logged_in) {
                 logged_in = login(cb);
