@@ -7,7 +7,7 @@ typedef struct FIELD {
     char dsp_attr;
     char fld_attr;
     enum colors color; 
-    char *name;// &io from specific
+    char *name; // If not NULL indicates that it is an input or disp  field 
     char *io;
     struct cb_field *meta;
 } FIELD;
@@ -35,13 +35,13 @@ FIELD fieldmap_login[] = {
     DMS( 5, 5,  37, "Tab to change fields, Enter to submit", PROT, NONE, BLUE, NULL),
 };
 
-//TODO: NEED TO FIGURE OUT UNDERLINES....
+// TODO: Finding the index of named fields and number of fields cannot be manual.
 FIELD fieldmap_mac[] = {
-    DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
-    DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"),
-    DMS(2, 67,  8, "",PROT, NONE, WHITE, "time"),
-    DMS(24,6,96,"",IC,UNDERLINE,GREEN,"selection"),
-    DMS(1,  0, 5, "User:", PROT, NONE, WHITE, NULL),
+    DMS(1,  7, 16, "DSP_USER", PROT, NONE, WHITE, NULL),
+    DMS(1, 67, 10, "DSP_DATE", PROT, NONE, WHITE, NULL),
+    DMS(2, 67,  8, "DSP_TIME", PROT, NONE, WHITE, NULL),
+    DMS(24,6,2,"",IC,NONE,GREEN,"selection"), // TODO find idx by names.
+    DMS(1,  0, 5,  "User:", PROT, NONE, WHITE, NULL),
     DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL),
     DMS(2, 35,  9, "MAIN MENU", PROT, NONE, WHITE,NULL),
     DMS(6,  6, 28, "Select one of the following:",PROT, NONE, BLUE, NULL),
@@ -51,12 +51,11 @@ FIELD fieldmap_mac[] = {
     DMS(11,10,15,  "4. Live montior",PROT, NONE,GREEN, NULL),
     DMS(23,0,9,"Selection",PROT,NONE,GREEN,NULL),
     DMS(24,0,4, "===>",PROT,NONE,GREEN,NULL),
-
-    //    DMS(26,0,100,"",PROT,UNDERLINE,GREEN,""),//
+    DMS(26,0,100,"DSP_HL",PROT,UNDERLINE,GREEN,NULL),
     DMS(28,6,9,"F6=Logout",PROT,NONE,BLUE,NULL),  
     DMS(28,19,9, "F7=Search",PROT,NONE,BLUE,NULL),
     DMS(28,31,16,"F8=Redraw screen",PROT,NONE,BLUE,NULL),
-    //    DMS(29,0,100,"",PROT,UNDERLINE,GREEN,""),
+    DMS(29,0,100,"DSP_HL",PROT,UNDERLINE,GREEN,NULL),
 };
 
 
@@ -67,4 +66,4 @@ FIELD fieldmap_addclient[] = {
     DMS(1,  0, 5, "User:", PROT, NONE, WHITE, NULL),
     DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL),
 };
-    
+

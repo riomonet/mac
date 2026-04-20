@@ -1,3 +1,9 @@
+/* AUTO DSP CONSTANTS */
+#define AUTO_DSP_USER 16
+#define AUTO_DSP_DATE 10
+#define AUTO_DSP_TIME 8
+char GLOBAL_UNDERLINE[100];
+#define AUTO_HL GLOBAL_UNDERLINE
 /* LOGIN SCREEN CONSTANTS */
 
 #define LGN_IDX_USER 0
@@ -10,10 +16,6 @@
 
 
 /* MAC CONSTANTS */
-
-#define MAC_IDX_USER 0
-#define MAC_IDX_DATE 1
-#define MAC_IDX_TIME 2
 #define MAC_IDX_SELECTION 3
 
 #define MAC_LEN_USER 16
@@ -21,4 +23,4 @@
 #define MAC_LEN_TIME 8
 #define MAC_LEN_SELECTION 2
 
-#define MAC_NUM_FIELDS 17 //len of fieldmap array
+#define MAC_NUM_FIELDS 19 // len of fieldmap array

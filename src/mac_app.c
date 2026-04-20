@@ -50,13 +50,7 @@ int main(void) {
             logged_in = 1;
         } break;
         case CLIENT: {
-            /* struct copybook *cb = cb_create(fieldmap_client, */
-            /*                                         MAX_SLOTS(fieldmap_client)); */
-            struct date_time dt = date_today();
-            char *fields[] = {"user", "date", "time"};
-            char *vals [] =  {current_operator, dt.date, dt.time};
-            /* set_cb_output(cb, fields, vals, 3); */
-            //int ic =  DSP_SEND(fieldmap_mac, cb);
+
             int ic =  DSP_SEND(fieldmap_mac, 5);
             int res = DSP_RECIEVE(fieldmap_mac, 3, ic);
 

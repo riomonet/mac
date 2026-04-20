@@ -142,6 +142,7 @@ int DSP_RECIEVE (FIELD *map, int map_len, int ic) {
 }
 
 int DSP_SEND(FIELD *map, int num_fields) {
+    struct date_time dt = date_today();
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(NOWRAP);
     int ic = 0;
@@ -152,7 +153,18 @@ int DSP_SEND(FIELD *map, int num_fields) {
         term_send_pos(map[i].row, map[i].col);
         if (!map[i].name) {
             term_send_col(map[i].color);
-            term_send_str(map[i].initial, map[i].len);
+            term_send_hlite(map[i].dsp_attr);
+            if(strcmp(map[i].initial,"DSP_TIME") == 0) {
+                term_send_str(dt.time, map[i].len); 
+            } else if(strcmp(map[i].initial,"DSP_DATE") == 0) {
+                term_send_str(dt.date, map[i].len);
+            } else if(strcmp(map[i].initial,"DSP_USER") == 0) {
+                term_send_str("ariel z", map[i].len);
+            }  else if(strcmp(map[i].initial,"DSP_HL") == 0) {
+                term_send_str(AUTO_HL, map[i].len);
+            } else { 
+                term_send_str(map[i].initial, map[i].len);                
+            }
         } else {
             term_send_col(map[i].meta->color);
             term_send_hlite(map[i].meta->dsp_attr);
@@ -164,6 +176,7 @@ int DSP_SEND(FIELD *map, int num_fields) {
     term_send_cmd(SHOW_CURSOR);
     return ic;
 }
+
 
 void DSP_start() {
     struct sigaction sa = {0};
@@ -178,6 +191,7 @@ void DSP_start() {
     if (sigaction(SIGINT, &sa, NULL) == -1) {
         perror("SIGINT");
     }
+    memset(GLOBAL_UNDERLINE,0x20,100);
     term_send_cmd(ALT_BUFFER);
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(HIDE_CURSOR);
