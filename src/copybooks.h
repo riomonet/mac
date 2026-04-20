@@ -7,10 +7,8 @@
     cb.name_cb.fld.meta.color =                              \
         fm_name[fld_num].color;                              \
 
-#define CB_FIELD(name, len)                        \
-struct { struct cb_field meta; char io[len];} name\
-
-
+#define CB_FIELD(name, len)                       \
+struct { struct cb_field meta; char io[len];} name
 
 typedef struct cb_field {
     short len;
@@ -20,17 +18,9 @@ typedef struct cb_field {
     enum colors color;
 } cb_field;
 
-enum LOGIN_FLD {
-    LOGIN_FLD_USER = 0,
-    LOGIN_W_USER = 16,
-    LOGIN_FLD_PASSWORD = 1,
-    LOGIN_W_PASSWORD = 16,
-    LOGIN_N_MAP_FIELDS = 6
-};
-
 struct login_cb {
-    CB_FIELD(user, 16);
-    CB_FIELD(password, 16);
+    CB_FIELD(user, LGN_LEN_USER);
+    CB_FIELD(password, LGN_LEN_PASSWORD);
 };
 
 struct client_cb {
@@ -41,7 +31,10 @@ struct client_cb {
 };
 
 struct mac_cb {
-    CB_FIELD(selection, 2);
+    CB_FIELD(user, MAC_LEN_USER);
+    CB_FIELD(date, MAC_LEN_DATE);
+    CB_FIELD(time, MAC_LEN_TIME);
+    CB_FIELD(selection, MAC_LEN_SELECTION);
 };
 
 struct copybooks {

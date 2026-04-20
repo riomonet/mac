@@ -64,7 +64,7 @@ int DSP_RECIEVE (FIELD *map, int map_len, int ic) {
 
     while (1) {
         if(RESIZE) {
-            DSP_SEND(map);
+            DSP_SEND(map, map_len);
             term_send_pos(map[active_field].row,
                           map[active_field].col + active_idx);
             term_send_cmd(RESET);
@@ -141,11 +141,11 @@ int DSP_RECIEVE (FIELD *map, int map_len, int ic) {
     }
 }
 
-int DSP_SEND(FIELD *map) {
+int DSP_SEND(FIELD *map, int num_fields) {
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(NOWRAP);
     int ic = 0;
-    for(int i = 0; i < LOGIN_N_MAP_FIELDS; i++) {
+    for(int i = 0; i < num_fields; i++) {
         if (map[i].fld_attr & IC) {
             ic = i;
         }

@@ -25,7 +25,7 @@ typedef struct FIELD {
  }
 
 
-#define len_fieldmap_login 6
+
 FIELD fieldmap_login[] = {
     DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
     DMS( 10, 38, 16, "",0, UNDERLINE, GREEN, "password"),
@@ -35,14 +35,15 @@ FIELD fieldmap_login[] = {
     DMS( 5, 5,  37, "Tab to change fields, Enter to submit", PROT, NONE, BLUE, NULL),
 };
 
-#define LEN_FIELDMAP_MAC 19
+//TODO: NEED TO FIGURE OUT UNDERLINES....
 FIELD fieldmap_mac[] = {
-    DMS(1,  0, 5, "User:", PROT, NONE, WHITE, NULL),
     DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
+    DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"),
+    DMS(2, 67,  8, "",PROT, NONE, WHITE, "time"),
+    DMS(24,6,96,"",IC,UNDERLINE,GREEN,"selection"),
+    DMS(1,  0, 5, "User:", PROT, NONE, WHITE, NULL),
     DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL),
-    DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field
     DMS(2, 35,  9, "MAIN MENU", PROT, NONE, WHITE,NULL),
-    DMS(2, 67,  8, "",PROT, NONE, WHITE, "time"), //TODO: change to names field
     DMS(6,  6, 28, "Select one of the following:",PROT, NONE, BLUE, NULL),
     DMS(8,10,15,   "1. Add customer",PROT, NONE,GREEN, NULL),
     DMS(9,10,17,   "2. View customers",PROT, NONE,GREEN, NULL),
@@ -50,16 +51,15 @@ FIELD fieldmap_mac[] = {
     DMS(11,10,15,  "4. Live montior",PROT, NONE,GREEN, NULL),
     DMS(23,0,9,"Selection",PROT,NONE,GREEN,NULL),
     DMS(24,0,4, "===>",PROT,NONE,GREEN,NULL),
-    DMS(24,6,96,"",IC,UNDERLINE,GREEN,"select"),
-    //Have to give hl a name so it can be rendered from cb.output
-    DMS(26,0,100,"",PROT,UNDERLINE,GREEN,"tl"),
+
+    //    DMS(26,0,100,"",PROT,UNDERLINE,GREEN,""),//
     DMS(28,6,9,"F6=Logout",PROT,NONE,BLUE,NULL),  
     DMS(28,19,9, "F7=Search",PROT,NONE,BLUE,NULL),
     DMS(28,31,16,"F8=Redraw screen",PROT,NONE,BLUE,NULL),
-    DMS(29,0,100,"",PROT,UNDERLINE,GREEN,"bl"),
+    //    DMS(29,0,100,"",PROT,UNDERLINE,GREEN,""),
 };
 
-#define LEN_FIELDMAP_ADDCLIENT 5
+
 FIELD fieldmap_addclient[] = {
     DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
     DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field

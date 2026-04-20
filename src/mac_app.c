@@ -13,6 +13,7 @@
 #include <assert.h>
 #include "network.c"
 #include "helper_macros.h"
+#include "bms_constants.h"
 #include "colors.h"
 #include "attr.h"
 #include "term_cmds.h"
@@ -40,16 +41,13 @@ int main(void) {
 
     while (1) {
         switch (current_state) {
-        case LOGIN: {
+        case LOGIN: 
             while (!logged_in) {
-                logged_in = login(cb);
-            }
-        } break;
-            
+                logged_in = login();
+            } break;
         case MAC: {
             current_state = main_menu();
-            //            logged_in = 0;
-            current_state = CLIENT;
+            logged_in = 1;
         } break;
         case CLIENT: {
             /* struct copybook *cb = cb_create(fieldmap_client, */
@@ -59,8 +57,8 @@ int main(void) {
             char *vals [] =  {current_operator, dt.date, dt.time};
             /* set_cb_output(cb, fields, vals, 3); */
             //int ic =  DSP_SEND(fieldmap_mac, cb);
-            int ic =  DSP_SEND(fieldmap_mac);
-            int res = DSP_RECIEVE(fieldmap_mac, LEN_FIELDMAP_ADDCLIENT, ic);
+            int ic =  DSP_SEND(fieldmap_mac, 5);
+            int res = DSP_RECIEVE(fieldmap_mac, 3, ic);
 
         } break;
         default: {
