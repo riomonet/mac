@@ -15,15 +15,15 @@
 #include "base_macros.h"
 #include "base_typedefs.h"
 #include "date_time.h"
-#include "colors.h"
+#include "terminal_colors.h"
 #include "terminal_commands.h"
-#include "terminal_raw_mode.h"  
+#include "terminal_raw_mode.h"
+
 #include "bms_constants.h"
 #include "fieldmaps.h"
-#include "copybooks.h"
+#include "copybook.h"
 #include "display_manager.h"
 #include "client_records.h"
-
 
 #include "date_time.c"
 #include "terminal_raw_mode.c"  
