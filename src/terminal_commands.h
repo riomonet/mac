@@ -29,5 +29,10 @@ struct term_cmd_obj term_cmds[] = {
     [WRAP] = {.name = "NOWRAP", .escape_seq = "\x1b[?7h", .len = 5},
 };
 
-
+void term_send_cmd(enum term_commands cmd);
+void term_send_pos(int y, int x);
+void term_send_col(enum colors col);
+void term_send_str(char *str, int len);
+void term_send_hlite (char dsp_attr);
+void term_send_intensity(char dsp_attr);
 #endif

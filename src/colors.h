@@ -55,4 +55,5 @@ struct rgb_color rgb_colors[] = {
 //amber new #ffb700 | 255;172;00// "\033[38;2;255;165;0m old
 //green alt #4aff00 | 70;255;00 // "\x1b[38;2;96;255;96m" old
 
+void setDefaultColors(enum colors background, enum colors foreground);
 #endif

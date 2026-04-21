@@ -31,9 +31,6 @@ struct client_cb {
 };
 
 struct mac_cb {
-    CB_FIELD(user, MAC_LEN_USER);
-    CB_FIELD(date, MAC_LEN_DATE);
-    CB_FIELD(time, MAC_LEN_TIME);
     CB_FIELD(selection, MAC_LEN_SELECTION);
 };
 

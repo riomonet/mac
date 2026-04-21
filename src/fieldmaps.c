@@ -1,32 +1,4 @@
-/* A screen is an array of fields */
-typedef struct FIELD {
-    int row;
-    int col;
-    int len;
-    char *initial;
-    char dsp_attr;
-    char fld_attr;
-    enum colors color; 
-    char *name; // If not NULL indicates that it is an input or disp  field 
-    char *io;
-    struct cb_field *meta;
-} FIELD;
-
-/* Field definitionn macro */
-#define DMS(r, c, l, def_val, fld, dsp, clr, n) (FIELD) {  \
- .row        = r,                                 \
- .col        = c,                                 \
- .len        = l,                                 \
- .initial    = def_val,                           \
- .fld_attr  =  fld,      			              \
- .dsp_attr  =  dsp,                               \
- .color      = clr,                               \
- .name       = n,                                 \
- }
-
-
-
-FIELD fieldmap_login[] = {
+field fieldmap_login[] = {
     DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
     DMS( 10, 38, 16, "",0, UNDERLINE, GREEN, "password"),
     DMS( 8, 9,  27,  "USER . . . . . . . . . . . ", PROT, NONE, GREEN, NULL),
@@ -36,10 +8,10 @@ FIELD fieldmap_login[] = {
 };
 
 // TODO: Finding the index of named fields and number of fields cannot be manual.
-FIELD fieldmap_mac[] = {
-    DMS(1,  7, 16, "DSP_USER", PROT, NONE, WHITE, NULL),
-    DMS(1, 67, 10, "DSP_DATE", PROT, NONE, WHITE, NULL),
-    DMS(2, 67,  8, "DSP_TIME", PROT, NONE, WHITE, NULL),
+field fieldmap_mac[] = {
+    DMS(1,  7, AUTO_DSP_USER, "DSP_USER", PROT, NONE, WHITE, NULL),
+    DMS(1, 67, AUTO_DSP_DATE, "DSP_DATE", PROT, NONE, WHITE, NULL),
+    DMS(2, 67, AUTO_DSP_TIME, "DSP_TIME", PROT, NONE, WHITE, NULL),
     DMS(24,6,2,"",IC,NONE,GREEN,"selection"), // TODO find idx by names.
     DMS(1,  0, 5,  "User:", PROT, NONE, WHITE, NULL),
     DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL),
@@ -59,7 +31,7 @@ FIELD fieldmap_mac[] = {
 };
 
 
-FIELD fieldmap_addclient[] = {
+field fieldmap_addclient[] = {
     DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
     DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field
     DMS(2, 67,  8, "",PROT, NONE, WHITE, "time"), //TODO: change to names fieldx

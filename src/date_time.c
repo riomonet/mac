@@ -1,9 +1,3 @@
-struct date_time {
-    char date[32];
-    char time[32];
-};
-
-//TODO: this should be a display manager feature
 struct date_time date_today() {
     time_t unix_time = time(NULL);
     struct tm *parts = localtime(&unix_time);

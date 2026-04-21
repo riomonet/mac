@@ -38,9 +38,9 @@ enum KEY_ACTION {
 /* F8:        \x1b[19~ */
 /* F9:        \x1b[20~ */
 
-int DSP_read();
-int DSP_RECIEVE (FIELD *map, int num_fields, int ic);
-int DSP_SEND(FIELD *map, int num_fields);
-void DSP_start();
-void DSP_CLEANUP();
+int display_manager_read();
+int display_manager_recieve (field *map, int num_fields, int ic);
+int display_manager_send(field *map, int num_fields);
+void display_manager_start();
+void display_manager_cleanup();
 #endif

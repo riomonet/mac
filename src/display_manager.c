@@ -7,7 +7,7 @@ void signalHandler(int code) {
     }
 }
 
-int DSP_read() {
+int display_manager_read() {
     int nread;
     char c, seq[3];
     while ((nread = read(STDIN_FILENO,&c,1)) == 0);
@@ -54,7 +54,7 @@ int DSP_read() {
     }
 }
 
-int DSP_RECIEVE (FIELD *map, int map_len, int ic) {
+int display_manager_recieve (field *map, int map_len, int ic) {
 
     int active_field = ic; // index into Map array. Inputs are non sequential.
     int active_idx = 0;   // col number
@@ -64,7 +64,7 @@ int DSP_RECIEVE (FIELD *map, int map_len, int ic) {
 
     while (1) {
         if(RESIZE) {
-            DSP_SEND(map, map_len);
+            display_manager_send(map, map_len);
             term_send_pos(map[active_field].row,
                           map[active_field].col + active_idx);
             term_send_cmd(RESET);
@@ -72,9 +72,9 @@ int DSP_RECIEVE (FIELD *map, int map_len, int ic) {
             term_send_col(map[active_field].meta->color);
             RESIZE = 0;
         }
-        int c = DSP_read();
+        int c = display_manager_read();
         if (c == 'q') {
-            DSP_CLEANUP();
+            display_manager_cleanup();
         }
         if (isalnum(c) || c == ' ') {
             char ch[1] = {c};
@@ -141,7 +141,8 @@ int DSP_RECIEVE (FIELD *map, int map_len, int ic) {
     }
 }
 
-int DSP_SEND(FIELD *map, int num_fields) {
+
+int display_manager_send(field *map, int num_fields) {
     struct date_time dt = date_today();
     term_send_cmd(CLEAR_SCREEN);
     term_send_cmd(NOWRAP);
@@ -154,13 +155,13 @@ int DSP_SEND(FIELD *map, int num_fields) {
         if (!map[i].name) {
             term_send_col(map[i].color);
             term_send_hlite(map[i].dsp_attr);
-            if(strcmp(map[i].initial,"DSP_TIME") == 0) {
+            if(strcmp(map[i].initial,"display_manager_TIME") == 0) {
                 term_send_str(dt.time, map[i].len); 
-            } else if(strcmp(map[i].initial,"DSP_DATE") == 0) {
+            } else if(strcmp(map[i].initial,"display_manager_DATE") == 0) {
                 term_send_str(dt.date, map[i].len);
-            } else if(strcmp(map[i].initial,"DSP_USER") == 0) {
+            } else if(strcmp(map[i].initial,"display_manager_USER") == 0) {
                 term_send_str("ariel z", map[i].len);
-            }  else if(strcmp(map[i].initial,"DSP_HL") == 0) {
+            }  else if(strcmp(map[i].initial,"display_manager_HL") == 0) {
                 term_send_str(AUTO_HL, map[i].len);
             } else { 
                 term_send_str(map[i].initial, map[i].len);                
@@ -178,7 +179,7 @@ int DSP_SEND(FIELD *map, int num_fields) {
 }
 
 
-void DSP_start() {
+void display_manager_start() {
     struct sigaction sa = {0};
     sigemptyset(&sa.sa_mask);    
     sa.sa_flags = SA_RESTART; // Restart interrupted sys-calls.
@@ -197,12 +198,12 @@ void DSP_start() {
     term_send_cmd(HIDE_CURSOR);
     printf("\x1b]11;rgb:00/00/00\e\\"); 
     fflush(stdout);
-    enableRawMode();
-    initTerm();
+    raw_mode_enable();
+    terminal_init();
     return;
 }
 
-void DSP_CLEANUP () {
+void display_manager_cleanup () {
     term_send_cmd(ORIG_BUFFER);
     term_send_cmd(SHOW_CURSOR);
     term_send_cmd(RESET);
