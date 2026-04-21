@@ -1,6 +1,15 @@
-
 #ifndef DSP_H
 #define  DSP_H
+
+/* Display manager has built in functionality to fill in display fields without
+ * using copybook data. Thes define are used by the display manager for that purpose.*/
+#define AUTO_DSP_USER 16
+#define AUTO_DSP_DATE 10
+#define AUTO_DSP_TIME 8
+char GLOBAL_UNDERLINE[100];
+#define AUTO_HL GLOBAL_UNDERLINE
+
+
 /* Credit: Salvatore San Fillipo kilo.c, copy and past*/
 enum KEY_ACTION {
         KEY_NULL = 0,       /* NULL */

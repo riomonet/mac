@@ -1,4 +1,4 @@
-field fieldmap_login[] = {
+global field fieldmap_login[] = {
     DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
     DMS( 10, 38, 16, "",0, UNDERLINE, GREEN, "password"),
     DMS( 8, 9,  27,  "USER . . . . . . . . . . . ", PROT, NONE, GREEN, NULL),
@@ -7,8 +7,8 @@ field fieldmap_login[] = {
     DMS( 5, 5,  37, "Tab to change fields, Enter to submit", PROT, NONE, BLUE, NULL),
 };
 
-// TODO: Finding the index of named fields and number of fields cannot be manual.
-field fieldmap_mac[] = {
+// TODO: Finding the index of named fields and number of fields better not manual.
+global field fieldmap_mac[] = {
     DMS(1,  7, AUTO_DSP_USER, "DSP_USER", PROT, NONE, WHITE, NULL),
     DMS(1, 67, AUTO_DSP_DATE, "DSP_DATE", PROT, NONE, WHITE, NULL),
     DMS(2, 67, AUTO_DSP_TIME, "DSP_TIME", PROT, NONE, WHITE, NULL),
@@ -30,8 +30,7 @@ field fieldmap_mac[] = {
     DMS(29,0,100,"DSP_HL",PROT,UNDERLINE,GREEN,NULL),
 };
 
-
-field fieldmap_addclient[] = {
+global field fieldmap_client_add[] = {
     DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
     DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field
     DMS(2, 67,  8, "",PROT, NONE, WHITE, "time"), //TODO: change to names fieldx

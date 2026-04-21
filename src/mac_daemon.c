@@ -41,9 +41,11 @@
 
 int main(void) {
     display_manager_start();
-    date_today();
+    
     enum screen_state screen_state = MAC;
+
     int logged_in = 0;
+ LOGIN:
     while (!logged_in) {
 	logged_in = login();
     }
@@ -54,6 +56,7 @@ int main(void) {
         case MAC:
 	    main_menu();
 	    break;
+	    goto LOGIN;
 
 	case ADD_NEW_CLIENT:
 	    //	    add_new_client();

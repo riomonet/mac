@@ -155,13 +155,13 @@ int display_manager_send(field *map, int num_fields) {
         if (!map[i].name) {
             term_send_col(map[i].color);
             term_send_hlite(map[i].dsp_attr);
-            if(strcmp(map[i].initial,"display_manager_TIME") == 0) {
+            if(strcmp(map[i].initial,"DSP_TIME") == 0) {
                 term_send_str(dt.time, map[i].len); 
-            } else if(strcmp(map[i].initial,"display_manager_DATE") == 0) {
+            } else if(strcmp(map[i].initial,"DSP_DATE") == 0) {
                 term_send_str(dt.date, map[i].len);
-            } else if(strcmp(map[i].initial,"display_manager_USER") == 0) {
+            } else if(strcmp(map[i].initial,"DSP_USER") == 0) {
                 term_send_str("ariel z", map[i].len);
-            }  else if(strcmp(map[i].initial,"display_manager_HL") == 0) {
+            }  else if(strcmp(map[i].initial,"DSP_HL") == 0) {
                 term_send_str(AUTO_HL, map[i].len);
             } else { 
                 term_send_str(map[i].initial, map[i].len);                
@@ -177,7 +177,6 @@ int display_manager_send(field *map, int num_fields) {
     term_send_cmd(SHOW_CURSOR);
     return ic;
 }
-
 
 void display_manager_start() {
     struct sigaction sa = {0};

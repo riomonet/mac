@@ -1,10 +1,10 @@
-#define FM_INIT(fm_name, name_cb, fld_num, fld, width)       \
-    fm_name[fld_num].io = (char *)&cb.name_cb.fld.io;        \
-    fm_name[fld_num].meta = &cb.name_cb.fld.meta;            \
-    memset(cb.name_cb.fld.io,0x20,width);                    \
-    cb.name_cb.fld.meta.dsp_attr =                           \
+#define FM_INIT(fm_name, cb_name, fld_num, fld, width)       \
+    fm_name[fld_num].io = (char *)&cb.cb_name.fld.io;        \
+    fm_name[fld_num].meta = &cb.cb_name.fld.meta;            \
+    memset(cb.cb_name.fld.io,0x20,width);                    \
+    cb.cb_name.fld.meta.dsp_attr =                           \
         fm_name[fld_num].dsp_attr;                           \
-    cb.name_cb.fld.meta.color =                              \
+    cb.cb_name.fld.meta.color =                              \
         fm_name[fld_num].color;                              \
 
 #define CB_FIELD(name, len)                       \
@@ -18,27 +18,30 @@ typedef struct cb_field {
     enum colors color;
 } cb_field;
 
-struct login_cb {
+struct cb_login {
     CB_FIELD(user, LGN_LEN_USER);
     CB_FIELD(password, LGN_LEN_PASSWORD);
 };
 
-struct client_cb {
+struct cb_client {
     CB_FIELD(fname, 14);
     CB_FIELD(lname, 14);
     CB_FIELD(phone, 14);
     CB_FIELD(email, 16);
 };
 
-struct mac_cb {
+struct cb_mac {
     CB_FIELD(selection, MAC_LEN_SELECTION);
 };
 
 struct copybooks {
-    struct login_cb login_cb;
-    struct mac_cb   mac_cb;
-    struct client_cb client_cb;
+    struct cb_login cb_login;
+    struct cb_mac  cb_mac;
 };
 
-struct copybooks cb;
+global struct copybooks cb;
+
+void bms_init_mac();
+void bms_init_login();
+void bms_init_all();
 
