@@ -39,34 +39,70 @@
 #include "screen_handler_login.c"
 #include "screen_handler_menu_main.c"
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+
+#define SOCKET_PATH "/tmp/mac_connect"
+#define LEN_DATA_BUF 128
+#define BACK_LOG 256
+
 int main(void) {
-    display_manager_start();
+
+    int server_sockfd;
     
-    enum screen_state screen_state = MAC;
+    struct sockaddr_un server = {0};
+    unlink(SOCKET_PATH);
 
-    int logged_in = 0;
- LOGIN:
-    while (!logged_in) {
-	logged_in = login();
+    /* Create Master socket */
+    server_sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if(server_sockfd == -1) {
+	perror("socket");
+	exit(EXIT_FAILURE);
+    }
+    printf("Master socket created at /tmp/mac_connect\n");
+
+    /* Fill out the 'server_socket' record.*/
+    server.sun_family = AF_UNIX;
+    strncpy(server.sun_path, SOCKET_PATH, sizeof(server.sun_path) - 1);
+
+    /* Bind 'server_sockfd' to the socket path named in 'server.sun_path' */
+    int ret = bind(server_sockfd, (struct sockaddr *)&server, sizeof(server));
+    if(ret == -1) {
+	perror("bind");
+	exit(EXIT_FAILURE);
+    }
+    printf("Master socket bind() succesful\n");
+
+    /* Prepare to accept connections.*/
+    ret = listen(server_sockfd, BACK_LOG);
+    if(ret == -1) {
+	perror("listen");
+	exit(EXIT_FAILURE);
     }
 
-    while (logged_in) {
-        switch (screen_state) {
+    char data_buf[LEN_DATA_BUF];
+    /* Main loop for handling connections */
+    for(;;) {
 
-        case MAC:
-	    main_menu();
-	    break;
-	    goto LOGIN;
+	/* clear the buffer */
 
-	case ADD_NEW_CLIENT:
-	    //	    add_new_client();
-	    break;
-        }
-        if( CLEANUP == 1) {
-            display_manager_cleanup();
-            exit(0);
-        }
+
+	write(STDOUT_FILENO,"Waiting for incoming connections\n", 33);
+	int data_sockfd = accept(server_sockfd, NULL, NULL);
+	if (data_sockfd == -1) {
+	    perror("accept");
+	    exit(EXIT_FAILURE);
+	}
+	write(STDOUT_FILENO,"Connection established\n",23);
+
+	int nbytes_read = 1;
+	while(nbytes_read){
+	    memset(data_buf,0,LEN_DATA_BUF);
+	    nbytes_read = read(data_sockfd, data_buf, LEN_DATA_BUF);
+	    write(STDOUT_FILENO,data_buf, nbytes_read);
+	}
+	close(data_sockfd);
     }
-        return 0;
+    close(server_sockfd);
 }
-

@@ -5,7 +5,7 @@ int auth(char *username, char *password) {
 
 int login() {
     bms_init_login();
-    int ic =  display_manager_send(fieldmap_login, LGN_NUM_FIELDS);
-    int	res = display_manager_recieve(fieldmap_login,LGN_NUM_FIELDS, ic);
+    //int ic =  display_manager_send(fieldmap_login, LGN_NUM_FIELDS);
+    // int	res = display_manager_recieve(fieldmap_login,LGN_NUM_FIELDS, ic);
     return 1;
 }

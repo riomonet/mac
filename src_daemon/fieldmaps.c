@@ -30,11 +30,12 @@ global field fieldmap_mac[] = {
     DMS(29,0,100,"DSP_HL",PROT,UNDERLINE,GREEN,NULL),
 };
 
-global field fieldmap_client_add[] = {
-    DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"),
-    DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field
-    DMS(2, 67,  8, "",PROT, NONE, WHITE, "time"), //TODO: change to names fieldx
-    DMS(1,  0, 5, "User:", PROT, NONE, WHITE, NULL),
-    DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL),
-};
+/* global field  fieldmap_client_add[] = { */
+/*     DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"), */
+/*     DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field */
+/*     DMS(2, 67,  8, "",PROT, NONE, WHITE, "time"), //TODO: change to names fieldx */
+/*     DMS(1,  0, 5, "User:", PROT, NONE, WHITE, NULL), */
+/*     DMS(1, 29, 21, "Marina Access Control", PROT, NONE, WHITE, NULL), */
+/* }; */
+
 
