@@ -65,11 +65,13 @@ int main(void) {
     }
     printf("connection established\n");
     /* main loop */
-    field data_buf[LEN_DATA_BUF];
+    field fieldmap_buf[LEN_DATA_BUF];
+    char data_buf[4096];
     while (1) {
-	memset(data_buf, 0, LEN_DATA_BUF * sizeof(field));
-	int nbytes_read = read(client_sockfd , data_buf, 4096);
-	display_manager_send(data_buf, 6, NULL);
+	memset(fieldmap_buf, 0, LEN_DATA_BUF * sizeof(field));
+	int nbytes_read = read(client_sockfd , fieldmap_buf, 4096);
+	nbytes_read = read(client_sockfd , data_buf, 4096);
+	display_manager_send(fieldmap_buf, 6, data_buf);
 	//display_manager_recieve (data_buf, 6, 3);
     }
     display_manager_cleanup();

@@ -99,7 +99,9 @@ int main(void) {
 	    int type;
 	};
 
+	bms_init_login();
 	write(data_sockfd , fieldmap_login, sizeof fieldmap_login);
+	write(data_sockfd , &cb.cb_login, sizeof cb.cb_login);
 	close(data_sockfd);
     }
     close(server_sockfd);
