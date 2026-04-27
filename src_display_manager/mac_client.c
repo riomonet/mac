@@ -20,29 +20,29 @@
 #include <sys/wait.h>
 #include <sys/un.h>
 
-#include "base_macros.h"
-#include "base_typedefs.h"
-#include "date_time.h"
-#include "terminal_colors.h"
+#include "../common/base_macros.h"
+#include "../common/base_typedefs.h"
+#include "../common/date_time.h"
+#include "../common/terminal_colors.h"
 #include "terminal_commands.h"
 #include "terminal_raw_mode.h"
 
-#include "bms_constants.h"
-#include "fieldmaps.h"
-#include "copybook.h"
+#include "../common/bms_constants.h"
+#include "../common/fieldmaps.h"
+#include "../common/copybook.h"
 #include "display_manager.h"
 
-#include "date_time.c"
+#include "../common/date_time.c"
 #include "terminal_raw_mode.c"  
 #include "terminal_commands.c"
 #include "display_manager.c"            
 
 #define SOCKET_PATH "/tmp/mac_connect"
-#define LEN_DATA_BUF 128
+#define LEN_DATA_BUF 256
 
 int main(void) {
 
-    //    display_manager_start();
+    display_manager_start();
 
     /* Fill out sockaddr_un record. */
     struct sockaddr_un client = {0};
@@ -57,8 +57,6 @@ int main(void) {
     }
 
     printf("client socket created\n");
-
-
     /* connect to server */
     int ret = connect(client_sockfd, (struct sockaddr *)&client, sizeof(client));
     if (ret == -1) {
@@ -66,20 +64,13 @@ int main(void) {
 	exit(EXIT_FAILURE);
     }
     printf("connection established\n");
-
     /* main loop */
-    char data_buf[LEN_DATA_BUF];
+    field data_buf[LEN_DATA_BUF];
     while (1) {
-	memset(data_buf, 0, LEN_DATA_BUF);
-	int nbytes_read = read(STDIN_FILENO , data_buf, LEN_DATA_BUF);
-	data_buf[nbytes_read] = 0;
-	
-	if(strcmp(data_buf, "quit\n") == 0) {
-	    break;
-	} else {
-	    write(client_sockfd, data_buf, nbytes_read + 1);
-	}
+	memset(data_buf, 0, LEN_DATA_BUF * sizeof(field));
+	int nbytes_read = read(client_sockfd , data_buf, 4096);
+	display_manager_send(data_buf, 6, NULL);
+	//display_manager_recieve (data_buf, 6, 3);
     }
-    
-    //    display_manager_cleanup();
+    display_manager_cleanup();
 }

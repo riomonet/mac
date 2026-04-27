@@ -1,14 +1,18 @@
+#define AUTO_DSP_USER 16
+#define AUTO_DSP_DATE 10
+#define AUTO_DSP_TIME 8
+
 typedef struct field {
     int row;
     int col;
     int len;
-    char *initial;
+    char initial[128];
     char dsp_attr;
     char fld_attr;
     enum colors color; 
-    char *name;  //If not NULL indicates that it is an input or disp  field 
-    char *io;
-    struct cb_field *meta;
+    char name[32];  //If not NULL indicates that it is an input or disp  field 
+    size_t io_offset;
+    size_t meta_offset;
 } field;
 
 /* Field definitionn macro */
@@ -17,8 +21,8 @@ typedef struct field {
  .col        = c,                                 \
  .len        = l,                                 \
  .initial    = def_val,                           \
- .fld_attr  =  fld,      			              \
- .dsp_attr  =  dsp,                               \
+ .fld_attr  =  fld,      			  \
+ .dsp_attr  =  dsp,				  \
  .color      = clr,                               \
  .name       = n,                                 \
  }
