@@ -7,7 +7,7 @@ typedef struct field {
     int row;
     int col;
     int len;
-    char initial[128];
+    char initial[64];
     char dsp_attr;
     char fld_attr;
     enum colors color; 

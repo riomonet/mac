@@ -64,25 +64,32 @@ int main(void) {
     }
     
     /* main loop */
-    field fieldmap_buf[LEN_DATA_BUF];
-    char cb_buf[4096];
+    field fieldmap_buf[LEN_DATA_BUF] = {0};
+    char cb_buf[4096] = {0};
     int nbytes_fldmap, nbytes_cb, nfields, ic, key;
 
     while (1) {
-	// read type_header -> if fieldmap len of field map should be in header
-	// or maybe wcan use the 
-	//read field map
-	//read copy book
-	// send and recive to display manager
+	// read type_header -> if fieldmap 
+	// read field map
+	// read copy book
+	// send and recive to/from display manager
 	// if just copybook just send cb with cached's fldmap
-	// where do i cache it??????
+	// where do i cache it?????? its cached
+	/* so if the heade says its a fieldmap then it automaticlly sends a copy book and a field map
+	 * and we reset teh fieldmap_buf and reset cb_buf and then do our readsb
+	 * if its just a copy book we reset just that and do our reads either
+	 * i guess we ar going to rerender either way */
+	
 	nbytes_fldmap = read(client_sockfd , fieldmap_buf, 4096);
 	nbytes_cb = read(client_sockfd , cb_buf, 4096);
 	nfields = nbytes_fldmap / sizeof(field);
 	ic = display_manager_send(fieldmap_buf, nfields, cb_buf);
 	key = display_manager_recieve(fieldmap_buf, nfields, ic, cb_buf);
-	// need to send back the key pressed and the copy book
-	//write(client_sockfd, cb_buf, nbytes_cb);
+	// need to send back the key pressed and copybook in a header.
+	/* each socket will have its own identity thats how the deamon knows
+	   who it is dealing with
+	 */
+	// write(client_sockfd, cb_buf, nbytes_cb);
     }
     display_manager_cleanup();
 }
