@@ -144,7 +144,6 @@ int display_manager_recieve (field *map, int map_len, int ic, char *base) {
     }
 }
 
-
 int display_manager_send(field *map, int num_fields, char *base) {
     struct date_time dt = date_today();
     term_send_cmd(CLEAR_SCREEN);

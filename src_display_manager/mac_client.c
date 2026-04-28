@@ -56,23 +56,33 @@ int main(void) {
 	exit(EXIT_FAILURE);
     }
 
-    printf("client socket created\n");
     /* connect to server */
     int ret = connect(client_sockfd, (struct sockaddr *)&client, sizeof(client));
     if (ret == -1) {
 	perror("connect");
 	exit(EXIT_FAILURE);
     }
-    printf("connection established\n");
+    
     /* main loop */
     field fieldmap_buf[LEN_DATA_BUF];
-    char data_buf[4096];
+    char cb_buf[4096];
+    int nbytes_fldmap, nbytes_cb, nfields, ic, key;
+
     while (1) {
-	//	memset(fieldmap_buf, 0, LEN_DATA_BUF * sizeof(field));
-	int nbytes_read = read(client_sockfd , fieldmap_buf, 4096);
-	nbytes_read = read(client_sockfd , data_buf, 4096);
-	int ic = display_manager_send(fieldmap_buf, 6, data_buf);
-	display_manager_recieve(fieldmap_buf, 6, ic, data_buf);
+	// read type_header -> if fieldmap len of field map should be in header
+	// or maybe wcan use the 
+	//read field map
+	//read copy book
+	// send and recive to display manager
+	// if just copybook just send cb with cached's fldmap
+	// where do i cache it??????
+	nbytes_fldmap = read(client_sockfd , fieldmap_buf, 4096);
+	nbytes_cb = read(client_sockfd , cb_buf, 4096);
+	nfields = nbytes_fldmap / sizeof(field);
+	ic = display_manager_send(fieldmap_buf, nfields, cb_buf);
+	key = display_manager_recieve(fieldmap_buf, nfields, ic, cb_buf);
+	// need to send back the key pressed and the copy book
+	//write(client_sockfd, cb_buf, nbytes_cb);
     }
     display_manager_cleanup();
 }
