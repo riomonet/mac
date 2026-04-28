@@ -1,8 +1,8 @@
 global field fieldmap_login[] = {
-    DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
-    DMS( 10, 38, 16, "",0, UNDERLINE, GREEN, "password"),
     DMS( 8, 9,  27,  "USER . . . . . . . . . . . ", PROT, NONE, GREEN,""),
+    DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
     DMS( 10, 9,  27, "PASSWORD . . . . . . . . . ", PROT, NONE, GREEN, ""),
+    DMS( 10, 38, 16, "",0, UNDERLINE, GREEN, "password"),
     DMS( 1, 40, 19, "Marina 59 | Sign On", PROT, NONE, WHITE, ""),
     DMS( 5, 5,  37, "Tab to change fields, Enter to submit", PROT, NONE, BLUE,""),
 };

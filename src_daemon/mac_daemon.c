@@ -55,7 +55,7 @@ int main(void) {
     unlink(SOCKET_PATH);
 
     /* Create Master socket */
-    server_sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+    server_sockfd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
     if(server_sockfd == -1) {
 	perror("socket");
 	exit(EXIT_FAILURE);
@@ -81,6 +81,12 @@ int main(void) {
 	exit(EXIT_FAILURE);
     }
 
+    //send field map login.
+    struct msg_head {
+	int type;
+	size_t len;
+    };
+
     /* Main loop for handling connections */
     for(;;) {
 
@@ -92,13 +98,6 @@ int main(void) {
 	    exit(EXIT_FAILURE);
 	}
 	write(STDOUT_FILENO,"Connection established\n",23);
-
-	//send field map login.
-	struct msg_head {
-	    size_t len;
-	    int type;
-	};
-
 	bms_init_login();
 	write(data_sockfd , fieldmap_login, sizeof fieldmap_login);
 	write(data_sockfd , &cb.cb_login, sizeof cb.cb_login);

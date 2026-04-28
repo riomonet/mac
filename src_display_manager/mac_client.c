@@ -50,7 +50,7 @@ int main(void) {
     strncpy(client.sun_path, SOCKET_PATH, sizeof(client.sun_path) - 1);
 
     /* Create a socket.*/
-    int client_sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+    int client_sockfd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
     if(client_sockfd == -1) {
 	perror("socket");
 	exit(EXIT_FAILURE);
@@ -68,11 +68,11 @@ int main(void) {
     field fieldmap_buf[LEN_DATA_BUF];
     char data_buf[4096];
     while (1) {
-	memset(fieldmap_buf, 0, LEN_DATA_BUF * sizeof(field));
+	//	memset(fieldmap_buf, 0, LEN_DATA_BUF * sizeof(field));
 	int nbytes_read = read(client_sockfd , fieldmap_buf, 4096);
 	nbytes_read = read(client_sockfd , data_buf, 4096);
-	display_manager_send(fieldmap_buf, 6, data_buf);
-	//display_manager_recieve (data_buf, 6, 3);
+	int ic = display_manager_send(fieldmap_buf, 6, data_buf);
+	display_manager_recieve(fieldmap_buf, 6, ic, data_buf);
     }
     display_manager_cleanup();
 }

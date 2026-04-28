@@ -54,23 +54,24 @@ int display_manager_read() {
     }
 }
 
-#if 0
 int display_manager_recieve (field *map, int map_len, int ic, char *base) {
-
     int active_field = ic; // index into Map array. Inputs are non sequential.
     int active_idx = 0;   // col number
 
-    term_send_hlite(map[active_field].meta->dsp_attr);
-    term_send_col(map[active_field].meta->color);
+    meta_fields *meta = (meta_fields *)(base + map[active_field].meta_offset);
+    char *io = (base + map[active_field].io_offset);
+
+    term_send_hlite(meta->dsp_attr);
+    term_send_col(meta->color);
 
     while (1) {
         if(RESIZE) {
-            display_manager_send(map, map_len);
+            display_manager_send(map, map_len, base);
             term_send_pos(map[active_field].row,
                           map[active_field].col + active_idx);
             term_send_cmd(RESET);
-            term_send_hlite(map[active_field].meta->dsp_attr);
-            term_send_col(map[active_field].meta->color);
+            term_send_hlite(meta->dsp_attr);
+            term_send_col(meta->color);
             RESIZE = 0;
         }
         int c = display_manager_read();
@@ -81,7 +82,7 @@ int display_manager_recieve (field *map, int map_len, int ic, char *base) {
             char ch[1] = {c};
             if (active_idx < map[active_field].len - 1) {
                 write(STDOUT_FILENO,ch,1);
-                map[active_field].io[active_idx] = c;
+                io[active_idx] = c;
                 active_idx++;
                 term_send_pos( map[active_field].row,
                                map[active_field].col + active_idx);
@@ -95,7 +96,7 @@ int display_manager_recieve (field *map, int map_len, int ic, char *base) {
                 term_send_pos( map[active_field].row,
                                map[active_field].col + active_idx - 1);
                 write(STDOUT_FILENO," ",1);
-                map[active_field].io[active_idx - 1] = ' ';
+                io[active_idx - 1] = ' ';
                 active_idx--;
             } break; 
 
@@ -111,8 +112,9 @@ int display_manager_recieve (field *map, int map_len, int ic, char *base) {
                     active_idx = 0;
                     break; // Break out of inner while loop.
                 }
-
-            }
+	    }
+	    meta = (meta_fields *)(base + map[active_field].meta_offset);
+	    io = (base + map[active_field].io_offset);
             break;
             
         case ARROW_UP:   break;
@@ -137,11 +139,11 @@ int display_manager_recieve (field *map, int map_len, int ic, char *base) {
         term_send_pos(map[active_field].row,
                       map[active_field].col + active_idx);
         term_send_cmd(SHOW_CURSOR);
-        term_send_hlite(map[active_field].meta->dsp_attr);
-        term_send_col(map[active_field].meta->color);
+        term_send_hlite(meta->dsp_attr);
+        term_send_col(meta->color);
     }
 }
-#endif
+
 
 int display_manager_send(field *map, int num_fields, char *base) {
     struct date_time dt = date_today();
@@ -157,7 +159,7 @@ int display_manager_send(field *map, int num_fields, char *base) {
 	char *io = (base + map[i].io_offset);
 
         term_send_pos(map[i].row, map[i].col);
-	if (!map[i].name) {
+	if (strlen(map[i].name) == 0) {
             term_send_col(map[i].color);
             term_send_hlite(map[i].dsp_attr);
             if(strcmp(map[i].initial,"DSP_TIME") == 0) {
