@@ -32,6 +32,8 @@ global field fieldmap_mac[] = {
 };
 
 
+
+
 /* global field  fieldmap_client_add[] = { */
 /*     DMS(1,  7, 16, "", PROT, NONE,WHITE, "user"), */
 /*     DMS(1, 67, 10, "", PROT,NONE,WHITE,"date"), //TODO: change to named field */

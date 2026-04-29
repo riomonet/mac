@@ -31,6 +31,7 @@
 //#include "terminal_commands.c"
 
 #include "fieldmaps.c"
+                                                \
 #include "copybook.c"
 //#include "display_manager.c"            // Display manager
 
@@ -46,6 +47,16 @@
 #define SOCKET_PATH "/tmp/mac_connect"
 #define LEN_DATA_BUF 128
 #define BACK_LOG 256
+
+#define MAP_AND_DATA 1
+#define DATA_ONLY 2
+#define MAP_ONLY 4
+
+
+struct msg_header {
+    size_t len;
+    char typ;
+};
 
 int main(void) {
 #if 1
@@ -81,17 +92,13 @@ int main(void) {
 	exit(EXIT_FAILURE);
     }
 
-    //send field map login.
-    struct msg_head {
-	int type;
-	size_t len;
-    };
-
+    
     /* Main loop for handling connections */
     for(;;) {
 
 	/* clear the buffer */
 	write(STDOUT_FILENO,"Waiting for incoming connections\n", 33);
+    
 	int data_sockfd = accept(server_sockfd, NULL, NULL);
 	if (data_sockfd == -1) {
 	    perror("accept");
@@ -99,8 +106,19 @@ int main(void) {
 	}
 	write(STDOUT_FILENO,"Connection established\n",23);
 	bms_init_login();
-	write(data_sockfd , fieldmap_login, sizeof fieldmap_login);
-	write(data_sockfd , &cb.cb_login, sizeof cb.cb_login);
+
+    struct msg_header h;
+    h.typ = 1;
+    size_t len = sizeof(h) +  sizeof(fieldmap_login);
+    char *buf = malloc(len);
+    memcpy(buf,&h,sizeof(h));
+    memcpy(buf+sizeof(h),
+           fieldmap_login,
+           sizeof(fieldmap_login));
+    write(data_sockfd ,buf, len);
+    
+    /* write(data_sockfd , fieldmap_login, sizeof fieldmap_login); */
+    /* write(data_sockfd , &cb.cb_login, sizeof cb.cb_login); */
 	close(data_sockfd);
     }
     close(server_sockfd);

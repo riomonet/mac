@@ -79,7 +79,7 @@ int main(void) {
 	 * and we reset teh fieldmap_buf and reset cb_buf and then do our readsb
 	 * if its just a copy book we reset just that and do our reads either
 	 * i guess we ar going to rerender either way */
-	
+        
 	nbytes_fldmap = read(client_sockfd , fieldmap_buf, 4096);
 	nbytes_cb = read(client_sockfd , cb_buf, 4096);
 	nfields = nbytes_fldmap / sizeof(field);
@@ -91,5 +91,6 @@ int main(void) {
 	 */
 	// write(client_sockfd, cb_buf, nbytes_cb);
     }
+    
     display_manager_cleanup();
 }

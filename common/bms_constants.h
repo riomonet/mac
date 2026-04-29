@@ -30,8 +30,8 @@ enum screen_state {
 
 
 /* LOGIN FIELD CONSTANTS */
-#define LGN_IDX_USER 0
-#define LGN_IDX_PASSWORD 1
+#define LGN_IDX_USER 1
+#define LGN_IDX_PASSWORD 3
 
 #define LGN_LEN_USER 16
 #define LGN_LEN_PASSWORD 16
