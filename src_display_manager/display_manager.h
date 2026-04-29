@@ -48,8 +48,8 @@ enum KEY_ACTION {
 /* F9:        \x1b[20~ */
 
 int display_manager_read();
-int display_manager_recieve (field *map, int num_fields, int ic, char *base);
-int display_manager_send(field *map, int num_fields, char *base);
+int display_manager_recieve (field *map, int num_fields, int ic, u8 *base);
+int display_manager_send(field *map, int num_fields, u8 *base);
 void display_manager_start();
 void display_manager_cleanup();
 #endif

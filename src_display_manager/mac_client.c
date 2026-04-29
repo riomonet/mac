@@ -42,7 +42,7 @@
 
 int main(void) {
 
-    display_manager_start();
+          display_manager_start();
 
     /* Fill out sockaddr_un record. */
     struct sockaddr_un client = {0};
@@ -62,35 +62,38 @@ int main(void) {
 	perror("connect");
 	exit(EXIT_FAILURE);
     }
-    
-    /* main loop */
-    field fieldmap_buf[LEN_DATA_BUF] = {0};
-    char cb_buf[4096] = {0};
-    int nbytes_fldmap, nbytes_cb, nfields, ic, key;
+
+
+#define MSG_FMCB 1
+#define MSG_CB 2
+
+    struct af_unix_header {
+	u8 version;
+	u8 typ;
+	u16 fm_len;
+	u16 cb_len;
+	u16 total_len;
+    };
+
+    u32 ic, key;    
+    u32 n_fields = 0, n_bytes = 0;
+    u8 af_unix_buf[4096] = {0};
+    u8 cb_buf[1024] = {0};
+    field fm_array[32];
 
     while (1) {
-	// read type_header -> if fieldmap 
-	// read field map
-	// read copy book
-	// send and recive to/from display manager
-	// if just copybook just send cb with cached's fldmap
-	// where do i cache it?????? its cached
-	/* so if the heade says its a fieldmap then it automaticlly sends a copy book and a field map
-	 * and we reset teh fieldmap_buf and reset cb_buf and then do our readsb
-	 * if its just a copy book we reset just that and do our reads either
-	 * i guess we ar going to rerender either way */
-        
-	nbytes_fldmap = read(client_sockfd , fieldmap_buf, 4096);
-	nbytes_cb = read(client_sockfd , cb_buf, 4096);
-	nfields = nbytes_fldmap / sizeof(field);
-	ic = display_manager_send(fieldmap_buf, nfields, cb_buf);
-	key = display_manager_recieve(fieldmap_buf, nfields, ic, cb_buf);
-	// need to send back the key pressed and copybook in a header.
-	/* each socket will have its own identity thats how the deamon knows
-	   who it is dealing with
-	 */
+	n_bytes = read(client_sockfd ,af_unix_buf, sizeof af_unix_buf);
+	struct af_unix_header *h = (struct af_unix_header *) af_unix_buf;
+	assert(h->total_len == n_bytes);
+	memcpy(cb_buf, af_unix_buf + sizeof(struct af_unix_header) + h->fm_len, h->cb_len);
+	if (h->typ == MSG_FMCB && h->fm_len > 0) {
+	    memcpy(fm_array, af_unix_buf + sizeof(struct af_unix_header), h->fm_len);
+	}
+	n_fields = h->fm_len / sizeof(field);
+	ic = display_manager_send(fm_array, n_fields, cb_buf);
+	key = display_manager_recieve(fm_array, n_fields, ic, cb_buf);
+
 	// write(client_sockfd, cb_buf, nbytes_cb);
     }
-    
     display_manager_cleanup();
 }

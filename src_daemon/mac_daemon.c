@@ -17,26 +17,15 @@
 #include "../common/base_typedefs.h"
 #include "../common/date_time.h"
 #include "../common/terminal_colors.h"
-//#include "terminal_commands.h"
-//#include "terminal_raw_mode.h"
-
 #include "../common/bms_constants.h"
 #include "../common/fieldmaps.h"
 #include "../common/copybook.h"
-//#include "display_manager.h"
 #include "client_records.h"
 
 #include "../common/date_time.c"
-//#include "terminal_raw_mode.c"  
-//#include "terminal_commands.c"
-
 #include "fieldmaps.c"
-                                                \
 #include "copybook.c"
-//#include "display_manager.c"            // Display manager
-
 #include "client_records.c"
-
 #include "screen_handler_login.c"
 #include "screen_handler_menu_main.c"
 
@@ -48,15 +37,41 @@
 #define LEN_DATA_BUF 128
 #define BACK_LOG 256
 
-#define MAP_AND_DATA 1
-#define DATA_ONLY 2
-#define MAP_ONLY 4
+
+#define MSG_FMCB 1
+#define MSG_CB 2
 
 
-struct msg_header {
-    size_t len;
-    char typ;
+struct af_unix_header {
+    u8 version;
+    u8 typ;
+    u16 fm_len;
+    u16 cb_len;
+    u16 total_len;
 };
+
+u8 *pack_af_unix_msg(field *fm, short fm_len, u8 *cb, short cb_len) {
+    assert(fm_len >= 0 && cb_len >= 0);
+    assert(fm || cb);
+
+    struct af_unix_header *h;
+    u8 *msg = (u8 *) malloc(sizeof(struct af_unix_header) + fm_len + cb_len);
+    memcpy(msg + sizeof(struct af_unix_header) + fm_len, cb, cb_len);
+
+    h = (struct af_unix_header *) msg;
+    h->version = 1;
+    h->cb_len = cb_len;
+    h->fm_len = fm_len;
+    h->total_len = sizeof(struct af_unix_header) + fm_len + cb_len;
+    h->typ = MSG_CB;
+
+    if(fm) {
+	memcpy(msg + sizeof(struct af_unix_header), fm, fm_len);
+	h->typ = MSG_FMCB;
+    } 
+    return msg;
+}
+
 
 int main(void) {
 #if 1
@@ -91,7 +106,6 @@ int main(void) {
 	perror("listen");
 	exit(EXIT_FAILURE);
     }
-
     
     /* Main loop for handling connections */
     for(;;) {
@@ -107,22 +121,19 @@ int main(void) {
 	write(STDOUT_FILENO,"Connection established\n",23);
 	bms_init_login();
 
-    struct msg_header h;
-    h.typ = 1;
-    size_t len = sizeof(h) +  sizeof(fieldmap_login);
-    char *buf = malloc(len);
-    memcpy(buf,&h,sizeof(h));
-    memcpy(buf+sizeof(h),
-           fieldmap_login,
-           sizeof(fieldmap_login));
-    write(data_sockfd ,buf, len);
-    
-    /* write(data_sockfd , fieldmap_login, sizeof fieldmap_login); */
-    /* write(data_sockfd , &cb.cb_login, sizeof cb.cb_login); */
+	u8 *msg = pack_af_unix_msg(fieldmap_login,
+				   sizeof fieldmap_login,
+				   (u8 *)&cb.cb_login,
+				   sizeof(cb.cb_login));
+
+	int af_unix_msg_len = ((struct af_unix_header *) msg)->total_len;
+	write(data_sockfd,msg, af_unix_msg_len);
+	free(msg);
+
+	//Read response........
+	//select epoll etc......
 	close(data_sockfd);
     }
     close(server_sockfd);
     #endif
-
-
 }
