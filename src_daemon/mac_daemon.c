@@ -74,7 +74,6 @@ u8 *pack_af_unix_msg(field *fm, short fm_len, u8 *cb, short cb_len) {
 
 
 int main(void) {
-#if 1
     int server_sockfd;
     
     struct sockaddr_un server = {0};
@@ -106,7 +105,8 @@ int main(void) {
 	perror("listen");
 	exit(EXIT_FAILURE);
     }
-    
+
+    bms_init_login();
     /* Main loop for handling connections */
     for(;;) {
 
@@ -119,8 +119,8 @@ int main(void) {
 	    exit(EXIT_FAILURE);
 	}
 	write(STDOUT_FILENO,"Connection established\n",23);
-	bms_init_login();
 
+	for(;;){
 	u8 *msg = pack_af_unix_msg(fieldmap_login,
 				   sizeof fieldmap_login,
 				   (u8 *)&cb.cb_login,
@@ -128,12 +128,19 @@ int main(void) {
 
 	int af_unix_msg_len = ((struct af_unix_header *) msg)->total_len;
 	write(data_sockfd,msg, af_unix_msg_len);
-	free(msg);
-
-	//Read response........
+	
+	if (read(data_sockfd, &cb.cb_login,sizeof(cb.cb_login)) == 0) {
+	    free(msg);
+	    break;
+	} 
+	write(STDOUT_FILENO, cb.cb_login.user.io, 16);
+	write(STDOUT_FILENO, "\n", 1);
+	write(STDOUT_FILENO, cb.cb_login.password.io, 16);
 	//select epoll etc......
+	//	close(data_sockfd);
+	free(msg);
+	}
 	close(data_sockfd);
     }
     close(server_sockfd);
-    #endif
 }

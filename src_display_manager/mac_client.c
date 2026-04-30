@@ -75,6 +75,12 @@ int main(void) {
 	u16 total_len;
     };
 
+    struct af_unix_data {
+	u8 version;
+	u16 payload_len;
+	int AID;
+    };
+
     u32 ic, key;    
     u32 n_fields = 0, n_bytes = 0;
     u8 af_unix_buf[4096] = {0};
@@ -82,8 +88,11 @@ int main(void) {
     field fm_array[32];
 
     while (1) {
+
 	n_bytes = read(client_sockfd ,af_unix_buf, sizeof af_unix_buf);
 	struct af_unix_header *h = (struct af_unix_header *) af_unix_buf;
+
+	
 	assert(h->total_len == n_bytes);
 	memcpy(cb_buf, af_unix_buf + sizeof(struct af_unix_header) + h->fm_len, h->cb_len);
 	if (h->typ == MSG_FMCB && h->fm_len > 0) {
@@ -93,7 +102,20 @@ int main(void) {
 	ic = display_manager_send(fm_array, n_fields, cb_buf);
 	key = display_manager_recieve(fm_array, n_fields, ic, cb_buf);
 
-	// write(client_sockfd, cb_buf, nbytes_cb);
+	struct af_unix_data af_data = {
+	    .version = 1,
+	    .payload_len = h->cb_len,
+	    .AID = key
+	};
+	u8 *msg = malloc((sizeof af_data) + h->cb_len);
+	memcpy(msg + sizeof(af_data),cb_buf, h->cb_len);
+	memcpy(msg, &af_data, sizeof(af_data));
+	write(client_sockfd, cb_buf, af_data.payload_len + sizeof(af_data));
+
+	for(u32 i = 0; i < n_bytes; i++) {
+	    af_unix_buf[i] = 0;
+	}
     }
+    //	close(client_sockfd);
     display_manager_cleanup();
 }
