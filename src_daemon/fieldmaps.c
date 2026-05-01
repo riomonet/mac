@@ -1,3 +1,4 @@
+
 global field fieldmap_login[] = {
     DMS( 8, 9,  27,  "USER . . . . . . . . . . . ", PROT, NONE, GREEN,""),
     DMS( 8, 38, 16,"",IC, UNDERLINE, GREEN, "user"),
@@ -30,8 +31,6 @@ global field fieldmap_mac[] = {
     DMS(28,31,16,"F8=Redraw screen",PROT,NONE,BLUE,""),
     DMS(29,0,100,"DSP_HL",PROT,UNDERLINE,GREEN,""),
 };
-
-
 
 
 /* global field  fieldmap_client_add[] = { */

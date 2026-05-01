@@ -1,3 +1,6 @@
+#include "date_time.h"
+
+
 struct date_time date_today() {
     time_t unix_time = time(NULL);
     struct tm *parts = localtime(&unix_time);

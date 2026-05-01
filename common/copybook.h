@@ -38,14 +38,3 @@ void bms_init_mac();
 void bms_init_login();
 void bms_init_all();
 
-
-/*      struct cb_login { */
-/* 	 struct { */
-/* 	     struct cb_field meta; */
-/* 	     char io[LGN_LEN_USER]; */
-/* 	 } user; */
-/* 	 struct { */
-/* 	     struct cb_field meta; */
-/* 	     char io[LGN_LEN_PASSWORD]; */
-/* 	 } password; */
-/*      } */

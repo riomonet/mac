@@ -56,11 +56,11 @@ int main(void) {
 	exit(EXIT_FAILURE);
     }
 
-    /* connect to server */
+    /* connect to server didnt fail?*/
     int ret = connect(client_sockfd, (struct sockaddr *)&client, sizeof(client));
-    if (ret == -1) {
+    if (ret < 0) {
 	perror("connect");
-	exit(EXIT_FAILURE);
+	exit(1);
     }
 
 
@@ -116,6 +116,6 @@ int main(void) {
 	    af_unix_buf[i] = 0;
 	}
     }
-    //	close(client_sockfd);
+    close(client_sockfd);
     display_manager_cleanup();
 }

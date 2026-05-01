@@ -1,7 +1,9 @@
+#ifndef CLIENT_RECORDS_H
+#define CLIENT_RECORDS_H
+
 #define CLIENT_RECORD_ACTIVE 0
 #define CLIENT_RECORD_ARCHIVED 1
 #define CLIENT_RECORD_VERSION 1u << 4
-
 
 /* Clients that are not in tables do not have id's */
 struct client_record {
@@ -51,6 +53,4 @@ int client_record_table_get_next_id(struct client_record_table *tbl);
 int client_record_table_push (struct client_record_table *tbl, struct client_record *rec);
 
 /* Client credentials api */
-
-
- 
+#endif
