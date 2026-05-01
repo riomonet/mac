@@ -20,7 +20,7 @@ int proc_remove_from_table(int proc_sockfd) {
 	}
     }
     return PROC_ERROR_NOT_FOUND; // NOT FOUND
-};
+}
 
 void proc_initialize_table() {
     for (int i = 0; i < PROC_TABLE_SIZE; i++) {
@@ -29,13 +29,13 @@ void proc_initialize_table() {
 }
 
 void proc_refresh_table(fd_set *fd_set_ptr) {
-    FD_ZERO(fd_set_ptr);
-    int i = 0;
-    for(; i < PROC_TABLE_SIZE; i++) {
+  FD_ZERO(fd_set_ptr);
+  int i = 0;
+  for(; i < PROC_TABLE_SIZE; i++) {
 	if (proc_table[i].fd != -1) {
-	    FD_SET(proc_table[i].fd, fd_set_ptr);
+      FD_SET(proc_table[i].fd, fd_set_ptr);
 	}
-    }
+  }
 }
 
 	

@@ -24,8 +24,5 @@ struct mac_proc {
 extern struct mac_proc proc_table[PROC_TABLE_SIZE];
 
 
-int proc_add_to_table(int proc_sockfd);
-void proc_remove_from_table(int proc_sockfd);
-void proc_initialize_table();
 
 #endif
