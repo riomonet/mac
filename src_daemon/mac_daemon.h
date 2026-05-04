@@ -18,6 +18,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/select.h>
+
 
 #include "../common/base_macros.h"
 #include "../common/base_typedefs.h"
@@ -27,7 +29,7 @@
 #include "../common/fieldmaps.h"
 #include "../common/copybook.h"
 #include "client_records.h"
-#include "proc.h"
+#include "mck_net_mplex.h"
 #include "net.h"
 
 #endif

@@ -1,5 +1,5 @@
 #ifndef NET_H
-#define NET_
+#define NET_H
 
 #define SOCKET_PATH "/tmp/mac_connect"
 #define LEN_DATA_BUF 128
@@ -15,6 +15,5 @@ struct af_unix_header {
     u16 cb_len;
     u16 total_len;
 };
-
 
 #endif
