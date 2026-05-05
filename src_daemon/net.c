@@ -1,3 +1,4 @@
+/* TODO: Rename this function and make it a generic create header for any tcp ipmessage, not http or wasm*/
 u8 *pack_af_unix_msg(field *fm, short fm_len, u8 *cb, short cb_len) {
     assert(fm_len >= 0 && cb_len >= 0);
     assert(fm || cb);
@@ -21,25 +22,49 @@ u8 *pack_af_unix_msg(field *fm, short fm_len, u8 *cb, short cb_len) {
 }
 
 
-int net_start_server() {
-    int server_sockfd;
+enum conn_type {
+    AF_UNIX_T, AF_INET_T, HTTP_T, WEBSOCKET_T
+};
 
+struct socket_ctx {
+    enum conn_type type;
+    char *path;
+    char *port;
+    int (*response)(int fd);
+};
+
+
+int net_start_server(struct socket_ctx ctx) {
+    int server_sockfd;
+    fd_set system_fd_set; // Multpilex: local copy of the 'select' fdset
+    fdset_init();         // 
+        
     struct sockaddr_un server = {0};
 
-    unlink(SOCKET_PATH);
+    switch (ctx.type) {
+    case AF_UNIX_T:
+	{
+	    server_sockfd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+	    server.sun_family = AF_UNIX;
+	    strncpy(server.sun_path, ctx.path, sizeof(server.sun_path) - 1);
+	    printf("Unix Domain Socket created at /tmp/mac_connect\n");
+	    unlink(ctx.path);
+	    break;
+	}
+    case AF_INET_T:
+	break;
+    case HTTP_T:
+	break;
+    case WEBSOCKET_T:
+	break;
+    }
 
-    server_sockfd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
     if(server_sockfd == -1) {
 	perror("socket");
 	exit(EXIT_FAILURE);
     }
-    printf("Master socket created at /tmp/mac_connect\n");
-
-    /* Fill out the 'server_socket' record.*/
-    server.sun_family = AF_UNIX;
-    strncpy(server.sun_path, SOCKET_PATH, sizeof(server.sun_path) - 1);
-    /* Create Master socket */
-
+    
+    
     /* Bind 'server_sockfd' to the socket path named in 'server.sun_path' */
     int ret = bind(server_sockfd, (struct sockaddr *)&server, sizeof(server));
     if(ret == -1) {
@@ -54,8 +79,28 @@ int net_start_server() {
 	perror("listen");
 	exit(EXIT_FAILURE);
     }
-    return server_sockfd;
+    fdset_add(server_sockfd);
+
+    for(;;) {
+	sys_fdset_refresh(&system_fd_set);
+	select((fdset_maxfd() + 1),&system_fd_set, NULL, NULL, NULL);
+	if (FD_ISSET(server_sockfd,&system_fd_set)) {
+	    int data_sockfd = accept(master_fd, NULL, NULL);
+	    if (data_sockfd == -1) {
+		perror("accept");
+		exit(EXIT_FAILURE);
+	    }
+	    //DO SOMETHING WITH THE FD
+	} else {
+	    for (int i = 0;i < MAX_SOCKETS; i ++) {
+		if (FD_ISSET(fdset[i], &system_fd_set)) {
+		    // DO SOMETHING WITH THE FD
+		}
+	    }
+	}
+    }
 }
+
 
 
 

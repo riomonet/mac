@@ -1,7 +1,6 @@
 #ifndef NET_H
 #define NET_H
 
-#define SOCKET_PATH "/tmp/mac_connect"
 #define LEN_DATA_BUF 128
 #define BACK_LOG 256
 
