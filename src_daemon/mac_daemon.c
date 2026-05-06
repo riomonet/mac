@@ -6,7 +6,6 @@
 #include "client_records.c"
 #include "screen_handler_login.c"
 #include "screen_handler_menu_main.c"
-#include "mck_net_mplex.c"
 #include "net.c"
 
 
@@ -19,25 +18,22 @@ struct client_conn {
     uid_t uid;
 };
 
-int unix_domain_responder(int fd) {
-    return 0;
-}
 
 int main(void) {
 
-
-    struct socket_ctx unix_domain_ctx = {
-	.type = AF_UNIX_T,
+    struct mac_socket unix_domain_ctx = {
+	     .prot = AF_UNIX_T,
 	    .path = "/tmp/mac_connect",
 	    .port = "",
-	    .response = unix_domain_responder
+
     };
     
     bms_init_login();
     bms_init_mac();
 
     int res = net_start_server(unix_domain_ctx);
-    
+
+    #if 0
     u8 *msg = pack_af_unix_msg(fieldmap_mac,
 			       sizeof fieldmap_login,
 			       (u8 *)&cb.cb_login,
@@ -66,7 +62,8 @@ int main(void) {
 	write(STDOUT_FILENO, cb.cb_login.password.io, 16);
 	free(msg);
 	close(master_fd);
-    }
+    #endif
 }
+
 
 
