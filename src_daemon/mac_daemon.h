@@ -29,7 +29,7 @@
 #include "../common/fieldmaps.h"
 #include "../common/copybook.h"
 #include "client_records.h"
-#include "mck_net_mplex.h"
+#include "mplx.h"
 #include "net.h"
 
 #endif

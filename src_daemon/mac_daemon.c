@@ -6,33 +6,14 @@
 #include "client_records.c"
 #include "screen_handler_login.c"
 #include "screen_handler_menu_main.c"
+#include "mplx.c"
 #include "net.c"
 
 
-
-int client_connections[1024];
-
-struct client_conn {
-    int state;
-    int fd;
-    uid_t uid;
-};
-
-
 int main(void) {
-
-    struct mac_socket unix_domain_ctx = {
-	     .prot = AF_UNIX_T,
-	    .path = "/tmp/mac_connect",
-	    .port = "",
-
-    };
-    
-    bms_init_login();
-    bms_init_mac();
-
-    int res = net_start_server(unix_domain_ctx);
-
+    net_setup_servers();
+    net_event_loop_start();
+  
     #if 0
     u8 *msg = pack_af_unix_msg(fieldmap_mac,
 			       sizeof fieldmap_login,
