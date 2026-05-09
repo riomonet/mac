@@ -12,51 +12,6 @@ struct mac_socket {
     char *buffer;
 };
 
-struct mac_servers {
-    struct mac_socket servers[4];
-    int len;
-};
-
-int net_start_server(struct mac_socket ctx) {
-    int server_sockfd;
-    struct sockaddr_un server = {0};
-    switch (ctx.prot) {
-    case AF_UNIX_T:
-	{
-	    server_sockfd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
-	    server.sun_family = AF_UNIX;
-	    strncpy(server.sun_path, ctx.path, sizeof(server.sun_path) - 1);
-	    printf("Unix Domain Socket created at /tmp/mac_connect\n");
-	    unlink(ctx.path);
-	    break;
-	}
-    case AF_INET_T:
-	break;
-    case HTTP_T:
-	break;
-    case WEBSOCKET_T:
-	break;
-    }
-
-    if(server_sockfd == -1) {
-	perror("socket");
-	exit(EXIT_FAILURE);
-    }
-
-    int ret = bind(server_sockfd, (struct sockaddr *)&server, sizeof(server));
-    if(ret == -1) {
-	perror("bind");
-	exit(EXIT_FAILURE);
-    }
-    printf("Master socket bind() succesful\n");
-
-    ret = listen(server_sockfd, BACK_LOG);
-    if(ret == -1) {
-	perror("listen");
-	exit(EXIT_FAILURE);
-    }
-    return server_sockfd;
-}
 
 void net_setup_servers() {
     struct mplx_set mx_set = mplx_create_interface();
