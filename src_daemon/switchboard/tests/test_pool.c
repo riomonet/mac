@@ -15,9 +15,9 @@ int main(void) {
     Pool_add(p,7);
     Pool_add(p,4);
     Pool_print(p, 10);
-    Pool_free(p);
     Pool_add(p,99);
-    //    Pool_print(p, 10);
+    Pool_print(p, 10);
+    Pool_free(p);
     return 0;
 }
 

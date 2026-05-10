@@ -4,39 +4,12 @@
 #include <string.h>
 
 #include "pool.h"
+#include "arryutils.h"
 
 #define ARRAY_SIZE 1024
 #define SENTINEL -1
 #define T Pool_T // it is a pointer. 
 
-/* TODO: Move to array_utils module */
-int iarray_find_first_of(int *x, int len, int tok) {
-    for (int i = 0; i < len; i++) {
-        if (x[i] == tok) return i;
-    }
-    return -1;
-}
-
-void iarray_print(int *x, int cnt) {
-    for (int i = 0; i< cnt; i++) {
-        printf("%d ", x[i]);
-    }
-}
-
-int *iarray_remove_all_of(int *x, int len, int tok) {
-    int cnt = 0, *arr;
-    for (int i = 0; i < len; i++) {
-        if (x[i] != tok)  cnt++;
-    }
-    arr = malloc(cnt * sizeof(int));
-    int idx = 0;
-    for (int i = 0; i < len; i++) {
-        if (x[i] != tok) {
-            arr[idx++] = x[i];
-        }
-    }
-    return arr;
-}
 
 struct T {
     int elems[ARRAY_SIZE];
@@ -94,4 +67,3 @@ void Pool_print (T pool, int cnt) {
     iarray_print(pool->elems, cnt);
     printf("\n");
 }
-
