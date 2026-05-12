@@ -4,8 +4,7 @@
 #include "monitor.h"
 
 /* buf size error detection must be as big as capacity */
-
-Pool_T Monitor_select(int *elems, int capacity) {
+void Monitor_select(int *elems, int capacity) {
     
     fd_set active_fds;
     FD_ZERO(&active_fds);
@@ -26,7 +25,7 @@ Pool_T Monitor_select(int *elems, int capacity) {
     int j = 0;
     for(int i = 0; i < capacity; i++) {
         if(FD_ISSET(elems[i], &active_fds)) {
-            isset[j++] = elems[i];//TODO
+            /* TODO */
         }
     }
 }
