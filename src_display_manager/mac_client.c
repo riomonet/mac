@@ -37,12 +37,12 @@
 #include "terminal_commands.c"
 #include "display_manager.c"            
 
-#define SOCKET_PATH "/tmp/mac_connect"
+#define SOCKET_PATH "/tmp/mac_c"
 #define LEN_DATA_BUF 256
 
 int main(void) {
 
-          display_manager_start();
+    display_manager_start();
 
     /* Fill out sockaddr_un record. */
     struct sockaddr_un client = {0};
@@ -88,10 +88,9 @@ int main(void) {
     field fm_array[32];
 
     while (1) {
-
+	
 	n_bytes = read(client_sockfd ,af_unix_buf, sizeof af_unix_buf);
 	struct af_unix_header *h = (struct af_unix_header *) af_unix_buf;
-
 	
 	assert(h->total_len == n_bytes);
 	memcpy(cb_buf, af_unix_buf + sizeof(struct af_unix_header) + h->fm_len, h->cb_len);

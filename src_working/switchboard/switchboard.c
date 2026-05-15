@@ -1,9 +1,9 @@
-#include "switchboard.h"
-#include "pool.h"
-#include "../mac.h"
+#include "../includes/core.h"
 
 #define BACK_LOG 5
 #define PATH "/tmp/mac_c"
+
+
 
 int start_unix_listener(char *path) {
     int server_sockfd;
@@ -79,11 +79,11 @@ void switchboard_select() {
 		    read(fd, buffer, sizeof buffer);
 		    int keep_session = client_unix_handler(fd, typ, buffer);
 		    write(fd, buffer, strlen(buffer)); 
-
-		    if (!keep_session) {
- 			/* 	Pool_remove(pool,fd); NEED TO IMPLEMENT*/ 
-			close_socket(fd);
-		    }
+		    
+		    /* if (!keep_session) { */
+ 		    /* 	/\* 	Pool_remove(pool,fd); NEED TO IMPLEMENT*\/  */
+		    /* 	close_socket(fd); */
+		    /* } */
 		}
 	    }
 	}
